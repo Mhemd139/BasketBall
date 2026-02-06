@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "today": "היום",
+    "halls": "אולמות",
+    "teams": "קבוצות",
+    "more": "עוד"
+  },
+  "common": {
+    "loading": "טוען...",
+    "error": "משהו השתבש",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "add": "הוסף",
+    "search": "חיפוש",
+    "filter": "סינון",
+    "back": "חזור",
+    "close": "סגור",
+    "confirm": "אישור",
+    "yes": "כן",
+    "no": "לא"
+  },
+  "home": {
+    "title": "לוח הזמנים להיום",
+    "no_events": "אין אירועים מתוכננים להיום",
+    "upcoming": "אירועים קרובים",
+    "view_all": "הצג הכל"
+  },
+  "halls": {
+    "title": "אולמות כדורסל",
+    "hall": "אולם",
+    "add_hall": "הוסף אולם",
+    "edit_hall": "ערוך אולם",
+    "name": "שם האולם",
+    "description": "תיאור",
+    "schedule": "לוח זמנים"
+  },
+  "events": {
+    "title": "אירועים",
+    "training": "אימון",
+    "game": "משחק",
+    "add_event": "הוסף אירוע",
+    "edit_event": "ערוך אירוע",
+    "event_type": "סוג אירוע",
+    "event_title": "כותרת",
+    "date": "תאריך",
+    "start_time": "שעת התחלה",
+    "end_time": "שעת סיום",
+    "hall": "אולם",
+    "trainer": "מאמן",
+    "notes": "הערות",
+    "recurring": "חוזר",
+    "mark_attendance": "סמן נוכחות"
+  },
+  "attendance": {
+    "title": "נוכחות",
+    "mark_attendance": "סמן נוכחות",
+    "present": "נוכח",
+    "absent": "נעדר",
+    "late": "מאחר",
+    "mark_all_present": "סמן הכל נוכחים",
+    "mark_all_absent": "סמן הכל נעדרים",
+    "save_attendance": "שמור נוכחות",
+    "attendance_saved": "הנוכחות נשמרה בהצלחה",
+    "summary": "סיכום",
+    "total_trainees": "סך מתאמנים"
+  },
+  "trainers": {
+    "title": "מאמנים",
+    "add_trainer": "הוסף מאמן",
+    "edit_trainer": "ערוך מאמן",
+    "name": "שם",
+    "phone": "טלפון",
+    "role": "תפקיד",
+    "admin": "מנהל",
+    "sub_trainer": "מאמן משנה",
+    "assigned_class": "כיתה מוקצית"
+  },
+  "classes": {
+    "title": "כיתות",
+    "add_class": "הוסף כיתה",
+    "edit_class": "ערוך כיתה",
+    "name": "שם הכיתה",
+    "trainer": "מאמן",
+    "hall": "אולם",
+    "schedule_info": "מידע לוח זמנים",
+    "trainees": "מתאמנים"
+  },
+  "trainees": {
+    "title": "מתאמנים",
+    "add_trainee": "הוסף מתאמן",
+    "edit_trainee": "ערוך מתאמן",
+    "name": "שם",
+    "phone": "טלפון",
+    "jersey_number": "מספר חולצה",
+    "class": "כיתה",
+    "payment_status": "סטטוס תשלום",
+    "paid": "שולם",
+    "unpaid": "לא שולם",
+    "search_by_name": "חפש לפי שם או מספר חולצה"
+  },
+  "payments": {
+    "title": "תשלומים",
+    "payment_status": "סטטוס תשלום",
+    "paid": "שולם",
+    "unpaid": "לא שולם",
+    "payment_date": "תאריך תשלום",
+    "amount": "סכום",
+    "comment": "הערה",
+    "mark_as_paid": "סמן כשולם",
+    "mark_as_unpaid": "סמן כלא שולם",
+    "annual_fee": "דמי חבר שנתי: 3000 ש\"ח",
+    "outstanding_payments": "תשלומים ממתינים"
+  },
+  "auth": {
+    "login": "התחברות",
+    "logout": "התנתקות",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "sign_in": "כניסה",
+    "sign_out": "יציאה",
+    "profile": "פרופיל"
+  },
+  "admin": {
+    "dashboard": "לוח בקרה",
+    "manage_trainers": "נהל מאמנים",
+    "manage_halls": "נהל אולמות",
+    "manage_classes": "נהל כיתות",
+    "view_payments": "צפה בתשלומים",
+    "settings": "הגדרות"
+  }
+}

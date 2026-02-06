@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "today": "Today",
+    "halls": "Halls",
+    "teams": "Teams",
+    "more": "More"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "home": {
+    "title": "Today's Schedule",
+    "no_events": "No events scheduled for today",
+    "upcoming": "Upcoming Events",
+    "view_all": "View All"
+  },
+  "halls": {
+    "title": "Basketball Halls",
+    "hall": "Hall",
+    "add_hall": "Add Hall",
+    "edit_hall": "Edit Hall",
+    "name": "Hall Name",
+    "description": "Description",
+    "schedule": "Schedule"
+  },
+  "events": {
+    "title": "Events",
+    "training": "Training",
+    "game": "Game",
+    "add_event": "Add Event",
+    "edit_event": "Edit Event",
+    "event_type": "Event Type",
+    "event_title": "Title",
+    "date": "Date",
+    "start_time": "Start Time",
+    "end_time": "End Time",
+    "hall": "Hall",
+    "trainer": "Trainer",
+    "notes": "Notes",
+    "recurring": "Recurring",
+    "mark_attendance": "Mark Attendance"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "mark_attendance": "Mark Attendance",
+    "present": "Present",
+    "absent": "Absent",
+    "late": "Late",
+    "mark_all_present": "Mark All Present",
+    "mark_all_absent": "Mark All Absent",
+    "save_attendance": "Save Attendance",
+    "attendance_saved": "Attendance saved successfully",
+    "summary": "Summary",
+    "total_trainees": "Total Trainees"
+  },
+  "trainers": {
+    "title": "Trainers",
+    "add_trainer": "Add Trainer",
+    "edit_trainer": "Edit Trainer",
+    "name": "Name",
+    "phone": "Phone",
+    "role": "Role",
+    "admin": "Admin",
+    "sub_trainer": "Sub Trainer",
+    "assigned_class": "Assigned Class"
+  },
+  "classes": {
+    "title": "Classes",
+    "add_class": "Add Class",
+    "edit_class": "Edit Class",
+    "name": "Class Name",
+    "trainer": "Trainer",
+    "hall": "Hall",
+    "schedule_info": "Schedule Info",
+    "trainees": "Trainees"
+  },
+  "trainees": {
+    "title": "Trainees",
+    "add_trainee": "Add Trainee",
+    "edit_trainee": "Edit Trainee",
+    "name": "Name",
+    "phone": "Phone",
+    "jersey_number": "Jersey Number",
+    "class": "Class",
+    "payment_status": "Payment Status",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "search_by_name": "Search by name or jersey number"
+  },
+  "payments": {
+    "title": "Payments",
+    "payment_status": "Payment Status",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "payment_date": "Payment Date",
+    "amount": "Amount",
+    "comment": "Comment",
+    "mark_as_paid": "Mark as Paid",
+    "mark_as_unpaid": "Mark as Unpaid",
+    "annual_fee": "Annual Fee: 3000 NIS",
+    "outstanding_payments": "Outstanding Payments"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "sign_in": "Sign In",
+    "sign_out": "Sign Out",
+    "profile": "Profile"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "manage_trainers": "Manage Trainers",
+    "manage_halls": "Manage Halls",
+    "manage_classes": "Manage Classes",
+    "view_payments": "View Payments",
+    "settings": "Settings"
+  }
+}

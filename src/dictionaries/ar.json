@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "today": "اليوم",
+    "halls": "القاعات",
+    "teams": "الفرق",
+    "more": "المزيد"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ ما",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "home": {
+    "title": "جدول اليوم",
+    "no_events": "لا توجد فعاليات مجدولة لهذا اليوم",
+    "upcoming": "الفعاليات القادمة",
+    "view_all": "عرض الكل"
+  },
+  "halls": {
+    "title": "قاعات كرة السلة",
+    "hall": "القاعة",
+    "add_hall": "إضافة قاعة",
+    "edit_hall": "تعديل القاعة",
+    "name": "اسم القاعة",
+    "description": "الوصف",
+    "schedule": "الجدول"
+  },
+  "events": {
+    "title": "الفعاليات",
+    "training": "تدريب",
+    "game": "مباراة",
+    "add_event": "إضافة فعالية",
+    "edit_event": "تعديل الفعالية",
+    "event_type": "نوع الفعالية",
+    "event_title": "العنوان",
+    "date": "التاريخ",
+    "start_time": "وقت البداية",
+    "end_time": "وقت النهاية",
+    "hall": "القاعة",
+    "trainer": "المدرب",
+    "notes": "ملاحظات",
+    "recurring": "متكرر",
+    "mark_attendance": "تسجيل الحضور"
+  },
+  "attendance": {
+    "title": "الحضور",
+    "mark_attendance": "تسجيل الحضور",
+    "present": "حاضر",
+    "absent": "غائب",
+    "late": "متأخر",
+    "mark_all_present": "تسجيل الكل حاضر",
+    "mark_all_absent": "تسجيل الكل غائب",
+    "save_attendance": "حفظ الحضور",
+    "attendance_saved": "تم حفظ الحضور بنجاح",
+    "summary": "الملخص",
+    "total_trainees": "إجمالي المتدربين"
+  },
+  "trainers": {
+    "title": "المدربون",
+    "add_trainer": "إضافة مدرب",
+    "edit_trainer": "تعديل المدرب",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "role": "الدور",
+    "admin": "مدير",
+    "sub_trainer": "مدرب مساعد",
+    "assigned_class": "الصف المعين"
+  },
+  "classes": {
+    "title": "الصفوف",
+    "add_class": "إضافة صف",
+    "edit_class": "تعديل الصف",
+    "name": "اسم الصف",
+    "trainer": "المدرب",
+    "hall": "القاعة",
+    "schedule_info": "معلومات الجدول",
+    "trainees": "المتدربون"
+  },
+  "trainees": {
+    "title": "المتدربون",
+    "add_trainee": "إضافة متدرب",
+    "edit_trainee": "تعديل المتدرب",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "jersey_number": "رقم القميص",
+    "class": "الصف",
+    "payment_status": "حالة الدفع",
+    "paid": "مدفوع",
+    "unpaid": "غير مدفوع",
+    "search_by_name": "البحث بالاسم أو رقم القميص"
+  },
+  "payments": {
+    "title": "المدفوعات",
+    "payment_status": "حالة الدفع",
+    "paid": "مدفوع",
+    "unpaid": "غير مدفوع",
+    "payment_date": "تاريخ الدفع",
+    "amount": "المبلغ",
+    "comment": "ملاحظة",
+    "mark_as_paid": "تحديد كمدفوع",
+    "mark_as_unpaid": "تحديد كغير مدفوع",
+    "annual_fee": "الرسوم السنوية: 3000 شيكل",
+    "outstanding_payments": "المدفوعات المعلقة"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "sign_in": "دخول",
+    "sign_out": "خروج",
+    "profile": "الملف الشخصي"
+  },
+  "admin": {
+    "dashboard": "لوحة المدير",
+    "manage_trainers": "إدارة المدربين",
+    "manage_halls": "إدارة القاعات",
+    "manage_classes": "إدارة الصفوف",
+    "view_payments": "عرض المدفوعات",
+    "settings": "الإعدادات"
+  }
+}
