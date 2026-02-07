@@ -29,9 +29,11 @@ export interface Database {
           name_ar: string
           name_he: string
           name_en: string
-          phone: string
-          role: 'admin' | 'sub_trainer'
+          phone?: string
+          role?: 'admin' | 'sub_trainer'
           auth_user_id?: string | null
+          gender?: 'male' | 'female'
+          availability?: string[]
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +45,8 @@ export interface Database {
           phone?: string
           role?: 'admin' | 'sub_trainer'
           auth_user_id?: string | null
+          gender?: 'male' | 'female'
+          availability?: string[]
           created_at?: string
           updated_at?: string
         }
@@ -183,6 +187,7 @@ export interface Database {
           jersey_number: number | null
           class_id: string | null
           is_paid: boolean
+          amount_paid: number
           payment_date: string | null
           payment_comment_ar: string | null
           payment_comment_he: string | null
@@ -199,6 +204,7 @@ export interface Database {
           jersey_number?: number | null
           class_id?: string | null
           is_paid?: boolean
+          amount_paid?: number
           payment_date?: string | null
           payment_comment_ar?: string | null
           payment_comment_he?: string | null
@@ -215,10 +221,12 @@ export interface Database {
           jersey_number?: number | null
           class_id?: string | null
           is_paid?: boolean
+          amount_paid?: number
           payment_date?: string | null
           payment_comment_ar?: string | null
           payment_comment_he?: string | null
           payment_comment_en?: string | null
+          gender?: 'male' | 'female'
           created_at?: string
           updated_at?: string
         }
@@ -247,6 +255,35 @@ export interface Database {
           status?: 'present' | 'absent' | 'late'
           marked_by?: string | null
           marked_at?: string
+        }
+      }
+      payment_logs: {
+        Row: {
+          id: string
+          trainee_id: string
+          amount: number
+          payment_date: string
+          season: string | null
+          note: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          trainee_id: string
+          amount: number
+          payment_date?: string
+          season?: string | null
+          note?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          trainee_id?: string
+          amount?: number
+          payment_date?: string
+          season?: string | null
+          note?: string | null
+          created_at?: string
         }
       }
     }

@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { locales, directions, type Locale } from '@/lib/i18n/config'
-import { getDictionary } from '@/lib/i18n/get-dictionary'
 import '../globals.css'
 
 const inter = Inter({
@@ -29,9 +28,10 @@ export default async function LocaleLayout({
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ locale: Locale }>
+  params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params
+  const { locale: rawLocale } = await params
+  const locale = rawLocale as Locale
 
   // Validate locale
   if (!locales.includes(locale)) {
@@ -39,8 +39,6 @@ export default async function LocaleLayout({
   }
 
   const direction = directions[locale]
-  const dictionary = await getDictionary(locale)
-
   return (
     <html lang={locale} dir={direction} className={inter.variable}>
       <body className="min-h-screen bg-background font-sans antialiased">

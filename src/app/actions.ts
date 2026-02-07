@@ -1,0 +1,419 @@
+'use server'
+
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+
+type AttendanceStatus = 'present' | 'absent' | 'late'
+
+// --- Authentication Actions ---
+
+// Optional: Use Twilio client if keys are present
+const getTwilioClient = () => {
+  const sid = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  if (sid && token) {
+    try {
+      const twilio = require('twilio')
+      return twilio(sid, token)
+    } catch (error) {
+      console.error('Twilio package issue:', error)
+      return null
+    }
+  }
+  return null
+}
+
+// Optional: Use Vonage client if keys are present
+const getVonageClient = () => {
+  const key = process.env.VONAGE_API_KEY
+  const secret = process.env.VONAGE_API_SECRET
+  if (key && secret) {
+    try {
+      const { Vonage } = require('@vonage/server-sdk')
+      const { Auth } = require('@vonage/auth')
+      
+      const credentials = new Auth({ apiKey: key, apiSecret: secret })
+      return new Vonage(credentials)
+    } catch (error) {
+      console.error('Vonage package issue:', error)
+      return null
+    }
+  }
+  return null
+}
+
+const crypto = require('crypto')
+
+export async function sendOTP(phone: string) {
+  // 1. Try Twilio
+  const twilio = getTwilioClient()
+  const twilioService = process.env.TWILIO_VERIFY_SERVICE_SID
+  if (twilio && twilioService) {
+      // ... existing Twilio logic ...
+      try {
+        await twilio.verify.v2.services(twilioService)
+          .verifications.create({ to: phone, channel: 'sms' })
+        return { success: true }
+      } catch (e: any) { return { success: false, error: e.message } }
+  }
+
+  // 2. Try Vonage SMS (Stateless verification)
+  const vonage = getVonageClient()
+  if (vonage) {
+    try {
+        // Generate random 4-digit code
+        const code = Math.floor(1000 + Math.random() * 9000).toString()
+        
+        // Send via SMS
+        const resp = await vonage.sms.send({
+            to: phone,
+            from: 'Vonage APIs', // Generic sender ID matches docs
+            text: `Your verification code is: ${code}`
+        })
+        console.log('Vonage Response:', JSON.stringify(resp, null, 2))
+        
+        // Check for API-level errors (e.g. non-whitelisted number)
+        if (resp.messages && resp.messages[0].status !== '0') {
+            const errorText = resp.messages[0]['error-text'] || `Vonage Error Code: ${resp.messages[0].status}`
+            console.error('Vonage Delivery Error:', errorText)
+            return { success: false, error: errorText }
+        }
+        
+        // Hash the code with secret (Stateless)
+        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret'
+        const hash = crypto.createHmac('sha256', secret)
+            .update(code)
+            .digest('hex')
+
+        // Return the hash to client so they can send it back with the code
+        return { success: true, hash }
+    } catch (e: any) {
+        console.error('Vonage Send Error:', e)
+        return { success: false, error: e.message || 'Vonage Failed' }
+    }
+  }
+
+  // Fallback to Mock
+  console.log('Using Mock OTP for:', phone)
+  return { success: true } 
+}
+
+// verifyOTP accepts 'otpHash' (if using stateless SMS) OR 'requestId' (legacy/verify API) 
+export async function verifyOTP(phone: string, otp: string, context?: string) {
+  const supabase = await createServerSupabaseClient()
+  const cleanPhone = phone.trim()
+  
+  // 1. Twilio Check
+  const twilio = getTwilioClient()
+  if (twilio && process.env.TWILIO_VERIFY_SERVICE_SID) {
+      try {
+        const check = await twilio.verify.v2.services(process.env.TWILIO_VERIFY_SERVICE_SID)
+          .verificationChecks.create({ to: cleanPhone, code: otp })
+        if (check.status !== 'approved') return { success: false, error: 'Invalid Code' }
+      } catch (e: any) { return { success: false, error: e.message } }
+  }
+  
+  // 2. Vonage / Stateless Check (Context is Hash)
+  else if (context && context.length > 10) { 
+      const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret'
+      const expectedHash = crypto.createHmac('sha256', secret)
+          .update(otp)
+          .digest('hex')
+      
+      if (context !== expectedHash) {
+          return { success: false, error: 'Invalid Code' }
+      }
+  }
+  
+  // 3. Mock
+  else {
+    if (otp !== '1111' && otp !== '1234') return { success: false, error: 'Invalid OTP' }
+  }
+
+  // ... rest of logic (Create User, Session) ...
+  // ...
+
+
+  // 1. Try to find existing trainer
+  let { data: trainer, error } = await (supabase as any)
+    .from('trainers')
+    .select('id, name_en')
+    .eq('phone', cleanPhone)
+    .single()
+
+  // 2. If not found, create new one (Sign Up) via SECURITY DEFINER function
+  let wasCreated = false
+  if (!trainer) {
+    const { data: newTrainer, error: createError } = await (supabase as any).rpc('create_trainer', {
+      p_phone: cleanPhone,
+    })
+
+    if (createError) {
+      console.error('Signup Error:', createError)
+      return { success: false, error: `Signup failed: ${createError.message}` }
+    }
+    trainer = newTrainer
+    wasCreated = true
+  }
+
+  // 3. Create Session
+  const cookieStore = await cookies()
+  cookieStore.set('admin_session', JSON.stringify({
+    id: trainer.id,
+    name: trainer.name_en || 'Trainer',
+    role: 'trainer'
+  }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+    path: '/',
+  })
+
+  // Return specific status so UI knows if we need to ask for name
+  return { success: true, isNew: wasCreated }
+}
+
+export async function updateProfile(name: string) {
+  const session = await getSession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const supabase = await createServerSupabaseClient()
+
+  // Use SECURITY DEFINER function to bypass RLS
+  const { data, error } = await (supabase as any).rpc('update_trainer_profile', {
+    trainer_id: session.id,
+    new_name_en: name,
+    new_name_ar: name,
+    new_name_he: name,
+  })
+
+  if (error) return { success: false, error: error.message }
+  if (data?.error) return { success: false, error: data.error }
+  
+  // Update session cookie with new name
+  const cookieStore = await cookies()
+  cookieStore.set('admin_session', JSON.stringify({
+    ...session,
+    name: name
+  }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+    path: '/',
+  })
+
+  revalidatePath('/', 'layout') // Clear everything
+  revalidatePath('/[locale]/more', 'page')
+  revalidatePath('/[locale]/trainers', 'page')
+
+  return { success: true }
+}
+
+export async function deleteTrainee(traineeId: string) {
+  const session = await getSession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await (supabase as any)
+    .from('trainees')
+    .delete()
+    .eq('id', traineeId)
+  
+  if (error) return { success: false, error: error.message }
+  
+  revalidatePath('/teams/[classId]')
+  return { success: true }
+}
+
+// Payments
+// Payments
+export async function updateTraineePayment(traineeId: string, amount: number, comment: string) {
+  const session = await getSession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const supabase = await createServerSupabaseClient()
+  
+  // 1. Insert into Payment Logs
+  const { error: logError } = await (supabase as any)
+    .from('payment_logs')
+    .insert({
+        trainee_id: traineeId,
+        amount: amount,
+        note: comment,
+        season: '2025-2026' // Default for now
+    })
+
+  if (logError) {
+     console.error('Log Payment Error:', logError)
+     return { success: false, error: logError.message }
+  }
+
+  // 2. Update Trainee Total (Atomic Increment) - "Materialized View" pattern
+  // We first fetch current total to allow incrementing (Supabase doesn't have simple 'inc' via JS client easily without RPC)
+  // Better approach: Create an RPC, but for now we'll do read-modify-write which is okay for low volume
+  
+  const { data: trainee } = await (supabase as any)
+    .from('trainees')
+    .select('amount_paid')
+    .eq('id', traineeId)
+    .single()
+    
+  const newTotal = (trainee?.amount_paid || 0) + amount
+
+  const { error: updateError } = await (supabase as any)
+    .from('trainees')
+    .update({
+      amount_paid: newTotal,
+      is_paid: newTotal >= 3000,
+      payment_date: new Date().toISOString() // Last payment date
+    })
+    .eq('id', traineeId)
+
+  if (updateError) {
+     console.error('Update Payment Error:', updateError)
+     return { success: false, error: updateError.message }
+  }
+
+  revalidatePath('/[locale]/payments', 'page')
+  revalidatePath('/teams/[classId]', 'page') // Refresh list
+  return { success: true }
+}
+
+export async function toggleTraineePayment(traineeId: string, isPaid: boolean) {
+  const session = await getSession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await (supabase as any)
+    .from('trainees')
+    .update({ is_paid: isPaid })
+    .eq('id', traineeId)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/[locale]/teams', 'layout')
+  return { success: true }
+}
+
+export async function logout() {
+  const cookieStore = await cookies()
+  cookieStore.delete('admin_session')
+  return { success: true }
+}
+
+export async function getSession() {
+  const cookieStore = await cookies()
+  const session = cookieStore.get('admin_session')
+  if (!session) return null
+  try {
+    return JSON.parse(session.value)
+  } catch {
+    return null
+  }
+}
+
+// --- Attendance Actions ---
+
+export async function saveAttendance(
+  traineeId: string, 
+  eventId: string, 
+  status: AttendanceStatus
+) {
+  const supabase = await createServerSupabaseClient()
+  
+  const { error } = await (supabase as any)
+    .from('attendance')
+    .upsert(
+      { trainee_id: traineeId, event_id: eventId, status },
+      { onConflict: 'trainee_id,event_id' }
+    )
+
+  if (error) {
+    console.error('Error saving attendance:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function bulkSaveAttendance(
+  records: { trainee_id: string; event_id: string; status: AttendanceStatus }[]
+) {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await (supabase as any)
+    .from('attendance')
+    .upsert(records, { onConflict: 'trainee_id,event_id' })
+
+  if (error) {
+    console.error('Error bulk saving attendance:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function addTrainee({ 
+  classId, 
+  name, 
+  phone, 
+  jerseyNumber,
+  gender
+}: { 
+  classId: string
+  name: string
+  phone?: string
+  jerseyNumber?: number | null
+  gender?: 'male' | 'female'
+}) {
+  const supabase = await createServerSupabaseClient()
+  
+  // Verify session (optional but recommended)
+  const session = await getSession()
+  if (!session) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  const { data, error } = await (supabase as any)
+    .from('trainees')
+    .insert([
+      { 
+        class_id: classId,
+        name_en: name, // Defaulting everything to name for now
+        name_ar: name,
+        name_he: name,
+        phone: phone || null,
+        jersey_number: jerseyNumber,
+        is_paid: false,
+        gender: gender || 'male'
+      }
+    ])
+    .select()
+
+  if (error) {
+    console.error('Error adding trainee:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, trainee: data[0] }
+}
+
+
+export async function getTraineeAttendanceStats(traineeId: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  const { data, error } = await (supabase as any)
+    .from('attendance')
+    .select('status')
+    .eq('trainee_id', traineeId)
+  
+  if (error) return { success: false, error: error.message }
+  
+  const total = data.length
+  const present = data.filter((r: any) => r.status === 'present').length
+  const late = data.filter((r: any) => r.status === 'late').length
+  const absent = data.filter((r: any) => r.status === 'absent').length
+  
+  return { success: true, stats: { total, present, late, absent } }
+}

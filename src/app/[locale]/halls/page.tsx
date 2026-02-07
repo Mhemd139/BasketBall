@@ -2,7 +2,16 @@ import { getDictionary } from '@/lib/i18n/get-dictionary'
 import type { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Sidebar } from '@/components/layout/Sidebar'
+import { Card, CardContent } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getLocalizedField } from '@/lib/utils'
+import type { Database } from '@/lib/supabase/types'
+import Link from 'next/link'
+import { Building2 } from 'lucide-react'
+
+type Hall = Database['public']['Tables']['halls']['Row']
 
 export default async function HallsPage({
   params,
@@ -11,34 +20,94 @@ export default async function HallsPage({
 }) {
   const { locale } = await params
   const dict = await getDictionary(locale)
+  const supabase = await createServerSupabaseClient()
+
+  const { data: halls } = await supabase
+    .from('halls')
+    .select('*')
+    .order('created_at', { ascending: true })
 
   return (
-    <>
-      <Header title={dict.halls.title} />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
+      <Sidebar locale={locale} />
+      
+      <div className="flex-1 flex flex-col md:ml-[240px]">
+        <Header locale={locale} />
 
-      <main className="min-h-[calc(100vh-56px-64px)] p-4 pb-20">
-        <div className="mx-auto max-w-4xl">
-          <Card>
-            <CardHeader>
-              <CardTitle>🏟️ {dict.halls.title}</CardTitle>
-              <CardDescription>
-                {locale === 'ar' && 'إدارة قاعات كرة السلة الثلاثة'}
-                {locale === 'he' && 'נהל את שלושת אולמות הכדורסל'}
-                {locale === 'en' && 'Manage your 3 basketball halls'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {locale === 'ar' && 'قريباً - سيتم إضافة صفحة إدارة القاعات'}
-                {locale === 'he' && 'בקרוב - דף ניהול אולמות יתווסף'}
-                {locale === 'en' && 'Coming soon - Hall management page will be added'}
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <section className="py-4 text-center md:text-start">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-white" strokeWidth={2.5} />
+                </div>
+                <h1 className="heading-lg">
+                  {locale === 'ar' ? 'القاعات' : locale === 'he' ? 'אולמות' : 'Halls'}
+                </h1>
+              </div>
+              <p className="text-gray-500">
+                {locale === 'ar' ? 'استعرض قاعات كرة السلة' : locale === 'he' ? 'צפה באולמות כדורסל' : 'Browse basketball halls'}
               </p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            </section>
 
-      <BottomNav locale={locale} dict={dict} />
-    </>
+            {/* Halls List */}
+            <section>
+              {halls && halls.length > 0 ? (
+                <div className="space-y-3">
+                  {halls.map((hall: Hall, index: number) => (
+                    <Link key={hall.id} href={`/${locale}/halls/${hall.id}`}>
+                      <Card 
+                        interactive 
+                        className={`animate-fade-in-up stagger-${Math.min(index + 1, 4)}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-6 h-6 text-orange-600" strokeWidth={2.5} />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-gray-900 mb-1">
+                              {getLocalizedField(hall, 'name', locale)}
+                            </h3>
+                            <p className="text-sm text-gray-500 truncate">
+                              {getLocalizedField(hall, 'description', locale) || (
+                                locale === 'ar' ? 'قاعة كرة السلة' :
+                                locale === 'he' ? 'אולם כדורסל' :
+                                'Basketball hall'
+                              )}
+                            </p>
+                          </div>
+                          
+                          <div className="text-gray-300 text-lg flex-shrink-0">
+                            {locale === 'ar' || locale === 'he' ? '←' : '→'}
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <Card className="animate-fade-in-up">
+                  <CardContent className="py-16 text-center">
+                    <div className="flex justify-center mb-4">
+                      <Building2 className="w-16 h-16 text-gray-300" strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {locale === 'ar' ? 'لا توجد قاعات بعد' : locale === 'he' ? 'אין אולמות עדיין' : 'No halls yet'}
+                    </h3>
+                    <p className="text-gray-500 text-sm">
+                      {locale === 'ar' ? 'سيتم إضافة القاعات قريباً' : locale === 'he' ? 'אולמות יתווספו בקרוב' : 'Halls will be added soon'}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </section>
+          </div>
+        </main>
+
+        <BottomNav locale={locale} />
+      </div>
+    </div>
   )
 }

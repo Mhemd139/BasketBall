@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -12,6 +11,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Redirect root to /ar (default locale)
-  redirect('/ar')
+  return children
 }
