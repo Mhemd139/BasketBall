@@ -73,7 +73,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await getEventAttendance(event.id);
+            const res = await getEventAttendance(event.id, targetClassId);
             if (res.success && res.trainees) {
                 setTrainees(res.trainees);
                 
@@ -260,7 +260,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                             </h2>
                             <p className="text-sm text-gray-500 font-normal mt-1 flex items-center gap-2">
                                 <span className="font-bold text-indigo-600">
-                                    {getTraineeName(event)}
+                                    {locale === 'ar' ? event?.title_ar : locale === 'he' ? event?.title_he : event?.title_en}
                                 </span>
                                 <span>•</span>
                                 <span className="text-xs">{event?.event_date}</span>

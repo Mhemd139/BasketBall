@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus, Users, UserPlus, MapPin } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { CreateTeamModal } from '@/components/teams/CreateTeamModal'
+import { CreatePlayerModal } from '@/components/players/CreatePlayerModal'
 import Link from 'next/link'
 
 interface QuickActionsProps {
@@ -13,6 +14,7 @@ interface QuickActionsProps {
 
 export function QuickActions({ locale, canManage }: QuickActionsProps) {
     const [isTeamModalOpen, setIsTeamModalOpen] = useState(false)
+    const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false)
 
     if (!canManage) return null
 
@@ -37,7 +39,10 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
                     </Card>
                 </button>
 
-                <Link href={`/${locale}/teams`} className="group relative overflow-hidden">
+                <button 
+                    onClick={() => setIsPlayerModalOpen(true)}
+                    className="group relative overflow-hidden"
+                >
                     <Card interactive className="p-4 border-dashed border-2 border-emerald-100 bg-emerald-50/30 hover:bg-slate-50 hover:border-emerald-300 transition-all flex flex-col items-center justify-center gap-3 h-full">
                         <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
                             <UserPlus className="w-6 h-6" />
@@ -46,12 +51,17 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
                             {locale === 'ar' ? 'إضافة لاعب' : locale === 'he' ? 'הוסף שחקן' : 'Add Player'}
                         </span>
                     </Card>
-                </Link>
+                </button>
             </div>
 
             <CreateTeamModal 
                 isOpen={isTeamModalOpen}
                 onClose={() => setIsTeamModalOpen(false)}
+                locale={locale}
+            />
+            <CreatePlayerModal 
+                isOpen={isPlayerModalOpen}
+                onClose={() => setIsPlayerModalOpen(false)}
                 locale={locale}
             />
         </section>

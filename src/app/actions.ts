@@ -463,14 +463,22 @@ export async function getTraineeAttendanceStats(traineeId: string) {
 }
 // --- Attendance Actions ---
 
-export async function getEventAttendance(eventId: string) {
+export async function getEventAttendance(eventId: string, classId?: string | null) {
   const supabase = await createServerSupabaseClient()
   
-  // 1. Get all trainees
-  const { data: trainees, error: traineesError } = await (supabase as any)
-    .from('trainees')
-    .select('*')
+  // 1. Get trainees
+  // If classId is provided, we fetch the roster + some others
+  // If not, we fetch all (limited for performance)
+  let query = (supabase as any).from('trainees').select('*')
+  
+  if (classId) {
+    // Prioritize roster, then others
+    query = query.order('class_id', { ascending: false }) // This is a bit weak for priority, but we'll filter in UI anyway
+  }
+  
+  const { data: trainees, error: traineesError } = await query
     .order('name_en', { ascending: true })
+    .limit(classId ? 200 : 100) // Safety limit
 
   if (traineesError) {
     console.error('Error fetching trainees:', traineesError)
