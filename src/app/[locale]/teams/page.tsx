@@ -29,8 +29,8 @@ export default async function TeamsPage({
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-4xl mx-auto w-full">
             {/* Header */}
             <section className="py-4 text-center md:text-start">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-2">

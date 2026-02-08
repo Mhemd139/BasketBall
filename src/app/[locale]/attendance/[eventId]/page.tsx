@@ -26,12 +26,14 @@ export default async function AttendancePage({
   const { locale, eventId } = await params
   const supabase = await createServerSupabaseClient()
 
-  // Fetch event with hall
-  const { data: event, error: eventError } = await (supabase as any)
-    .from('events')
-    .select('*, halls(*)')
-    .eq('id', eventId)
-    .single()
+  // Step 1: event + attendance in parallel
+  const [
+    { data: event, error: eventError },
+    { data: attendanceRecords }
+  ] = await Promise.all([
+    (supabase as any).from('events').select('*, halls(*)').eq('id', eventId).single(),
+    (supabase as any).from('attendance').select('trainee_id, status').eq('event_id', eventId),
+  ])
 
   if (eventError || !event) {
     notFound()
@@ -39,14 +41,14 @@ export default async function AttendancePage({
 
   const eventWithHall = event as unknown as EventWithHall
 
-  // Fetch trainees for this event's class
-  // Find the class associated with the trainer of this event
+  // Step 2: class from trainer
   const { data: classData } = await (supabase as any)
     .from('classes')
     .select('id')
     .eq('trainer_id', event.trainer_id)
     .single()
 
+  // Step 3: trainees
   let trainees: Trainee[] = []
   if (classData) {
     const { data } = await (supabase as any)
@@ -56,12 +58,6 @@ export default async function AttendancePage({
       .order('jersey_number', { ascending: true })
     trainees = data || []
   }
-
-  // Fetch existing attendance for this event
-  const { data: attendanceRecords } = await (supabase as any)
-    .from('attendance')
-    .select('trainee_id, status')
-    .eq('event_id', eventId)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>

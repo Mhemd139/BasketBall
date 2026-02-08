@@ -34,8 +34,8 @@ export default async function HallsPage({
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-4xl mx-auto w-full">
             {/* Header */}
             <section className="py-4 text-center md:text-start">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
@@ -59,17 +59,23 @@ export default async function HallsPage({
                     <Link key={hall.id} href={`/${locale}/halls/${hall.id}`}>
                       <Card 
                         interactive 
-                        className={`animate-fade-in-up stagger-${Math.min(index + 1, 4)}`}
+                        className={`animate-fade-in-up stagger-${Math.min(index + 1, 4)} active:scale-[0.98] transition-transform duration-100`}
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center flex-shrink-0">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center flex-shrink-0 relative">
                             <Building2 className="w-6 h-6 text-orange-600" strokeWidth={2.5} />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-gray-900 mb-1">
-                              {getLocalizedField(hall, 'name', locale)}
-                            </h3>
+                            <div className="flex justify-between items-start">
+                              <h3 className="text-base font-semibold text-gray-900 mb-1">
+                                {getLocalizedField(hall, 'name', locale)}
+                              </h3>
+                            </div>
+                            <p className="text-xs font-medium text-green-600 bg-green-50 inline-block px-2 py-0.5 rounded-md mb-1">
+                                {locale === 'ar' ? 'مفتوح الآن' : locale === 'he' ? 'פתוח עכשיו' : 'Open Now'}
+                            </p>
                             <p className="text-sm text-gray-500 truncate">
                               {getLocalizedField(hall, 'description', locale) || (
                                 locale === 'ar' ? 'قاعة كرة السلة' :

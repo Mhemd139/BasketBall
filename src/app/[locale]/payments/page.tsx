@@ -8,8 +8,6 @@ import { Card } from '@/components/ui/Card'
 import { Users, ChevronRight, Trophy } from 'lucide-react'
 import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
-
 export default async function PaymentsPage({
   params,
 }: {

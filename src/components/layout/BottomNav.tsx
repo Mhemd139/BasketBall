@@ -16,6 +16,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '', icon: Home, label: 'Home', labelAr: 'الرئيسية', labelHe: 'בית' },
   { href: '/schedule', icon: Calendar, label: 'Schedule', labelAr: 'الجدول', labelHe: 'לוח זמנים' },
+  { href: '/halls', icon: Building2, label: 'Halls', labelAr: 'القاعات', labelHe: 'אולמות' },
   { href: '/teams', icon: Users, label: 'Teams', labelAr: 'الفرق', labelHe: 'קבוצות' },
   { href: '/more', icon: Settings, label: 'More', labelAr: 'المزيد', labelHe: 'עוד' },
 ];
@@ -43,7 +44,7 @@ export function BottomNav({ locale }: BottomNavProps) {
   
   return (
     <nav className="bottom-nav md:hidden" suppressHydrationWarning>
-      <div className="flex items-center justify-around w-full max-w-[400px]">
+      <div className="flex items-center justify-evenly w-full max-w-[400px]">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const fullHref = `/${locale}${item.href}`;
@@ -53,7 +54,7 @@ export function BottomNav({ locale }: BottomNavProps) {
             <Link
               key={item.href}
               href={fullHref}
-              className={cn('nav-item', active && 'active')}
+              className={cn('nav-item min-h-[48px] active:scale-95 transition-transform duration-100', active && 'active')}
             >
               <div className="nav-icon">
                 <Icon className="w-5 h-5" strokeWidth={2.5} />

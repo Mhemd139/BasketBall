@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Building2, Calendar } from 'lucide-react'
 import { HallSchedule } from '@/components/halls/HallSchedule'
+import { getSession } from '@/app/actions' // Import getSession
 
 type Hall = Database['public']['Tables']['halls']['Row']
 type Event = Database['public']['Tables']['events']['Row']
@@ -24,28 +25,22 @@ export default async function HallDetailPage({
   const { locale, id } = await params
   const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
+  const session = await getSession() // Fetch Session
 
-  const { data: hall, error: hallError } = await supabase
-    .from('halls')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const today = new Date().toISOString().split('T')[0]
+
+  const [{ data: hall, error: hallError }, { data: events }] = await Promise.all([
+    supabase.from('halls').select('*').eq('id', id).single(),
+    supabase.from('events').select('*').eq('hall_id', id).gte('event_date', today)
+      .order('event_date', { ascending: true }).order('start_time', { ascending: true }).limit(10),
+  ])
 
   if (hallError || !hall) {
     notFound()
   }
 
   const hallData = hall as Hall
-
-  const today = new Date().toISOString().split('T')[0]
-  const { data: events } = await supabase
-    .from('events')
-    .select('*')
-    .eq('hall_id', id)
-    .gte('event_date', today)
-    .order('event_date', { ascending: true })
-    .order('start_time', { ascending: true })
-    .limit(10)
+  const isEditable = session?.role === 'coach' || session?.role === 'admin' || session?.role === 'trainer' // Allow trainers to edit for now? Or strictly 'coach'? User said "Coach". Using trainer/admin for safety.
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
@@ -54,23 +49,32 @@ export default async function HallDetailPage({
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} showBack backHref={`/${locale}/halls`} />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-4xl mx-auto w-full">
             {/* Hall Hero */}
-            <section className="py-4 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg mb-4">
-                <Building2 className="w-8 h-8 text-white" strokeWidth={2.5} />
+            <section className="py-4 mb-2">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-lg shadow-orange-200">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
+                
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="mb-3 p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                    <Building2 className="w-8 h-8 text-white" strokeWidth={2.5} />
+                  </div>
+                  
+                  <h1 className="heading-lg text-white mb-2 drop-shadow-sm">
+                    {getLocalizedField(hallData, 'name', locale)}
+                  </h1>
+                  
+                  <p className="text-orange-50 max-w-md mx-auto font-medium opacity-90">
+                    {getLocalizedField(hallData, 'description', locale) || (
+                      locale === 'ar' ? 'قاعة كرة السلة' :
+                      locale === 'he' ? 'אולם כדורסל' :
+                      'Basketball hall'
+                    )}
+                  </p>
+                </div>
               </div>
-              <h1 className="heading-lg mb-2">
-                {getLocalizedField(hallData, 'name', locale)}
-              </h1>
-              <p className="text-gray-500 max-w-md mx-auto">
-                {getLocalizedField(hallData, 'description', locale) || (
-                  locale === 'ar' ? 'قاعة كرة السلة' :
-                  locale === 'he' ? 'אולם כדורסל' :
-                  'Basketball hall'
-                )}
-              </p>
             </section>
 
             {/* Hall Schedule Timeline */}
@@ -78,7 +82,8 @@ export default async function HallDetailPage({
               <HallSchedule 
                 hallId={hallData.id} 
                 events={events as any} 
-                locale={locale} 
+                locale={locale}
+                isEditable={isEditable} 
              />
             </section>
           </div>

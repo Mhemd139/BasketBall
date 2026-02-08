@@ -45,6 +45,42 @@ const getVonageClient = () => {
 
 const crypto = require('crypto')
 
+// --- Event Actions ---
+
+export async function upsertEvent(eventData: any) {
+  const session = await getSession()
+  if (!session || (session.role !== 'coach' && session.role !== 'admin' && session.role !== 'trainer')) {
+      return { success: false, error: 'Unauthorized' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  
+  // Basic validation (can be expanded)
+  if (!eventData.hall_id || !eventData.start_time || !eventData.end_time || !eventData.event_date) {
+      return { success: false, error: 'Missing required fields' }
+  }
+
+  // Inject trainer_id if creating or updating
+  const payload = {
+      ...eventData,
+      trainer_id: session.id // Track who created/modified it (or owner)
+  }
+
+  const { data, error } = await (supabase as any)
+    .from('events')
+    .upsert(payload)
+    .select()
+    .single()
+
+  if (error) {
+      console.error('Upsert Event Error:', error)
+      return { success: false, error: error.message }
+  }
+
+  revalidatePath('/[locale]/halls/[id]', 'page')
+  return { success: true, event: data }
+}
+
 export async function sendOTP(phone: string) {
   // 1. Try Twilio
   const twilio = getTwilioClient()

@@ -22,8 +22,8 @@ export default async function ReportsPage({
           backHref={`/${locale}/more`}
         />
 
-        <main className="flex-1 pt-24 px-5">
-           <div className="max-w-4xl mx-auto grid gap-6">
+        <main className="flex-1 pt-24 px-3 md:px-5 w-full">
+           <div className="max-w-4xl mx-auto grid gap-6 w-full">
              {/* Stats Overview */}
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="p-6">

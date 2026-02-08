@@ -38,6 +38,7 @@ export function Header({ locale, title, showBack, backHref }: HeaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -59,8 +60,12 @@ export function Header({ locale, title, showBack, backHref }: HeaderProps) {
       return;
     }
 
-    setLoading(true);
-    const supabase = createClient();
+    // Debounce: clear previous timer, set new one
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      const supabase = createClient();
 
     const [traineeRes, trainerRes] = await Promise.all([
       (supabase as any)
@@ -103,6 +108,7 @@ export function Header({ locale, title, showBack, backHref }: HeaderProps) {
 
     setResults(mapped);
     setLoading(false);
+    }, 300);
   }, [locale, nameField]);
 
   // Close on Escape or click outside

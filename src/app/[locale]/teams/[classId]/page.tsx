@@ -31,26 +31,19 @@ export default async function TeamDetailPage({
   const supabase = await createServerSupabaseClient()
   const session = await getSession()
 
-  // Fetch class details with trainer and hall
-  const { data: team, error: teamError } = await (supabase as any)
-    .from('classes')
-    .select('*, trainers(*), halls(*)')
-    .eq('id', classId)
-    .single()
+  const [
+    { data: team, error: teamError },
+    { data: roster }
+  ] = await Promise.all([
+    (supabase as any).from('classes').select('*, trainers(*), halls(*)').eq('id', classId).single(),
+    (supabase as any).from('trainees').select('*').eq('class_id', classId).order('jersey_number', { ascending: true }),
+  ])
 
   if (teamError || !team) {
     notFound()
   }
 
   const teamDetails = team as unknown as ClassWithDetails
-
-  // Fetch trainees roster
-  const { data: roster } = await (supabase as any)
-    .from('trainees')
-    .select('*')
-    .eq('class_id', classId)
-    .order('jersey_number', { ascending: true })
-
   const trainees = (roster || []) as Trainee[]
 
   return (
@@ -65,8 +58,8 @@ export default async function TeamDetailPage({
           backHref={`/${locale}/teams`}
         />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-4xl mx-auto w-full">
             {/* Team Hero */}
             <section className="py-4">
               <div className="flex items-center gap-4 mb-6">

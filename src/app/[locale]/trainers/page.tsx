@@ -10,8 +10,6 @@ import { User, Phone, Trophy, Users } from 'lucide-react'
 
 type Trainer = Database['public']['Tables']['trainers']['Row']
 
-export const dynamic = 'force-dynamic'
-
 export default async function TrainersPage({
   params,
 }: {
@@ -26,8 +24,6 @@ export default async function TrainersPage({
     .select('*')
     .order('name_en')
 
-  console.log('DEBUG TRAINERS FROM DB:', trainers)
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
       <Sidebar locale={locale} />
@@ -39,8 +35,8 @@ export default async function TrainersPage({
           showBack={false}
         />
 
-        <main className="flex-1 pt-48 pb-32 md:pb-10 px-5">
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             {(trainers || []).map((trainer: Trainer) => (
               <Card key={trainer.id} className="flex items-center gap-4">
                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md text-white">

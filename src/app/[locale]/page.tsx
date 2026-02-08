@@ -35,17 +35,26 @@ export default async function HomePage({
 
   const today = new Date().toISOString().split('T')[0]
 
-  const { data: events } = await supabase
-    .from('events')
-    .select('*, halls(*)')
-    .eq('event_date', today)
-    .order('start_time', { ascending: true })
+  // ⚡ Performance Check: Start Query Timer
+  const dbStart = Date.now()
+
+  const [
+    { data: events },
+    { count: hallsCount },
+    { count: teamsCount },
+    { count: traineesCount }
+  ] = await Promise.all([
+    supabase.from('events').select('*, halls(*)').eq('event_date', today).order('start_time', { ascending: true }),
+    supabase.from('halls').select('*', { count: 'exact', head: true }),
+    supabase.from('teams').select('*', { count: 'exact', head: true }),
+    supabase.from('trainees').select('*', { count: 'exact', head: true }),
+  ])
+
+  // ⚡ Performance Check: Log Duration
+  const dbDuration = Date.now() - dbStart
+  console.log(`\n⚡ [Home Page] Database Fetch Time: ${dbDuration}ms \n`)
 
   const todayEvents = (events || []) as unknown as EventWithHall[]
-
-  const { count: hallsCount } = await supabase.from('halls').select('*', { count: 'exact', head: true })
-  const { count: teamsCount } = await supabase.from('teams').select('*', { count: 'exact', head: true })
-  const { count: traineesCount } = await supabase.from('trainees').select('*', { count: 'exact', head: true })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
@@ -54,46 +63,115 @@ export default async function HomePage({
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 pt-18 pb-20 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-4xl md:max-w-7xl mx-auto w-full space-y-4 md:space-y-8">
             {/* Stats */}
-            <section className="py-4">
-              <div className="grid grid-cols-3 md:flex md:justify-center md:gap-8 gap-3">
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #fff7ed, #fed7aa)', color: '#ea580c' }}>
-                    <Building2 className="w-6 h-6" strokeWidth={2.5} />
+            <section>
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-2 md:gap-6 pb-2 -mx-3 px-3 md:mx-0 md:px-0 md:grid md:grid-cols-3 scrollbar-hide">
+                <div className="stat-card min-w-[110px] md:min-w-0 p-3 md:p-6 snap-center shrink-0 flex-1 transition-all hover:scale-105">
+                  <div className="stat-icon w-8 h-8 md:w-12 md:h-12 text-lg md:text-2xl mb-1 md:mb-2" style={{ background: 'linear-gradient(135deg, #fff7ed, #fed7aa)', color: '#ea580c' }}>
+                    <Building2 className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                   </div>
-                  <div className="stat-value">{hallsCount || 0}</div>
-                  <div className="stat-label">{locale === 'ar' ? 'قاعات' : locale === 'he' ? 'אולמות' : 'Halls'}</div>
+                  <div className="stat-value text-xl md:text-3xl font-bold">{hallsCount || 0}</div>
+                  <div className="stat-label text-xs md:text-sm font-medium">{locale === 'ar' ? 'قاعات' : locale === 'he' ? 'אולמות' : 'Halls'}</div>
                 </div>
                 
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f5f3ff, #ddd6fe)', color: '#7c3aed' }}>
-                    <Users className="w-6 h-6" strokeWidth={2.5} />
+                <div className="stat-card min-w-[110px] md:min-w-0 p-3 md:p-6 snap-center shrink-0 flex-1 transition-all hover:scale-105">
+                  <div className="stat-icon w-8 h-8 md:w-12 md:h-12 text-lg md:text-2xl mb-1 md:mb-2" style={{ background: 'linear-gradient(135deg, #f5f3ff, #ddd6fe)', color: '#7c3aed' }}>
+                    <Users className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                   </div>
-                  <div className="stat-value">{teamsCount || 0}</div>
-                  <div className="stat-label">{locale === 'ar' ? 'فرق' : locale === 'he' ? 'קבוצות' : 'Teams'}</div>
+                  <div className="stat-value text-xl md:text-3xl font-bold">{teamsCount || 0}</div>
+                  <div className="stat-label text-xs md:text-sm font-medium">{locale === 'ar' ? 'فرق' : locale === 'he' ? 'קבוצות' : 'Teams'}</div>
                 </div>
                 
-                <div className="stat-card">
-                  <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ecfdf5, #bbf7d0)', color: '#16a34a' }}>
-                    <User className="w-6 h-6" strokeWidth={2.5} />
+                <div className="stat-card min-w-[110px] md:min-w-0 p-3 md:p-6 snap-center shrink-0 flex-1 transition-all hover:scale-105">
+                  <div className="stat-icon w-8 h-8 md:w-12 md:h-12 text-lg md:text-2xl mb-1 md:mb-2" style={{ background: 'linear-gradient(135deg, #ecfdf5, #bbf7d0)', color: '#16a34a' }}>
+                    <User className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                   </div>
-                  <div className="stat-value">{traineesCount || 0}</div>
-                  <div className="stat-label">{locale === 'ar' ? 'لاعبين' : locale === 'he' ? 'שחקנים' : 'Players'}</div>
+                  <div className="stat-value text-xl md:text-3xl font-bold">{traineesCount || 0}</div>
+                  <div className="stat-label text-xs md:text-sm font-medium">{locale === 'ar' ? 'لاعبين' : locale === 'he' ? 'שחקנים' : 'Players'}</div>
                 </div>
               </div>
             </section>
 
+            {/* Quick Actions - Responsive Dual State */}
+            <section>
+               <div className="grid grid-cols-4 md:grid-cols-4 gap-2 md:gap-6">
+                <Link href={`/${locale}/halls`}>
+                  <Card interactive className="h-full p-2 md:p-6 active:scale-[0.95] transition-transform flex flex-col items-center justify-center text-center gap-1 md:gap-3 min-h-[80px] md:min-h-[160px]">
+                     <div className="w-8 h-8 md:w-16 md:h-16 rounded-lg md:rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center transition-all">
+                        <Building2 className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
+                     </div>
+                     <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                           {locale === 'ar' ? 'القاعات' : locale === 'he' ? 'אולמות' : 'Halls'}
+                        </span>
+                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
+                           {locale === 'ar' ? 'عرض الجداول' : locale === 'he' ? 'צפה בלוחות' : 'View schedules'}
+                        </span>
+                     </div>
+                  </Card>
+                </Link>
+
+                <Link href={`/${locale}/teams`}>
+                  <Card interactive className="h-full p-2 md:p-6 active:scale-[0.95] transition-transform flex flex-col items-center justify-center text-center gap-1 md:gap-3 min-h-[80px] md:min-h-[160px]">
+                     <div className="w-8 h-8 md:w-16 md:h-16 rounded-lg md:rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center transition-all">
+                        <Users className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
+                     </div>
+                     <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                           {locale === 'ar' ? 'الفرق' : locale === 'he' ? 'קבוצות' : 'Teams'}
+                        </span>
+                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
+                           {locale === 'ar' ? 'إدارة الفرق' : locale === 'he' ? 'ניהול קבוצות' : 'Manage teams'}
+                        </span>
+                     </div>
+                  </Card>
+                </Link>
+
+                <Link href={`/${locale}/trainers`}>
+                  <Card interactive className="h-full p-2 md:p-6 active:scale-[0.95] transition-transform flex flex-col items-center justify-center text-center gap-1 md:gap-3 min-h-[80px] md:min-h-[160px]">
+                     <div className="w-8 h-8 md:w-16 md:h-16 rounded-lg md:rounded-2xl bg-green-100 text-green-600 flex items-center justify-center transition-all">
+                        <Dumbbell className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
+                     </div>
+                     <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                           {locale === 'ar' ? 'المدربين' : locale === 'he' ? 'מאמנים' : 'Trainers'}
+                        </span>
+                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
+                           {locale === 'ar' ? 'قائمة المدربين' : locale === 'he' ? 'רשימת מאמנים' : 'Trainer list'}
+                        </span>
+                     </div>
+                  </Card>
+                </Link>
+
+                <Link href={`/${locale}/reports`}>
+                  <Card interactive className="h-full p-2 md:p-6 active:scale-[0.95] transition-transform flex flex-col items-center justify-center text-center gap-1 md:gap-3 min-h-[80px] md:min-h-[160px]">
+                     <div className="w-8 h-8 md:w-16 md:h-16 rounded-lg md:rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center transition-all">
+                        <BarChart3 className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
+                     </div>
+                     <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                           {locale === 'ar' ? 'التقارير' : locale === 'he' ? 'דוחות' : 'Reports'}
+                        </span>
+                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
+                           {locale === 'ar' ? 'تحليلات' : locale === 'he' ? 'אנליטיקה' : 'Analytics'}
+                        </span>
+                     </div>
+                  </Card>
+                </Link>
+              </div>
+            </section>
+
             {/* Today's Schedule */}
-            <section className="pb-8">
-              <div className="section-header">
-                <h2 className="section-title">
-                  <Calendar className="w-5 h-5" />
+            <section className="pb-4">
+              <div className="section-header mb-2">
+                <h2 className="section-title text-base">
+                  <Calendar className="w-4 h-4" />
                   {locale === 'ar' ? 'جدول اليوم' : locale === 'he' ? 'לוח זמנים להיום' : "Today's Schedule"}
                 </h2>
-                <Badge className="badge-primary">
-                  {new Date().toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })}
+                <Badge className="badge-primary text-[10px] px-2 py-0.5">
+                  {new Date().toLocaleDateString(locale, { weekday: 'short', day: 'numeric' })}
                 </Badge>
               </div>
 
@@ -102,38 +180,39 @@ export default async function HomePage({
                   {todayEvents.map((event, index) => (
                     <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
                       <Card interactive className={`animate-fade-in-up stagger-${index + 1}`}>
-                        <div className="flex items-center gap-4">
-                          <div className="text-center min-w-[56px]">
-                            <div className="text-xl font-bold text-indigo-600">
+                        <div className="flex items-center gap-3">
+                          <div className="text-center min-w-[3.5rem] shrink-0">
+                            <div className="text-lg font-bold text-indigo-600 leading-none">
                               {formatTime(event.start_time).split(':')[0]}
                             </div>
-                            <div className="text-xs text-gray-400 uppercase font-medium">
+                            <div className="text-[10px] text-gray-400 uppercase font-medium mt-0.5">
                               {formatTime(event.start_time).includes('PM') ? 'PM' : 'AM'}
                             </div>
                           </div>
                           
-                          <div className={`w-1 h-12 rounded-full ${event.type === 'game' ? 'bg-orange-400' : 'bg-green-400'}`} />
+                          <div className={`w-1 h-10 rounded-full shrink-0 ${event.type === 'game' ? 'bg-orange-400' : 'bg-green-400'}`} />
                           
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 pr-1">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className={`text-xs font-semibold ${event.type === 'game' ? 'text-orange-500' : 'text-green-500'}`}>
-                                ● {event.type === 'game' 
-                                  ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'Game')
-                                  : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'Training')
+                              <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md' : 'text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md'}`}>
+                                {event.type === 'game' 
+                                  ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'GAME')
+                                  : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'TRAINING')
                                 }
                               </span>
                             </div>
-                            <h3 className="font-semibold text-gray-900 truncate">
+                            <h3 className="font-bold text-gray-900 text-sm truncate leading-tight mb-1">
                               {getLocalizedField(event, 'title', locale)}
                             </h3>
                             {event.halls && (
-                              <p className="text-sm text-gray-500">
-                                {getLocalizedField(event.halls, 'name', locale)}
+                              <p className="text-xs text-gray-500 flex items-center gap-1 truncate">
+                                <Building2 className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{getLocalizedField(event.halls, 'name', locale)}</span>
                               </p>
                             )}
                           </div>
                           
-                          <div className="text-gray-300 text-lg">
+                          <div className="text-gray-300 text-lg shrink-0">
                             {locale === 'ar' || locale === 'he' ? '←' : '→'}
                           </div>
                         </div>
@@ -156,57 +235,6 @@ export default async function HomePage({
                   </div>
                 </Card>
               )}
-            </section>
-
-            {/* Quick Actions */}
-            <section>
-              <div className="section-header">
-                <h2 className="section-title">
-                  {locale === 'ar' ? 'إجراءات سريعة' : locale === 'he' ? 'פעולות מהירות' : 'Quick Actions'}
-                </h2>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Link href={`/${locale}/halls`}>
-                  <Card variant="feature" color="orange" interactive className="animate-fade-in-up stagger-1">
-                    <div className="icon-wrapper">
-                      <Building2 className="w-8 h-8" strokeWidth={2.5} />
-                    </div>
-                    <h3>{locale === 'ar' ? 'القاعات' : locale === 'he' ? 'אולמות' : 'Halls'}</h3>
-                    <p>{locale === 'ar' ? 'عرض الجداول' : locale === 'he' ? 'צפה בלוחות' : 'View schedules'}</p>
-                  </Card>
-                </Link>
-
-                <Link href={`/${locale}/teams`}>
-                  <Card variant="feature" color="purple" interactive className="animate-fade-in-up stagger-2">
-                    <div className="icon-wrapper">
-                      <Users className="w-8 h-8" strokeWidth={2.5} />
-                    </div>
-                    <h3>{locale === 'ar' ? 'الفرق' : locale === 'he' ? 'קבוצות' : 'Teams'}</h3>
-                    <p>{locale === 'ar' ? 'إدارة الفرق' : locale === 'he' ? 'ניהול קבוצות' : 'Manage teams'}</p>
-                  </Card>
-                </Link>
-
-                <Link href={`/${locale}/trainers`}>
-                  <Card variant="feature" color="green" interactive className="animate-fade-in-up stagger-3">
-                    <div className="icon-wrapper">
-                      <Dumbbell className="w-8 h-8" strokeWidth={2.5} />
-                    </div>
-                    <h3>{locale === 'ar' ? 'المدربين' : locale === 'he' ? 'מאמנים' : 'Trainers'}</h3>
-                    <p>{locale === 'ar' ? 'قائمة المدربين' : locale === 'he' ? 'רשימת מאמנים' : 'Trainer list'}</p>
-                  </Card>
-                </Link>
-
-                <Link href={`/${locale}/reports`}>
-                  <Card variant="feature" color="blue" interactive className="animate-fade-in-up stagger-4">
-                    <div className="icon-wrapper">
-                      <BarChart3 className="w-8 h-8" strokeWidth={2.5} />
-                    </div>
-                    <h3>{locale === 'ar' ? 'التقارير' : locale === 'he' ? 'דוחות' : 'Reports'}</h3>
-                    <p>{locale === 'ar' ? 'تحليلات' : locale === 'he' ? 'אנליטיקה' : 'Analytics'}</p>
-                  </Card>
-                </Link>
-              </div>
             </section>
           </div>
         </main>

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { locales, directions, type Locale } from '@/lib/i18n/config'
@@ -17,6 +17,19 @@ export const metadata: Metadata = {
   },
   description: 'Basketball training management system for managing halls, trainers, classes, and attendance',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Basketball Manager',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 }
 
 export async function generateStaticParams() {

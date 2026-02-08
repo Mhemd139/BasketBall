@@ -25,11 +25,15 @@ export default async function SchedulePage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  // Fetch all events ordered by date desc (newest first)
+  const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  // Fetch recent events ordered by date desc (newest first)
   const { data: events } = await (supabase as any)
     .from('events')
     .select('*, halls(*)')
+    .gte('event_date', threeMonthsAgo)
     .order('event_date', { ascending: false })
+    .limit(50)
 
   const allEvents = (events || []) as EventWithDetails[]
 
@@ -55,8 +59,8 @@ export default async function SchedulePage({
           showBack={false}
         />
 
-        <main className="flex-1 pt-48 pb-32 md:pb-10 px-5">
-          <div className="max-w-2xl mx-auto space-y-6">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+          <div className="max-w-2xl mx-auto space-y-6 w-full">
             
             {sortedDates.length > 0 ? (
               sortedDates.map((date) => (
@@ -71,43 +75,43 @@ export default async function SchedulePage({
                   <div className="space-y-3">
                     {groupedEvents[date].map((event, index) => (
                       <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
-                        <Card interactive className="animate-fade-in-up">
-                          <div className="flex items-center gap-4">
-                            {/* Time */}
-                            <div className="text-center min-w-[56px]">
-                              <div className="text-xl font-bold text-indigo-600">
+                        <Card interactive className="animate-fade-in-up w-full overflow-hidden">
+                          <div className="flex items-center gap-3">
+                            {/* Time - Adjusted width/padding */}
+                            <div className="text-center min-w-[3.5rem] shrink-0">
+                              <div className="text-lg font-bold text-indigo-600 leading-none">
                                 {formatTime(event.start_time).split(':')[0]}
                               </div>
-                              <div className="text-xs text-gray-400 uppercase font-medium">
+                              <div className="text-[10px] text-gray-400 uppercase font-medium mt-0.5">
                                 {formatTime(event.start_time).includes('PM') ? 'PM' : 'AM'}
                               </div>
                             </div>
                             
                             {/* Type Indicator */}
-                            <div className={`w-1 h-12 rounded-full ${event.type === 'game' ? 'bg-orange-400' : 'bg-green-400'}`} />
+                            <div className={`w-1 h-10 rounded-full shrink-0 ${event.type === 'game' ? 'bg-orange-400' : 'bg-green-400'}`} />
                             
                             {/* Info */}
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 pr-1">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className={`text-xs font-semibold ${event.type === 'game' ? 'text-orange-500' : 'text-green-500'}`}>
-                                  ● {event.type === 'game' 
-                                    ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'Game')
-                                    : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'Training')
+                                <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md' : 'text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md'}`}>
+                                  {event.type === 'game' 
+                                    ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'GAME')
+                                    : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'TRAINING')
                                   }
                                 </span>
                               </div>
-                              <h3 className="font-semibold text-gray-900 truncate">
+                              <h3 className="font-bold text-gray-900 text-sm truncate leading-tight mb-1">
                                 {getLocalizedField(event, 'title', locale)}
                               </h3>
                               {event.halls && (
-                                <p className="text-sm text-gray-500 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {getLocalizedField(event.halls, 'name', locale)}
+                                <p className="text-xs text-gray-500 flex items-center gap-1 truncate">
+                                  <MapPin className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">{getLocalizedField(event.halls, 'name', locale)}</span>
                                 </p>
                               )}
                             </div>
                             
-                            <ChevronRight className="text-gray-300 w-5 h-5 rtl:rotate-180" />
+                            <ChevronRight className={`text-gray-300 w-5 h-5 shrink-0 ${locale === 'ar' || locale === 'he' ? 'rotate-180' : ''}`} />
                           </div>
                         </Card>
                       </Link>
