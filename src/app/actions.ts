@@ -102,36 +102,34 @@ export async function sendOTP(phone: string) {
       } catch (e: any) { return { success: false, error: e.message } }
   }
 
-  // 2. Try Vonage SMS (Stateless verification)
-  const vonage = getVonageClient()
-  if (vonage) {
+  // 2. Try Vonage Verify API (handles sender ID / routing automatically)
+  const vonageKey = process.env.VONAGE_API_KEY
+  const vonageSecret = process.env.VONAGE_API_SECRET
+  if (vonageKey && vonageSecret) {
     try {
-        // Generate random 4-digit code
-        const code = Math.floor(1000 + Math.random() * 9000).toString()
-        
-        // Send via SMS
-        const resp = await vonage.sms.send({
-            to: phone,
-            from: 'Vonage APIs', // Generic sender ID matches docs
-            text: `Your verification code is: ${code}`
+        const resp = await fetch('https://api.nexmo.com/verify/json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                api_key: vonageKey,
+                api_secret: vonageSecret,
+                number: phone,
+                brand: 'Basketball',
+                code_length: '4',
+                pin_expiry: 300,
+            }),
         })
-        // Check for API-level errors (e.g. non-whitelisted number)
-        if (resp.messages && resp.messages[0].status !== '0') {
-            const errorText = resp.messages[0]['error-text'] || `Vonage Error Code: ${resp.messages[0].status}`
-            console.error('Vonage Delivery Error:', errorText)
-            return { success: false, error: errorText }
-        }
-        
-        // Hash the code with secret (Stateless)
-        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret'
-        const hash = crypto.createHmac('sha256', secret)
-            .update(code)
-            .digest('hex')
+        const data = await resp.json()
 
-        // Return the hash to client so they can send it back with the code
-        return { success: true, hash }
+        if (data.status === '0') {
+            // Success — return request_id for verification step
+            return { success: true, requestId: data.request_id }
+        } else {
+            console.error('Vonage Verify Error:', data.error_text)
+            return { success: false, error: data.error_text || 'SMS failed' }
+        }
     } catch (e: any) {
-        console.error('Vonage Send Error:', e)
+        console.error('Vonage Verify Error:', e)
         return { success: false, error: e.message || 'Vonage Failed' }
     }
   }
@@ -155,15 +153,25 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
       } catch (e: any) { return { success: false, error: e.message } }
   }
   
-  // 2. Vonage / Stateless Check (Context is Hash)
-  else if (context && context.length > 10) { 
-      const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || 'default-secret'
-      const expectedHash = crypto.createHmac('sha256', secret)
-          .update(otp)
-          .digest('hex')
-      
-      if (context !== expectedHash) {
-          return { success: false, error: 'Invalid Code' }
+  // 2. Vonage Verify Check (Context is request_id)
+  else if (context && context.length > 10) {
+      const vonageKey = process.env.VONAGE_API_KEY
+      const vonageSecret = process.env.VONAGE_API_SECRET
+      if (vonageKey && vonageSecret) {
+          const resp = await fetch('https://api.nexmo.com/verify/check/json', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  api_key: vonageKey,
+                  api_secret: vonageSecret,
+                  request_id: context,
+                  code: otp,
+              }),
+          })
+          const data = await resp.json()
+          if (data.status !== '0') {
+              return { success: false, error: data.error_text || 'Invalid Code' }
+          }
       }
   }
   
