@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, ChevronLeft, ChevronRight, User, Users, Globe, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -23,9 +24,9 @@ interface SearchResult {
 }
 
 const LANGUAGES = [
-  { code: 'en', label: 'English', flag: '🇺🇸', dir: 'ltr' },
-  { code: 'ar', label: 'العربية', flag: '🇵🇸', dir: 'rtl' },
-  { code: 'he', label: 'עברית', flag: '🇮🇱', dir: 'rtl' },
+  { code: 'en', label: 'English', dir: 'ltr' },
+  { code: 'ar', label: 'العربية', dir: 'rtl' },
+  { code: 'he', label: 'עברית', dir: 'rtl' },
 ];
 
 export function Header({ locale, title, showBack, backHref, onBack }: HeaderProps) {
@@ -160,12 +161,18 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
               )}
               
               <Link href={`/${locale}`} className="flex items-center gap-3 group">
-                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20 group-hover:scale-105 transition-transform duration-300">
-                    <span className="text-2xl md:text-3xl filter drop-shadow-sm">🏀</span>
+                <div className="relative w-12 h-12 md:w-16 md:h-16 overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                    <Image 
+                        src="/images/logo.jpg" 
+                        alt="Logo" 
+                        fill
+                        className="object-contain"
+                        priority
+                    />
                 </div>
                 <div className="flex flex-col">
                     <h1 className="font-outfit font-bold text-xl md:text-2xl leading-none text-navy-900 tracking-tight">
-                        {title || (locale === 'ar' ? 'الباقة الغربية' : locale === 'he' ? 'באקה אל-גרביה' : 'Baqa El-Gharbia')}
+                        {title || (locale === 'ar' ? 'باقة الغربية' : locale === 'he' ? 'באקה אל-גרביה' : 'Baqa El-Gharbia')}
                     </h1>
                     <p className="text-[10px] md:text-xs text-gold-600 font-bold tracking-wider uppercase opacity-90">
                         {locale === 'ar' ? 'النادي الرياضي' : locale === 'he' ? 'מועדון ספורט' : 'Sports Club'}
@@ -244,7 +251,6 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                                     }`}
                                 >
                                     <span className="flex items-center gap-2">
-                                        <span>{lang.flag}</span>
                                         <span>{lang.label}</span>
                                     </span>
                                     {locale === lang.code && <Check className="w-3 h-3" />}

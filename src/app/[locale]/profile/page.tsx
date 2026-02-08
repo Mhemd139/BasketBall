@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { getTrainerProfileServer } from '@/app/actions'
+import { getTrainerProfileServer, logout } from '@/app/actions'
 import { EditTrainerProfileModal } from '@/components/trainers/EditTrainerProfileModal'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -27,6 +27,7 @@ export default function ProfilePage() {
   const [trainer, setTrainer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -46,9 +47,13 @@ export default function ProfilePage() {
   }, [isEditModalOpen])
 
   const handleLogout = async () => {
-    document.cookie = 'admin_session=; Max-Age=0; path=/;'
-    router.refresh()
-    router.push(`/${locale}/login`)
+    try {
+      await logout()
+      router.refresh()
+      router.push(`/${locale}/login`)
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 
   if (loading) return (
@@ -223,17 +228,39 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* Logout Button - Enhanced */}
-                <div className="mt-12 flex justify-center pb-8">
-                    <button 
-                        onClick={handleLogout}
-                        className="group relative px-10 py-4 rounded-2xl bg-white border border-gray-100 text-gray-400 font-black tracking-wide hover:text-red-500 hover:border-red-100 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-red-500/10 overflow-hidden"
-                    >
-                         <span className="relative z-10 flex items-center gap-3">
-                            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-                            {locale === 'ar' ? 'تسجيل الخروج' : locale === 'he' ? 'התנתקות' : 'Log Out'}
-                        </span>
-                    </button>
+                {/* Logout Section - Red & Vibrant */}
+                <div className="mt-12 flex flex-col items-center gap-4 pb-12">
+                    {!showLogoutConfirm ? (
+                        <button 
+                            onClick={() => setShowLogoutConfirm(true)}
+                            className="group relative px-10 py-4 rounded-2xl bg-white border border-red-100 text-red-500 font-black tracking-wide hover:bg-red-50 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-red-500/10"
+                        >
+                             <span className="relative z-10 flex items-center gap-3">
+                                <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                                {locale === 'ar' ? 'تسجيل الخروج' : locale === 'he' ? 'התנתקות' : 'Log Out'}
+                            </span>
+                        </button>
+                    ) : (
+                        <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in-95 duration-300">
+                            <p className="text-sm font-bold text-red-600 mb-1">
+                                {locale === 'ar' ? 'هل أنت متأكد؟' : locale === 'he' ? 'בטוח שברצונך להתנתק?' : 'Are you sure you want to sign out?'}
+                            </p>
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={handleLogout}
+                                    className="px-8 py-3 rounded-xl bg-red-500 text-white font-black text-sm hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95"
+                                >
+                                    {locale === 'ar' ? 'نعم، تسجيل الخروج' : locale === 'he' ? 'כן, התנתק' : 'Yes, Sign Out'}
+                                </button>
+                                <button 
+                                    onClick={() => setShowLogoutConfirm(false)}
+                                    className="px-8 py-3 rounded-xl bg-gray-100 text-gray-500 font-black text-sm hover:bg-gray-200 transition-all active:scale-95"
+                                >
+                                    {locale === 'ar' ? 'إلغاء' : locale === 'he' ? 'ביטול' : 'Cancel'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

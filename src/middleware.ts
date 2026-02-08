@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
   const isPublic = publicPaths.some(p => pathWithoutLocale.startsWith(p))
   
   const loginUrl = new URL(`/${locale}/login`, request.url)
-  const dashboardUrl = new URL(`/${locale}/teams`, request.url)
+  const dashboardUrl = new URL(`/${locale}`, request.url)
 
   if (!session && !isPublic) {
      return NextResponse.redirect(loginUrl)

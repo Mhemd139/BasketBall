@@ -86,7 +86,7 @@ export default function LoginPage() {
         if ((result as any).isNew) {
           setStep('profile-setup')
         } else {
-          router.push(`/${locale}/teams`)
+          router.push(`/${locale}`)
           router.refresh()
         }
       } else {
@@ -109,7 +109,7 @@ export default function LoginPage() {
        
        const result = await updateProfile(name, gender, availability)
        if (result.success) {
-          router.push(`/${locale}/teams`)
+          router.push(`/${locale}`)
           router.refresh()
        } else {
           setError(result.error || 'Failed to save profile')
