@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 
@@ -49,7 +49,7 @@ const crypto = require('crypto')
 
 export async function upsertEvent(eventData: any) {
   const session = await getSession()
-  if (!session || (session.role !== 'coach' && session.role !== 'admin' && session.role !== 'trainer')) {
+  if (!session) {
       return { success: false, error: 'Unauthorized' }
   }
 
@@ -223,28 +223,37 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   return { success: true, isNew: wasCreated }
 }
 
-export async function updateProfile(name: string) {
+export async function updateProfile(name: string, gender?: 'male' | 'female', availability?: string[]) {
   const session = await getSession()
   if (!session) return { success: false, error: 'Unauthorized' }
 
   const supabase = await createServerSupabaseClient()
 
-  // Use SECURITY DEFINER function to bypass RLS
-  const { data, error } = await (supabase as any).rpc('update_trainer_profile', {
-    trainer_id: session.id,
-    new_name_en: name,
-    new_name_ar: name,
-    new_name_he: name,
-  })
+  // Update trainer profile directly
+  const { data, error } = await (supabase as any)
+    .from('trainers')
+    .update({
+        name_en: name,
+        name_ar: name,
+        name_he: name,
+        gender: gender,
+        availability: availability
+    })
+    .eq('id', session.id)
+    .select()
+    .single()
 
-  if (error) return { success: false, error: error.message }
-  if (data?.error) return { success: false, error: data.error }
+  if (error) {
+      console.error('Update Profile Error:', error)
+      return { success: false, error: error.message }
+  }
   
   // Update session cookie with new name
   const cookieStore = await cookies()
   cookieStore.set('admin_session', JSON.stringify({
     ...session,
-    name: name
+    name: name,
+    gender: gender
   }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -595,7 +604,7 @@ export async function searchTrainees(query: string) {
 
 export async function transferTrainee(traineeId: string, classId: string) {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -613,7 +622,7 @@ export async function transferTrainee(traineeId: string, classId: string) {
 
 export async function updateTrainee(traineeId: string, updateData: any) {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -652,7 +661,7 @@ export async function getTrainerProfile(trainerId: string) {
 
 export async function updateTeamTrainer(classId: string, trainerId: string) {
     const session = await getSession()
-    if (!session || session.role !== 'admin') { // Assuming only admin/head coach can reassign
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -669,7 +678,7 @@ export async function updateTeamTrainer(classId: string, trainerId: string) {
 }
 export async function quickRegisterAndAssign(traineeData: any, classId: string) {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -694,7 +703,7 @@ export async function quickRegisterAndAssign(traineeData: any, classId: string) 
 
 export async function assignTraineeToTeam(traineeId: string, classId: string) {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -718,7 +727,7 @@ export async function createTeam(teamData: {
     hall_id: string | null 
 }) {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -740,7 +749,7 @@ export async function createTeam(teamData: {
 
 export async function updateTeam(id: string, teamData: any) {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -764,7 +773,7 @@ export async function updateTeam(id: string, teamData: any) {
 
 export async function deleteTeam(id: string) {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
+    if (!session) {
         return { success: false, error: 'Unauthorized' }
     }
 
@@ -781,4 +790,115 @@ export async function deleteTeam(id: string) {
 
     revalidatePath('/[locale]/teams', 'page')
     return { success: true }
+}
+
+// --- Event Management ---
+export async function deleteEvent(id: string) {
+    const session = await getSession()
+    if (!session) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('events')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        console.error('Delete Event Error:', error)
+        return { success: false, error: 'Failed to delete event' }
+    }
+
+    revalidatePath('/[locale]/schedule')
+    revalidatePath('/[locale]/halls/[id]')
+    return { success: true }
+}
+
+export async function updateHall(id: string, name_en: string, name_ar: string, name_he: string) {
+    const session = await getSession()
+    if (!session) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { data, error } = await (supabase as any)
+        .from('halls')
+        .update({ name_en, name_ar, name_he })
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error updating hall:', error)
+        return { success: false, error: error.message }
+    }
+    
+    revalidatePath('/[locale]/halls/[id]', 'page')
+    revalidatePath('/[locale]/halls', 'page')
+    return { success: true, hall: data }
+}
+
+export async function updateTrainerDetails(id: string, data: any) {
+    const session = await getSession()
+    if (!session) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServiceRoleClient()
+    const { data: updatedData, error } = await (supabase as any)
+        .from('trainers')
+        .update(data)
+        .eq('id', id)
+        .select()
+
+    if (error) {
+        console.error('Error updating trainer:', error)
+        return { success: false, error: error.message }
+    }
+    
+    // If no rows updated, it might mean the ID wasn't found, but we shouldn't throw 500
+    if (!updatedData || updatedData.length === 0) {
+         console.warn(`Trainer update: ID ${id} not found or no changes made.`)
+    }
+    
+    revalidatePath('/', 'layout')
+    revalidatePath('/[locale]/trainers', 'page')
+    return { success: true }
+}
+
+export async function deleteAccount() {
+    const session = await getSession()
+    if (!session) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('trainers')
+        .delete()
+        .eq('id', session.id)
+
+    if (error) {
+        console.error('Error deleting account:', error)
+        return { success: false, error: error.message }
+    }
+
+    await logout()
+    return { success: true }
+}
+
+// --- Profile Actions ---
+export async function getTrainerProfileServer() {
+    const session = await getSession()
+    if (!session) return null
+
+    const supabase = await createServerSupabaseClient()
+    const { data: trainer } = await (supabase as any)
+        .from('trainers')
+        .select('*')
+        .eq('id', session.id)
+        .single()
+        
+    return trainer
 }

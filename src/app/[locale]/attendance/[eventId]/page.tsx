@@ -4,6 +4,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Badge } from '@/components/ui/Badge'
 import { AttendanceSheet } from '@/components/attendance/AttendanceSheet'
+import { EventManagementActions } from '@/components/events/EventManagementActions'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getLocalizedField, formatTime, formatDate } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
@@ -41,20 +42,38 @@ export default async function AttendancePage({
 
   const eventWithHall = event as unknown as EventWithHall
 
-  // Step 2: class from trainer
-  const { data: classData } = await (supabase as any)
-    .from('classes')
-    .select('id')
-    .eq('trainer_id', event.trainer_id)
-    .single()
+  // Step 2: Extract class_id from notes (prioritized) or fallback to trainer's first class
+  let targetClassId = null;
+  
+  // Try to parse from notes
+  if (event.notes_en) {
+      try {
+          const notes = JSON.parse(event.notes_en);
+          if (notes.class_id) targetClassId = notes.class_id;
+      } catch (e) {
+          console.error("Error parsing event notes:", e);
+      }
+  }
 
-  // Step 3: trainees
+  // Fallback: Try to find a class for this trainer if not found in notes
+  if (!targetClassId && event.trainer_id) {
+       const { data: classData } = await (supabase as any)
+        .from('classes')
+        .select('id')
+        .eq('trainer_id', event.trainer_id)
+        .limit(1)
+        .single();
+        
+       if (classData) targetClassId = classData.id;
+  }
+
+  // Step 3: Fetch trainees
   let trainees: Trainee[] = []
-  if (classData) {
+  if (targetClassId) {
     const { data } = await (supabase as any)
       .from('trainees')
       .select('*')
-      .eq('class_id', classData.id)
+      .eq('class_id', targetClassId)
       .order('jersey_number', { ascending: true })
     trainees = data || []
   }
@@ -68,7 +87,7 @@ export default async function AttendancePage({
           locale={locale}
           title={getLocalizedField(eventWithHall, 'title', locale)}
           showBack
-          backHref={`/${locale}`}
+          backHref={`/${locale}/schedule`}
         />
 
         <main className="flex-1 pt-20 pb-32 md:pb-10 px-5">
@@ -87,9 +106,12 @@ export default async function AttendancePage({
                 </span>
               </div>
 
-              <h1 className="heading-md mb-2">
-                {getLocalizedField(eventWithHall, 'title', locale)}
-              </h1>
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <h1 className="heading-md">
+                  {getLocalizedField(eventWithHall, 'title', locale)}
+                </h1>
+                <EventManagementActions event={event} locale={locale} />
+              </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                 {eventWithHall.halls && (

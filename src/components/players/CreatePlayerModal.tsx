@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/Button'
 import { Loader2, User, Phone, Hash, ChevronRight, ArrowLeft, CheckCircle2, Users } from 'lucide-react'
 import { getEventRefData, addTrainee } from '@/app/actions'
+import { formatPhoneNumber } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface CreatePlayerModalProps {
@@ -154,7 +155,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                           className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 outline-none transition-all text-sm font-bold"
                           placeholder="05..."
                           value={formData.phone}
-                          onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
+                          onChange={e => setFormData(p => ({ ...p, phone: formatPhoneNumber(e.target.value) }))}
                         />
                       </div>
                     </div>

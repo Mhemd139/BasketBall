@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Building2, Calendar } from 'lucide-react'
 import { HallSchedule } from '@/components/halls/HallSchedule'
+import { HallManagementActions } from '@/components/halls/HallManagementActions'
 import { getSession } from '@/app/actions' // Import getSession
 
 type Hall = Database['public']['Tables']['halls']['Row']
@@ -64,6 +65,12 @@ export default async function HallDetailPage({
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                 <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
                 
+                {isEditable && (
+                  <div className="absolute top-4 right-4 z-20">
+                    <HallManagementActions hall={hallData} locale={locale} />
+                  </div>
+                )}
+
                 <div className="relative z-10 flex flex-col items-center text-center">
                   <div className="mb-3 p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
                     <Building2 className="w-8 h-8 text-white" strokeWidth={2.5} />

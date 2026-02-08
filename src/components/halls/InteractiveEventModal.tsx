@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
-import { Loader2, Calendar as CalendarIcon, Clock, Users, Trophy, User, ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, Users, Trophy, User, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getEventRefData } from '@/app/actions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,13 +15,15 @@ interface InteractiveEventModalProps {
     initialDate?: Date;
     initialEvent?: any;
     locale: string;
+    onDelete?: (eventId: string) => Promise<void>;
+    initialStep?: Step;
 }
 
-type Step = 'type' | 'details' | 'time' | 'review';
+type Step = 'type' | 'details' | 'time' | 'review' | 'delete-confirm';
 
-export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, initialEvent, locale }: InteractiveEventModalProps) {
+export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initialDate, initialEvent, locale, initialStep = 'type' }: InteractiveEventModalProps) {
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState<Step>('type');
+    const [step, setStep] = useState<Step>(initialStep);
     const [refData, setRefData] = useState<{ trainers: any[], classes: any[] }>({ trainers: [], classes: [] });
 
     // Form State
@@ -84,10 +86,10 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, in
     useEffect(() => {
         if (isOpen) {
             // Reset or Load Initial
-            setStep('type');
+            setStep(initialStep);
             loadRefData();
         }
-    }, [isOpen]);
+    }, [isOpen, initialStep]);
 
     const loadRefData = async () => {
         const res = await getEventRefData();
@@ -171,6 +173,19 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, in
 
     const getName = (item: any) => locale === 'ar' ? item.name_ar : locale === 'he' ? item.name_he : item.name_en;
 
+    const handleDelete = async () => {
+        if (!onDelete || !initialEvent) return;
+        setLoading(true);
+        try {
+            await onDelete(initialEvent.id);
+            onClose();
+        } catch (error) {
+            console.error("Failed to delete event", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px] bg-white rounded-3xl overflow-hidden p-0 border-0 h-[500px] flex flex-col">
@@ -182,14 +197,16 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, in
                         {step === 'time' && <><Clock className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'التوقيت' : 'Timing'}</>}
                         {step === 'review' && <><CheckCircle2 className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'مراجعة' : 'Review'}</>}
                     </DialogTitle>
-                    {/* Progress Bar */}
-                    <div className="flex gap-2 mt-4">
-                        {['type', 'details', 'time', 'review'].map((s, i) => (
-                            <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                                ['type', 'details', 'time', 'review'].indexOf(step) >= i ? 'bg-gold-500' : 'bg-white/20'
-                            }`} />
-                        ))}
-                    </div>
+                    {/* Progress Bar (Hide on Delete Confirm) */}
+                    {step !== 'delete-confirm' && (
+                        <div className="flex gap-2 mt-4">
+                            {['type', 'details', 'time', 'review'].map((s, i) => (
+                                <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${
+                                    ['type', 'details', 'time', 'review'].indexOf(step) >= i ? 'bg-gold-500' : 'bg-white/20'
+                                }`} />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 p-6 overflow-y-auto bg-gray-50/50">
@@ -204,33 +221,37 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, in
                         >
                             {step === 'type' && (
                                 <div className="grid grid-cols-2 gap-4 h-full">
-                                    <button 
+                                    <motion.button 
+                                        whileHover={{ scale: 1.02, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)" }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={() => setType('training')}
-                                        className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-6 ${
+                                        className={`flex flex-col items-center justify-center gap-4 rounded-3xl border-2 transition-all p-6 ${
                                             type === 'training' 
-                                            ? 'border-navy-600 bg-navy-50 text-navy-900 shadow-md ring-1 ring-navy-600' 
-                                            : 'border-white bg-white text-gray-400 hover:border-gray-200 hover:bg-gray-50'
+                                            ? 'border-navy-600 bg-navy-50 text-navy-900 ring-2 ring-navy-600 ring-offset-2' 
+                                            : 'border-white bg-white/50 text-gray-400 hover:border-navy-200 hover:bg-white'
                                         }`}
                                     >
-                                        <div className={`p-4 rounded-full ${type === 'training' ? 'bg-navy-100 text-navy-600' : 'bg-gray-100'}`}>
+                                        <div className={`p-5 rounded-2xl transition-colors ${type === 'training' ? 'bg-navy-600 text-white shadow-lg shadow-navy-200' : 'bg-gray-100 group-hover:bg-navy-50'}`}>
                                             <User className="w-8 h-8" />
                                         </div>
-                                        <span className="font-bold text-lg">{locale === 'ar' ? 'تدريب' : 'Training'}</span>
-                                    </button>
+                                        <span className="font-outfit font-bold text-lg">{locale === 'ar' ? 'تدريب' : 'Training'}</span>
+                                    </motion.button>
                                     
-                                    <button 
+                                    <motion.button 
+                                        whileHover={{ scale: 1.02, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)" }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={() => setType('game')}
-                                        className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-6 ${
+                                        className={`flex flex-col items-center justify-center gap-4 rounded-3xl border-2 transition-all p-6 ${
                                             type === 'game' 
-                                            ? 'border-gold-500 bg-gold-50 text-orange-900 shadow-md ring-1 ring-gold-500' 
-                                            : 'border-white bg-white text-gray-400 hover:border-gray-200 hover:bg-gray-50'
+                                            ? 'border-gold-500 bg-gold-50 text-orange-900 ring-2 ring-gold-500 ring-offset-2' 
+                                            : 'border-white bg-white/50 text-gray-400 hover:border-gold-200 hover:bg-white'
                                         }`}
                                     >
-                                        <div className={`p-4 rounded-full ${type === 'game' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100'}`}>
+                                        <div className={`p-5 rounded-2xl transition-colors ${type === 'game' ? 'bg-gold-500 text-white shadow-lg shadow-gold-200' : 'bg-gray-100 group-hover:bg-gold-50'}`}>
                                             <Trophy className="w-8 h-8" />
                                         </div>
-                                        <span className="font-bold text-lg">{locale === 'ar' ? 'مباراة' : 'Game'}</span>
-                                    </button>
+                                        <span className="font-outfit font-bold text-lg">{locale === 'ar' ? 'مباراة' : 'Game'}</span>
+                                    </motion.button>
                                 </div>
                             )}
 
@@ -382,6 +403,53 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, in
                                             <span className="font-bold text-navy-900">{startTime} - {endTime}</span>
                                         </div>
                                     </div>
+                                    
+                                    {onDelete && initialEvent && (
+                                        <button 
+                                            onClick={() => setStep('delete-confirm')}
+                                            className="text-red-500 text-xs font-bold hover:text-red-600 underline"
+                                        >
+                                            {locale === 'ar' ? 'حذف هذا الحدث' : 'Delete This Event'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {step === 'delete-confirm' && (
+                                <div className="flex flex-col items-center justify-center h-full space-y-6 text-center animate-in fade-in zoom-in duration-300 bg-gradient-to-b from-white to-red-50/50">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-red-100 rounded-full blur-xl opacity-50 animate-pulse"></div>
+                                        <div className="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center relative z-10 shadow-sm border border-red-100">
+                                            <Trash2 className="w-10 h-10" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-3 z-10">
+                                        <h3 className="text-3xl font-black text-navy-900 tracking-tight">
+                                            {locale === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?'}
+                                        </h3>
+                                        <p className="text-gray-500 text-sm max-w-[80%] mx-auto leading-relaxed">
+                                            {locale === 'ar' 
+                                                ? 'سيتم حذف هذا الحدث نهائياً ولا يمكن استرجاعه. هل ترغب حقاً في المتابعة؟' 
+                                                : 'This action cannot be undone. This event will be permanently deleted from the schedule.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-3 w-full px-8 z-10">
+                                        <Button 
+                                            onClick={handleDelete} 
+                                            disabled={loading} 
+                                            className="w-full bg-red-500 hover:bg-red-600 text-white rounded-2xl py-7 font-bold text-lg shadow-lg shadow-red-200 ring-4 ring-red-50 transition-all active:scale-[0.98]"
+                                        >
+                                            {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (locale === 'ar' ? 'نعم، احذف الحدث' : 'Yes, Delete Event')}
+                                        </Button>
+                                        <button 
+                                            onClick={() => setStep('review')}
+                                            className="text-gray-400 font-bold text-sm hover:text-navy-900 hover:bg-gray-100 px-6 py-3 rounded-xl transition-all"
+                                        >
+                                            {locale === 'ar' ? 'لا، تراجع' : 'No, Keep Event'}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </motion.div>
@@ -389,19 +457,37 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, initialDate, in
                 </div>
 
                 <DialogFooter className="mr-0 p-6 bg-white border-t border-gray-100 flex justify-between items-center shrink-0">
-                    {step !== 'type' ? (
-                        <button onClick={handleBack} className="text-gray-400 hover:text-navy-600 font-medium flex items-center gap-2">
-                            <ArrowLeft className="w-4 h-4" /> Back
+                    {step !== 'type' && step !== 'delete-confirm' ? (
+                        <button 
+                            onClick={handleBack} 
+                            className="text-gray-400 hover:text-navy-600 font-bold font-outfit flex items-center gap-2 transition-all hover:-translate-x-1 px-4 py-2 rounded-xl hover:bg-gray-50"
+                        >
+                            <ArrowLeft className="w-5 h-5" /> {locale === 'ar' ? 'رجوع' : 'Back'}
                         </button>
                     ) : <div></div>}
 
                     {step === 'review' ? (
-                         <Button onClick={handleSave} disabled={loading} className="bg-navy-600 hover:bg-navy-700 text-white rounded-xl px-8 py-6 font-bold shadow-lg shadow-navy-200">
-                             {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Confirm Event'}
+                         <Button 
+                            onClick={handleSave} 
+                            disabled={loading} 
+                            className="bg-gradient-to-r from-navy-800 to-navy-600 hover:from-navy-700 hover:to-navy-500 text-white rounded-2xl px-10 py-7 font-outfit font-bold text-lg shadow-lg shadow-navy-900/20 hover:shadow-navy-900/40 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ring-1 ring-white/10"
+                         >
+                             {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (
+                                <span className="flex items-center gap-3">
+                                    {locale === 'ar' ? 'تأكيد الحدث' : 'Confirm Event'} <CheckCircle2 className="w-5 h-5" />
+                                </span>
+                             )}
                          </Button>
+                    ) : step === 'delete-confirm' ? (
+                        null
                     ) : (
-                        <Button onClick={handleNext} className="bg-gold-500 hover:bg-gold-600 text-navy-900 rounded-xl px-6 py-6 font-bold flex items-center gap-2">
-                            Next <ArrowRight className="w-4 h-4" />
+                        <Button 
+                            onClick={handleNext} 
+                            className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-300 hover:to-gold-500 text-navy-950 rounded-2xl px-8 py-7 font-outfit font-bold text-lg shadow-lg shadow-gold-500/20 hover:shadow-gold-500/40 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                        >
+                            <span className="flex items-center gap-2">
+                                {locale === 'ar' ? 'التالي' : 'Next'} <ArrowRight className="w-5 h-5" />
+                            </span>
                         </Button>
                     )}
                 </DialogFooter>

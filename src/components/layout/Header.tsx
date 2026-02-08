@@ -159,7 +159,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                 </button>
               )}
               
-              <Link href={`/${locale}/teams`} className="flex items-center gap-3 group">
+              <Link href={`/${locale}`} className="flex items-center gap-3 group">
                 <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20 group-hover:scale-105 transition-transform duration-300">
                     <span className="text-2xl md:text-3xl filter drop-shadow-sm">🏀</span>
                 </div>

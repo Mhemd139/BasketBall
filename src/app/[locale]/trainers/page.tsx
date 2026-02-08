@@ -57,6 +57,16 @@ export default async function TrainersPage({
                           <span dir="ltr">{trainer.phone}</span>
                         </div>
                       )}
+
+                      {trainer.availability && trainer.availability.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {trainer.availability.map(day => (
+                            <span key={day} className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                              {day.slice(0, 3)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 </Card>
               </Link>

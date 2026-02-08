@@ -4,9 +4,10 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { getTrainerProfile, getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
-import { User, Phone, Trophy, MapPin, Calendar, Mail, Shield } from 'lucide-react'
+import { User, Phone, Trophy, MapPin, Calendar, Mail, Shield, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { TrainerProfileActions } from '@/components/trainers/TrainerProfileActions'
 
 export default async function TrainerProfilePage({
     params
@@ -22,6 +23,17 @@ export default async function TrainerProfilePage({
     }
 
     const { trainer, teams } = res
+
+    // Map days to localized labels for display
+    const daysMap: Record<string, string> = {
+        'Sunday': locale === 'ar' ? 'الأحد' : locale === 'he' ? 'ראשון' : 'Sunday',
+        'Monday': locale === 'ar' ? 'الإثنين' : locale === 'he' ? 'שני' : 'Monday',
+        'Tuesday': locale === 'ar' ? 'الثلاثاء' : locale === 'he' ? 'שלישי' : 'Tuesday',
+        'Wednesday': locale === 'ar' ? 'الأربعاء' : locale === 'he' ? 'רביעי' : 'Wednesday',
+        'Thursday': locale === 'ar' ? 'الخميس' : locale === 'he' ? 'חמישי' : 'Thursday',
+        'Friday': locale === 'ar' ? 'الجمعة' : locale === 'he' ? 'שישי' : 'Friday',
+        'Saturday': locale === 'ar' ? 'السبت' : locale === 'he' ? 'שבת' : 'Saturday',
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 flex">
@@ -39,9 +51,43 @@ export default async function TrainerProfilePage({
                     <div className="max-w-4xl mx-auto space-y-8">
                         
                         {/* Profile Header */}
-                        <section className="flex flex-col md:flex-row gap-8 items-start">
-                            <div className="w-32 h-32 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl rotate-3 shrink-0">
-                                <User className="w-16 h-16" strokeWidth={1.5} />
+                        <section className="flex flex-col md:flex-row gap-8 items-start relative">
+                            {/* Edit Button (Top Right of Section) */}
+                            <div className="absolute top-0 end-0">
+                                <TrainerProfileActions trainer={trainer} locale={locale} />
+                            </div>
+
+                            <div className="flex flex-col gap-6 md:w-64 md:shrink-0 items-center md:items-start">
+                                <div className="w-32 h-32 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl rotate-3 shrink-0">
+                                    <User className="w-16 h-16" strokeWidth={1.5} />
+                                </div>
+
+                                {/* Availability Section */}
+                                {trainer.availability && trainer.availability.length > 0 ? (
+                                    <div className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2">
+                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                            <Calendar className="w-4 h-4" />
+                                            {locale === 'ar' ? 'أيام التدريب المتاحة' : locale === 'he' ? 'ימי אימון זמינים' : 'Available Days'}
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {trainer.availability.map((day: string) => (
+                                                <span key={day} className="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-sm border border-indigo-100">
+                                                    {daysMap[day] || day}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2 opacity-60">
+                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                            <Calendar className="w-4 h-4" />
+                                            {locale === 'ar' ? 'أيام التدريب المتاحة' : locale === 'he' ? 'ימי אימון זמינים' : 'Available Days'}
+                                        </h3>
+                                        <p className="text-sm text-gray-400 italic">
+                                            {locale === 'ar' ? 'غير محدد' : locale === 'he' ? 'לא צוין' : 'Not specified'}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="flex-1 space-y-4">
@@ -70,8 +116,20 @@ export default async function TrainerProfilePage({
                                         </div>
                                         <span>{teams.length} {locale === 'ar' ? 'فرق' : locale === 'he' ? 'קבוצות' : 'Teams'}</span>
                                     </div>
+                                    <div className="flex items-center gap-3 text-gray-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${trainer.gender === 'female' ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'}`}>
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <span>
+                                            {trainer.gender === 'female' 
+                                                ? (locale === 'ar' ? 'أنثى' : locale === 'he' ? 'נקבה' : 'Female')
+                                                : (locale === 'ar' ? 'ذكر' : locale === 'he' ? 'זכר' : 'Male')}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
+
+                                </div>
+
                         </section>
 
                         {/* Teams Section */}

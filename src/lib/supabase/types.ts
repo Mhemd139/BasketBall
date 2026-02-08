@@ -21,6 +21,8 @@ export interface Database {
           phone: string
           role: 'admin' | 'sub_trainer'
           auth_user_id: string | null
+          gender: 'male' | 'female' | null
+          availability: string[] | null
           created_at: string
           updated_at: string
         }

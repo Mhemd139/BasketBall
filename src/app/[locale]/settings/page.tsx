@@ -1,17 +1,14 @@
-'use client';
-
-import { usePathname } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, Globe } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Globe, User } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
-import { use } from 'react';
+import { getSession } from '@/app/actions';
 
 interface SettingsPageProps {
   params: Promise<{ locale: string }>;
 }
 
-export default function SettingsPage({ params }: SettingsPageProps) {
-  const { locale } = use(params);
+export default async function SettingsPage({ params }: SettingsPageProps) {
+  const { locale } = await params;
+  const session = await getSession();
   const isRTL = locale === 'ar' || locale === 'he';
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
@@ -22,8 +19,17 @@ export default function SettingsPage({ params }: SettingsPageProps) {
       href: `/${locale}/settings/language`,
       icon: Globe,
     },
-    // Add more settings as they come (e.g. Notifications, Theme)
   ];
+
+  // Add Profile link if logged in
+  if (session && session.id) {
+    settingsItems.unshift({
+      label: locale === 'ar' ? 'ملفي الشخصي' : locale === 'he' ? 'הפרופיל שלי' : 'My Profile',
+      description: locale === 'ar' ? 'تعديل المعلومات وحذف الحساب' : locale === 'he' ? 'עריכת פרטים ומחיקת חשבון' : 'Edit details & delete account',
+      href: `/${locale}/trainers/${session.id}`,
+      icon: User,
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

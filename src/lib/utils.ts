@@ -35,3 +35,19 @@ export function getLocalizedField<T extends Record<string, any>>(
   const localizedFieldName = `${fieldName}_${locale}`
   return obj[localizedFieldName] || obj[`${fieldName}_en`] || ''
 }
+
+// Phone number formatting helper
+export function formatPhoneNumber(value: string): string {
+  // Remove all non-digit and non-plus characters first to handle the +972 case
+  let cleaned = value.replace(/[^\d+]/g, '')
+  
+  // specific handling for +972 or 972
+  if (cleaned.startsWith('+972')) {
+    cleaned = '0' + cleaned.substring(4)
+  } else if (cleaned.startsWith('972')) {
+    cleaned = '0' + cleaned.substring(3)
+  }
+  
+  // Finally ensure only digits remain
+  return cleaned.replace(/\D/g, '')
+}
