@@ -1,3 +1,4 @@
+// 🏀 Basketball Manager - Last build trigger: 2026-02-08T22:07:00
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import type { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
