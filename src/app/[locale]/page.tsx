@@ -6,6 +6,8 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSession } from '@/app/actions'
+import { QuickActions } from '@/components/home/QuickActions'
 import { getLocalizedField, formatTime } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
@@ -32,6 +34,8 @@ export default async function HomePage({
   }
   const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
+  const session = await getSession()
+  const canManage = !!session // Ensure logged-in trainers can see quick action shortcuts
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -46,7 +50,7 @@ export default async function HomePage({
   ] = await Promise.all([
     supabase.from('events').select('*, halls(*)').eq('event_date', today).order('start_time', { ascending: true }),
     supabase.from('halls').select('*', { count: 'exact', head: true }),
-    supabase.from('teams').select('*', { count: 'exact', head: true }),
+    supabase.from('classes').select('*', { count: 'exact', head: true }),
     supabase.from('trainees').select('*', { count: 'exact', head: true }),
   ])
 
@@ -94,20 +98,20 @@ export default async function HomePage({
               </div>
             </section>
 
-            {/* Quick Actions - Responsive Dual State */}
+            {/* Quick Actions Integration */}
+            <QuickActions locale={locale} canManage={canManage} />
+
+            {/* Navigation Section */}
             <section>
-               <div className="grid grid-cols-4 md:grid-cols-4 gap-2 md:gap-6">
+               <div className="grid grid-cols-4 gap-2 md:gap-6">
                 <Link href={`/${locale}/halls`}>
                   <Card interactive className="h-full p-2 md:p-6 active:scale-[0.95] transition-transform flex flex-col items-center justify-center text-center gap-1 md:gap-3 min-h-[80px] md:min-h-[160px]">
                      <div className="w-8 h-8 md:w-16 md:h-16 rounded-lg md:rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center transition-all">
                         <Building2 className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
                      </div>
                      <div className="flex flex-col items-center">
-                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
                            {locale === 'ar' ? 'القاعات' : locale === 'he' ? 'אולמות' : 'Halls'}
-                        </span>
-                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
-                           {locale === 'ar' ? 'عرض الجداول' : locale === 'he' ? 'צפה בלוחות' : 'View schedules'}
                         </span>
                      </div>
                   </Card>
@@ -119,11 +123,8 @@ export default async function HomePage({
                         <Users className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
                      </div>
                      <div className="flex flex-col items-center">
-                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
                            {locale === 'ar' ? 'الفرق' : locale === 'he' ? 'קבוצות' : 'Teams'}
-                        </span>
-                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
-                           {locale === 'ar' ? 'إدارة الفرق' : locale === 'he' ? 'ניהול קבוצות' : 'Manage teams'}
                         </span>
                      </div>
                   </Card>
@@ -135,11 +136,8 @@ export default async function HomePage({
                         <Dumbbell className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
                      </div>
                      <div className="flex flex-col items-center">
-                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
                            {locale === 'ar' ? 'المدربين' : locale === 'he' ? 'מאמנים' : 'Trainers'}
-                        </span>
-                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
-                           {locale === 'ar' ? 'قائمة المدربين' : locale === 'he' ? 'רשימת מאמנים' : 'Trainer list'}
                         </span>
                      </div>
                   </Card>
@@ -151,11 +149,8 @@ export default async function HomePage({
                         <BarChart3 className="w-4 h-4 md:w-8 md:h-8" strokeWidth={2.5} />
                      </div>
                      <div className="flex flex-col items-center">
-                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight">
+                        <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
                            {locale === 'ar' ? 'التقارير' : locale === 'he' ? 'דוחות' : 'Reports'}
-                        </span>
-                        <span className="hidden md:block text-xs md:text-sm text-gray-500 mt-1 font-medium">
-                           {locale === 'ar' ? 'تحليلات' : locale === 'he' ? 'אנליטיקה' : 'Analytics'}
                         </span>
                      </div>
                   </Card>
@@ -170,7 +165,7 @@ export default async function HomePage({
                   <Calendar className="w-4 h-4" />
                   {locale === 'ar' ? 'جدول اليوم' : locale === 'he' ? 'לוח זמנים להיום' : "Today's Schedule"}
                 </h2>
-                <Badge className="badge-primary text-[10px] px-2 py-0.5">
+                <Badge className="badge-primary text-[10px] px-2 py-0.5" variant="secondary">
                   {new Date().toLocaleDateString(locale, { weekday: 'short', day: 'numeric' })}
                 </Badge>
               </div>

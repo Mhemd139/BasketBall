@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { InteractiveEventModal } from './InteractiveEventModal';
+import { AttendanceModal } from './AttendanceModal';
 import { 
     format, addDays, startOfDay, isSameDay, parseISO, 
-    startOfWeek, startOfMonth, endOfWeek, endOfMonth, eachDayOfInterval 
+    startOfWeek, startOfMonth, endOfWeek, endOfMonth, eachDayOfInterval, isBefore 
 } from 'date-fns';
 import { enUS, arSA, he } from 'date-fns/locale';
-import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
-
-import { upsertEvent } from '@/app/actions'; // Import action
-import { CoachEventModal } from './CoachEventModal'; // Import Modal
+import { Calendar, Clock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { upsertEvent, fetchHallEvents } from '@/app/actions';
 
 interface Event {
     id: string;
@@ -28,20 +28,37 @@ interface HallScheduleProps {
     hallId: string;
     events: Event[];
     locale: string;
-    isEditable?: boolean; 
+    isEditable?: boolean;
 }
 
-export function HallSchedule({ hallId, events, locale, isEditable = false }: HallScheduleProps) {
+export function HallSchedule({ hallId, events: initialEvents, locale, isEditable = false }: HallScheduleProps) {
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [view, setView] = useState<'week' | 'month'>('week'); 
+    const [view, setView] = useState<'week' | 'month'>('month');
     const [now, setNow] = useState<Date | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false); // Modal State
-    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null); // New state
+    const [isModalOpen, setIsModalOpen] = useState(false); // Edit Modal State
+    const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false); // Attendance Modal State
+    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const [events, setEvents] = useState<Event[]>(initialEvents);
+    const [loading, setLoading] = useState(false);
 
     const dateLocale = locale === 'ar' ? arSA : locale === 'he' ? he : enUS;
     const isRTL = locale === 'ar' || locale === 'he';
 
-    // ... (useEffect and memo logic remains same) ...
+    // Fetch events when month changes
+    useEffect(() => {
+        const fetchEvents = async () => {
+            setLoading(true);
+            const start = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
+            const end = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
+            
+            const res = await fetchHallEvents(hallId, start, end);
+            if (res.success && res.events) {
+                setEvents(res.events as Event[]);
+            }
+            setLoading(false);
+        };
+        fetchEvents();
+    }, [selectedDate, hallId]);
 
     // Set current time on client side only to avoid hydration mismatch
     useEffect(() => {
@@ -53,7 +70,7 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
     // Generate days based on view
     const calendarDays = useMemo(() => {
         if (view === 'week') {
-            return Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i)); 
+            return Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
         } else {
             const start = startOfWeek(startOfMonth(selectedDate), { weekStartsOn: 0 });
             const end = endOfWeek(endOfMonth(selectedDate), { weekStartsOn: 0 });
@@ -77,6 +94,9 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
     };
 
     const handleAddEvent = () => {
+        const today = startOfDay(new Date());
+        if (isBefore(startOfDay(selectedDate), today)) return;
+
         setSelectedEvent(null);
         setIsModalOpen(true);
     };
@@ -88,14 +108,44 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
 
     const handleSaveEvent = async (eventData: any) => {
         // Optimistic update or just wait for revalidatePath from server action
-        // For simplicity, we rely on server action revalidation
-        await upsertEvent({
+        const res = await upsertEvent({
             ...eventData,
             id: selectedEvent?.id, // Include ID if editing
             hall_id: hallId
         });
-        setIsModalOpen(false);
-        setSelectedEvent(null);
+        
+        if (res.success && res.event) {
+            setIsModalOpen(false);
+            setSelectedEvent(null);
+            
+            // Update local state smoothly
+            setEvents(prev => {
+                // Ensure proper type matching
+                const newEvent = res.event as Event;
+                const exists = prev.find(e => e.id === newEvent.id);
+                if (exists) {
+                    return prev.map(e => e.id === newEvent.id ? newEvent : e);
+                }
+                return [...prev, newEvent];
+            });
+        }
+    };
+
+    const handleEventClick = (event: Event) => {
+        if (!isEditable) return;
+
+        const eventDate = parseISO(event.event_date);
+        const today = startOfDay(new Date());
+        // Check if event is today or in the past
+        const isPastOrToday = isBefore(eventDate, addDays(today, 1)); // < tomorrow starts = today or past
+
+        setSelectedEvent(event);
+        
+        if (isPastOrToday) {
+            setIsAttendanceModalOpen(true);
+        } else {
+            setIsModalOpen(true); // Edit for future logic is same as create
+        }
     };
 
     return (
@@ -104,25 +154,12 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
             <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg flex items-center gap-2 text-gray-800">
-                        <Calendar className="w-5 h-5 text-indigo-500" />
+                        <Calendar className="w-5 h-5 text-gold-500" />
                         {locale === 'ar' ? 'جدول القاعة' : locale === 'he' ? 'לוח זמנים' : 'Hall Schedule'}
                     </h3>
                     
                     <div className="flex items-center gap-2">
-                         <div className="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm">
-                            <button 
-                                onClick={() => setView('week')}
-                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${view === 'week' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                {locale === 'ar' ? 'أسبوع' : locale === 'he' ? 'שבוע' : 'Week'}
-                            </button>
-                            <button 
-                                onClick={() => setView('month')}
-                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${view === 'month' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                {locale === 'ar' ? 'شهر' : locale === 'he' ? 'חודש' : 'Month'}
-                            </button>
-                         </div>
+                         {/* View toggle removed as per user request - Month view only */}
                     </div>
                 </div>
 
@@ -175,10 +212,10 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
                                     relative flex flex-col items-center justify-center rounded-xl transition-all border
                                     ${view === 'month' ? 'h-10 md:h-14 w-full aspect-square md:aspect-auto' : 'min-w-[3.5rem] h-16 shrink-0'}
                                     ${isSelected 
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 z-10' 
+                                        ? 'bg-navy-600 text-white border-navy-600 shadow-md shadow-navy-200 scale-105 z-10' 
                                         : !isCurrentMonth && view === 'month'
                                             ? 'bg-gray-50/50 text-gray-300 border-transparent'
-                                            : 'bg-white text-gray-600 border-gray-100 hover:border-indigo-300 hover:bg-indigo-50'
+                                            : 'bg-white text-gray-600 border-gray-100 hover:border-gold-300 hover:bg-navy-50'
                                     }
                                 `}
                             >
@@ -193,7 +230,7 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
                                 {hasEvent && (
                                     <div className={`
                                         absolute bottom-1 w-1 h-1 md:w-1.5 md:h-1.5 rounded-full 
-                                        ${isSelected ? 'bg-white' : 'bg-indigo-500'}
+                                        ${isSelected ? 'bg-white' : 'bg-gold-500'}
                                     `} />
                                 )}
                             </button>
@@ -211,8 +248,13 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
                     </h4>
                     {isEditable && (
                         <button 
-                            className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-1"
+                            className={`text-xs px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1 ${
+                                isBefore(startOfDay(selectedDate), startOfDay(new Date()))
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                            }`}
                             onClick={handleAddEvent}
+                            disabled={isBefore(startOfDay(selectedDate), startOfDay(new Date()))}
                         >
                             <span className="text-lg leading-none">+</span>
                             {locale === 'ar' ? 'إضافة حدث' : locale === 'he' ? 'הוסף אירוע' : 'Add Event'}
@@ -246,7 +288,7 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
                                                 ? 'bg-orange-50/50 border-orange-400' 
                                                 : 'bg-blue-50/50 border-blue-400'
                                         } ${isCurrent ? 'ring-2 ring-indigo-500 ring-offset-1' : ''}`}
-                                            onClick={() => {/* Can open details/attendance modal here later */}}
+                                            onClick={() => handleEventClick(event)}
                                         >
                                             <div className="flex justify-between items-start mb-1">
                                                 <h4 className={`font-bold text-sm ${
@@ -309,14 +351,22 @@ export function HallSchedule({ hallId, events, locale, isEditable = false }: Hal
                 </div>
 
                 {isEditable && (
-                    <CoachEventModal 
-                        isOpen={isModalOpen} 
-                        onClose={() => setIsModalOpen(false)} 
-                        onSave={handleSaveEvent}
-                        initialDate={selectedDate}
-                        initialEvent={selectedEvent} // Pass for editing
-                        locale={locale}
-                    />
+                    <>
+                        <InteractiveEventModal 
+                            isOpen={isModalOpen} 
+                            onClose={() => setIsModalOpen(false)} 
+                            onSave={handleSaveEvent}
+                            initialDate={selectedDate}
+                            initialEvent={selectedEvent} // Pass for editing
+                            locale={locale}
+                        />
+                         <AttendanceModal
+                            isOpen={isAttendanceModalOpen}
+                            onClose={() => setIsAttendanceModalOpen(false)}
+                            event={selectedEvent}
+                            locale={locale}
+                        />
+                    </>
                 )}
             </div>
         </div>

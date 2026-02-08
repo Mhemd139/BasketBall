@@ -25,15 +25,17 @@ export default async function SchedulePage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const today = new Date().toISOString().split('T')[0]
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
-  // Fetch recent events ordered by date desc (newest first)
+  // Fetch upcoming events for the next 7 days
   const { data: events } = await (supabase as any)
     .from('events')
     .select('*, halls(*)')
-    .gte('event_date', threeMonthsAgo)
-    .order('event_date', { ascending: false })
-    .limit(50)
+    .gte('event_date', today)
+    .lte('event_date', nextWeek)
+    .order('event_date', { ascending: true })
+    .order('start_time', { ascending: true })
 
   const allEvents = (events || []) as EventWithDetails[]
 
@@ -45,8 +47,8 @@ export default async function SchedulePage({
     groupedEvents[dateKey].push(event)
   })
 
-  // Sort dates descending
-  const sortedDates = Object.keys(groupedEvents).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+  // Sort dates ascending (Today first)
+  const sortedDates = Object.keys(groupedEvents).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>

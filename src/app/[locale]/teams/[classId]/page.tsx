@@ -11,6 +11,7 @@ import { Users, User, MapPin, Calendar, Phone, Trophy, Plus } from 'lucide-react
 import { Card } from '@/components/ui/Card'
 import { getSession } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
+import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
 
 type Class = Database['public']['Tables']['classes']['Row']
 type Trainer = Database['public']['Tables']['trainers']['Row']
@@ -83,9 +84,17 @@ export default async function TeamDetailPage({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {/* Trainer Card */}
                 <div className="bg-white p-4 rounded-xl border shadow-sm">
-                  <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-medium">
-                    <User className="w-4 h-4 text-purple-600" />
-                    {locale === 'ar' ? 'المدرب' : locale === 'he' ? 'מאמן' : 'Coach'}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                      <User className="w-4 h-4 text-purple-600" />
+                      {locale === 'ar' ? 'المدرب' : locale === 'he' ? 'מאמן' : 'Coach'}
+                    </div>
+                    <TrainerReassignButton 
+                      classId={classId} 
+                      currentTrainerId={teamDetails.trainer_id} 
+                      locale={locale} 
+                      isAdmin={!!session} 
+                    />
                   </div>
                   <p className="font-semibold text-gray-900">
                     {teamDetails.trainers 

@@ -7,6 +7,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getLocalizedField } from '@/lib/utils'
 import Link from 'next/link'
 import { Users, User } from 'lucide-react'
+import { getSession } from '@/app/actions'
+import { TeamCard } from '@/components/teams/TeamCard'
+import { CreateTeamButton } from '@/components/teams/CreateTeamButton'
 
 export default async function TeamsPage({
   params,
@@ -15,6 +18,8 @@ export default async function TeamsPage({
 }) {
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
+  const session = await getSession()
+  const canCreate = !!session // Ensure logged-in trainers can see management features
 
   // Fetch classes (teams) with trainee count
   const { data: classes } = await supabase
@@ -41,48 +46,26 @@ export default async function TeamsPage({
                   {locale === 'ar' ? 'الفرق' : locale === 'he' ? 'קבוצות' : 'Teams'}
                 </h1>
               </div>
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-6">
                 {locale === 'ar' ? 'إدارة فرق كرة السلة' : locale === 'he' ? 'ניהול קבוצות כדורסל' : 'Manage basketball teams'}
               </p>
             </section>
+
+            {/* Create Team Button */}
+            <CreateTeamButton locale={locale} canCreate={canCreate} />
 
             {/* Teams List */}
             <section>
               {classes && classes.length > 0 ? (
                 <div className="space-y-3">
-                  {classes.map((cls: any, index: number) => {
-                    const traineeCount = cls.trainees?.[0]?.count ?? 0
-                    return (
-                      <Link key={cls.id} href={`/${locale}/teams/${cls.id}`}>
-                        <Card
-                          interactive
-                          className={`animate-fade-in-up stagger-${Math.min(index + 1, 4)}`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center flex-shrink-0">
-                              <Users className="w-6 h-6 text-purple-600" strokeWidth={2.5} />
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-base font-semibold text-gray-900 mb-1">
-                                {getLocalizedField(cls, 'name', locale)}
-                              </h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <User className="w-3.5 h-3.5" />
-                                <span>
-                                  {traineeCount} {locale === 'ar' ? 'لاعب' : locale === 'he' ? 'שחקנים' : 'players'}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="text-gray-300 text-lg flex-shrink-0">
-                              {locale === 'ar' || locale === 'he' ? '←' : '→'}
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    )
-                  })}
+                  {classes.map((cls: any, index: number) => (
+                    <TeamCard 
+                        key={cls.id} 
+                        cls={cls} 
+                        locale={locale} 
+                        isEditable={canCreate}
+                    />
+                  ))}
                 </div>
               ) : (
                 <Card className="animate-fade-in-up">

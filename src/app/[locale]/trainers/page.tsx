@@ -7,6 +7,7 @@ import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { Card } from '@/components/ui/Card'
 import { User, Phone, Trophy, Users } from 'lucide-react'
+import Link from 'next/link'
 
 type Trainer = Database['public']['Tables']['trainers']['Row']
 
@@ -38,24 +39,26 @@ export default async function TrainersPage({
         <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             {(trainers || []).map((trainer: Trainer) => (
-              <Card key={trainer.id} className="flex items-center gap-4">
-                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md text-white">
-                    <User className="w-8 h-8" strokeWidth={1.5} />
-                 </div>
-                 
-                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-gray-900 truncate">
-                      {getLocalizedField(trainer, 'name', locale)}
-                    </h3>
-                    
-                    {trainer.phone && (
-                      <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-1">
-                        <Phone className="w-3.5 h-3.5" />
-                        <span dir="ltr">{trainer.phone}</span>
-                      </div>
-                    )}
-                 </div>
-              </Card>
+              <Link key={trainer.id} href={`/${locale}/trainers/${trainer.id}`}>
+                <Card className="flex items-center gap-4 hover:border-indigo-500 transition-all border-2 border-transparent group interactive">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md text-white group-hover:scale-105 transition-transform">
+                      <User className="w-8 h-8" strokeWidth={1.5} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-lg text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                        {getLocalizedField(trainer, 'name', locale)}
+                      </h3>
+                      
+                      {trainer.phone && (
+                        <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-1">
+                          <Phone className="w-3.5 h-3.5" />
+                          <span dir="ltr">{trainer.phone}</span>
+                        </div>
+                      )}
+                  </div>
+                </Card>
+              </Link>
             ))}
 
             {(!trainers || trainers.length === 0) && (

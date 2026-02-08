@@ -60,10 +60,18 @@ export async function upsertEvent(eventData: any) {
       return { success: false, error: 'Missing required fields' }
   }
 
+  // Prevent creating events in the past
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const eventDate = new Date(eventData.event_date)
+  if (eventDate < today && !eventData.id) {
+      return { success: false, error: 'Cannot add events to past dates' }
+  }
+
   // Inject trainer_id if creating or updating
   const payload = {
       ...eventData,
-      trainer_id: session.id // Track who created/modified it (or owner)
+      trainer_id: eventData.trainer_id || session.id // Use provided trainer or fallback to session
   }
 
   const { data, error } = await (supabase as any)
@@ -452,4 +460,312 @@ export async function getTraineeAttendanceStats(traineeId: string) {
   const absent = data.filter((r: any) => r.status === 'absent').length
   
   return { success: true, stats: { total, present, late, absent } }
+}
+// --- Attendance Actions ---
+
+export async function getEventAttendance(eventId: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  // 1. Get all trainees
+  const { data: trainees, error: traineesError } = await (supabase as any)
+    .from('trainees')
+    .select('*')
+    .order('name_en', { ascending: true })
+
+  if (traineesError) {
+    console.error('Error fetching trainees:', traineesError)
+    return { success: false, error: traineesError.message }
+  }
+
+  // 2. Get existing attendance for this event
+  const { data: attendance, error: attendanceError } = await (supabase as any)
+    .from('attendance')
+    .select('*')
+    .eq('event_id', eventId)
+
+  if (attendanceError) {
+    console.error('Error fetching attendance:', attendanceError)
+    return { success: false, error: attendanceError.message }
+  }
+
+  return { success: true, trainees, attendance }
+}
+
+export async function updateAttendance(eventId: string, traineeId: string, status: AttendanceStatus) {
+  const session = await getSession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const supabase = await createServerSupabaseClient()
+
+  // Upsert attendance record
+  const { data, error } = await (supabase as any)
+    .from('attendance')
+    .upsert({
+      event_id: eventId,
+      trainee_id: traineeId,
+      status: status,
+      marked_by: session.id,
+      marked_at: new Date().toISOString()
+    }, { onConflict: 'event_id, trainee_id' })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating attendance:', error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/[locale]/halls/[id]', 'page')
+  return { success: true, data }
+}
+
+export async function getEventRefData() {
+    const supabase = await createServerSupabaseClient()
+    
+    // Fetch Trainers
+    const { data: trainers, error: trainersError } = await (supabase as any)
+      .from('trainers')
+      .select('id, name_en, name_ar, name_he')
+      .order('name_en')
+  
+    // Fetch Classes (Teams)
+    const { data: classes, error: classesError } = await (supabase as any)
+      .from('classes')
+      .select('id, name_en, name_ar, name_he')
+      .order('name_en')
+
+    // Fetch Halls
+    const { data: halls, error: hallsError } = await (supabase as any)
+      .from('halls')
+      .select('id, name_en, name_ar, name_he')
+      .order('name_en')
+  
+    if (trainersError || classesError || hallsError) {
+      console.error('Error fetching ref data:', trainersError || classesError || hallsError)
+      return { success: false, error: 'Failed to fetch reference data' }
+    }
+  
+    return { success: true, trainers, classes, halls }
+}
+
+export async function fetchHallEvents(hallId: string, startDate: string, endDate: string) {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data: events, error } = await (supabase as any)
+        .from('events')
+        .select('*')
+        .eq('hall_id', hallId)
+        .gte('event_date', startDate)
+        .lte('event_date', endDate)
+        .order('event_date', { ascending: true })
+        .order('start_time', { ascending: true })
+
+    if (error) {
+        console.error('Error fetching hall events:', error)
+        return { success: false, error: error.message }
+    }
+
+    return { success: true, events }
+}
+export async function searchTrainees(query: string) {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data: trainees, error } = await (supabase as any)
+        .from('trainees')
+        .select('*, classes(name_en, name_ar, name_he)')
+        .or(`name_en.ilike.%${query}%,name_ar.ilike.%${query}%,name_he.ilike.%${query}%,phone.ilike.%${query}%`)
+        .limit(10)
+
+    if (error) return { success: false, error: error.message }
+    return { success: true, trainees }
+}
+
+export async function transferTrainee(traineeId: string, classId: string) {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('trainees')
+        .update({ class_id: classId })
+        .eq('id', traineeId)
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/[locale]/teams/[classId]', 'page')
+    return { success: true }
+}
+
+export async function updateTrainee(traineeId: string, updateData: any) {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('trainees')
+        .update(updateData)
+        .eq('id', traineeId)
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/[locale]/teams/[classId]', 'page')
+    return { success: true }
+}
+
+export async function getTrainerProfile(trainerId: string) {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data: trainer, error: trainerError } = await (supabase as any)
+        .from('trainers')
+        .select('*')
+        .eq('id', trainerId)
+        .single()
+
+    if (trainerError) return { success: false, error: trainerError.message }
+
+    const { data: teams, error: teamsError } = await (supabase as any)
+        .from('classes')
+        .select('*, halls(name_en, name_ar, name_he)')
+        .eq('trainer_id', trainerId)
+
+    if (teamsError) return { success: false, error: teamsError.message }
+
+    return { success: true, trainer, teams }
+}
+
+export async function updateTeamTrainer(classId: string, trainerId: string) {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') { // Assuming only admin/head coach can reassign
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('classes')
+        .update({ trainer_id: trainerId })
+        .eq('id', classId)
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/[locale]/teams/[classId]', 'page')
+    return { success: true }
+}
+export async function quickRegisterAndAssign(traineeData: any, classId: string) {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { data: trainee, error: traineeError } = await (supabase as any)
+        .from('trainees')
+        .insert({
+            ...traineeData,
+            class_id: classId
+        })
+        .select()
+        .single()
+
+    if (traineeError) {
+        console.error('Error in quick register:', traineeError)
+        return { success: false, error: traineeError.message }
+    }
+
+    revalidatePath('/[locale]/halls/[id]', 'page')
+    return { success: true, trainee }
+}
+
+export async function assignTraineeToTeam(traineeId: string, classId: string) {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('trainees')
+        .update({ class_id: classId })
+        .eq('id', traineeId)
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/[locale]/halls/[id]', 'page')
+    return { success: true }
+}
+
+export async function createTeam(teamData: { 
+    name_ar: string, 
+    name_he: string, 
+    name_en: string, 
+    trainer_id: string | null, 
+    hall_id: string | null 
+}) {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { data, error } = await (supabase as any)
+        .from('classes')
+        .insert(teamData)
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error creating team:', error)
+        return { success: false, error: error.message }
+    }
+
+    revalidatePath('/[locale]/teams', 'page')
+    return { success: true, team: data }
+}
+
+export async function updateTeam(id: string, teamData: any) {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'coach')) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { data, error } = await (supabase as any)
+        .from('classes')
+        .update(teamData)
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error updating team:', error)
+        return { success: false, error: error.message }
+    }
+
+    revalidatePath('/[locale]/teams', 'page')
+    revalidatePath(`/[locale]/teams/${id}`, 'page')
+    return { success: true, team: data }
+}
+
+export async function deleteTeam(id: string) {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('classes')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error deleting team:', error)
+        return { success: false, error: error.message }
+    }
+
+    revalidatePath('/[locale]/teams', 'page')
+    return { success: true }
 }

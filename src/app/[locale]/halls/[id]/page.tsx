@@ -27,12 +27,19 @@ export default async function HallDetailPage({
   const supabase = await createServerSupabaseClient()
   const session = await getSession() // Fetch Session
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date()
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0]
 
   const [{ data: hall, error: hallError }, { data: events }] = await Promise.all([
     supabase.from('halls').select('*').eq('id', id).single(),
-    supabase.from('events').select('*').eq('hall_id', id).gte('event_date', today)
-      .order('event_date', { ascending: true }).order('start_time', { ascending: true }).limit(10),
+    supabase.from('events')
+      .select('*')
+      .eq('hall_id', id)
+      .gte('event_date', startOfMonth)
+      .lte('event_date', endOfMonth)
+      .order('event_date', { ascending: true })
+      .order('start_time', { ascending: true }),
   ])
 
   if (hallError || !hall) {

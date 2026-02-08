@@ -16,10 +16,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     
     const variantClasses = {
-      primary: 'btn-primary',
-      secondary: 'btn-secondary',
-      orange: 'btn-orange',
-      ghost: 'btn-secondary border-transparent hover:border-transparent hover:bg-gray-100',
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-300',
+      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm',
+      orange: 'bg-orange-500 text-white hover:bg-orange-600 shadow-sm',
+      ghost: 'hover:bg-accent hover:text-accent-foreground',
+      outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
     }
 
     return (

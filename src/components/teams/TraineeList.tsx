@@ -170,6 +170,7 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName }
             locale={locale} 
             teamName={teamName}
             trainerName={trainerName}
+            isAdmin={isAdmin}
             onClose={() => setSelectedTrainee(null)} 
         />
       )}
