@@ -26,6 +26,7 @@ export default async function TeamsPage({
     .from('classes')
     .select('*, trainees(count)')
     .order('created_at', { ascending: true })
+    .limit(50)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>

@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useDeferredValue, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -23,19 +23,20 @@ interface ClassPaymentsClientProps {
 
 export default function ClassPaymentsClient({ trainees, classData, locale, dict }: ClassPaymentsClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const deferredSearch = useDeferredValue(searchTerm)
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null)
-  
-  const className = classData 
+
+  const className = classData
         ? (locale === 'ar' ? classData.name_ar : locale === 'he' ? classData.name_he : classData.name_en)
         : ''
   const trainerName = classData?.trainers
         ? (locale === 'ar' ? classData.trainers.name_ar : locale === 'he' ? classData.trainers.name_he : classData.trainers.name_en)
         : ''
 
-  const filteredTrainees = trainees.filter(t => {
+  const filteredTrainees = useMemo(() => trainees.filter(t => {
       const name = locale === 'ar' ? t.name_ar : locale === 'he' ? t.name_he : t.name_en
-      return name.toLowerCase().includes(searchTerm.toLowerCase())
-  })
+      return name.toLowerCase().includes(deferredSearch.toLowerCase())
+  }), [trainees, deferredSearch, locale])
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -48,7 +49,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
             backHref={`/${locale}/payments`}
         />
 
-        <main className="flex-1 pt-24 pb-20 px-4 md:px-8">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
             <div className="max-w-5xl mx-auto space-y-6">
                 
                 {/* Header Info */}

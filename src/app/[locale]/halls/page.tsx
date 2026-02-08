@@ -26,6 +26,7 @@ export default async function HallsPage({
     .from('halls')
     .select('*')
     .order('created_at', { ascending: true })
+    .limit(50)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>

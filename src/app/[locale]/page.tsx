@@ -39,9 +39,6 @@ export default async function HomePage({
 
   const today = new Date().toISOString().split('T')[0]
 
-  // ⚡ Performance Check: Start Query Timer
-  const dbStart = Date.now()
-
   const [
     { data: events },
     { count: hallsCount },
@@ -54,10 +51,6 @@ export default async function HomePage({
     supabase.from('trainees').select('*', { count: 'exact', head: true }),
   ])
 
-  // ⚡ Performance Check: Log Duration
-  const dbDuration = Date.now() - dbStart
-  console.log(`\n⚡ [Home Page] Database Fetch Time: ${dbDuration}ms \n`)
-
   const todayEvents = (events || []) as unknown as EventWithHall[]
 
   return (
@@ -67,7 +60,7 @@ export default async function HomePage({
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
 
-        <main className="flex-1 pt-18 pb-20 md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl md:max-w-7xl mx-auto w-full space-y-4 md:space-y-8">
             {/* Stats */}
             <section>

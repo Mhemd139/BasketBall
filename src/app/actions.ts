@@ -115,8 +115,6 @@ export async function sendOTP(phone: string) {
             from: 'Vonage APIs', // Generic sender ID matches docs
             text: `Your verification code is: ${code}`
         })
-        console.log('Vonage Response:', JSON.stringify(resp, null, 2))
-        
         // Check for API-level errors (e.g. non-whitelisted number)
         if (resp.messages && resp.messages[0].status !== '0') {
             const errorText = resp.messages[0]['error-text'] || `Vonage Error Code: ${resp.messages[0].status}`
@@ -139,7 +137,6 @@ export async function sendOTP(phone: string) {
   }
 
   // Fallback to Mock
-  console.log('Using Mock OTP for:', phone)
   return { success: true } 
 }
 

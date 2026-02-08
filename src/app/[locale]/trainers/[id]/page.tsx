@@ -35,7 +35,7 @@ export default async function TrainerProfilePage({
                     backHref={`/${locale}/trainers`} 
                 />
 
-                <main className="flex-1 pt-24 px-4 pb-12">
+                <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
                     <div className="max-w-4xl mx-auto space-y-8">
                         
                         {/* Profile Header */}

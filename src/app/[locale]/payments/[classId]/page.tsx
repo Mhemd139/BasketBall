@@ -18,10 +18,6 @@ export default async function ClassPaymentsPage({
     supabase.from('trainees').select('*, classes (name_en, name_ar, name_he)').eq('class_id', classId).order('name_en'),
   ])
 
-  if (error) {
-    console.error('Error fetching trainees:', error)
-  }
-
   return (
     <ClassPaymentsClient 
         trainees={trainees || []} 

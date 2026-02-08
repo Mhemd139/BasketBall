@@ -82,7 +82,7 @@ function ProfileContent() {
           backHref={`/${locale}/more`} 
         />
         
-        <main className="flex-1 pt-24 px-5">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
           <div className="max-w-md mx-auto">
              <Card className="p-6 relative overflow-hidden transition-all duration-500">
                 {success ? (

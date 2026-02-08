@@ -26,10 +26,7 @@ export default async function PaymentsPage({
       trainers (name_en, name_ar, name_he)
     `)
     .order('name_en')
-
-  if (error) {
-    console.error('Error fetching classes:', error)
-  }
+    .limit(50)
 
   const safeClasses = (classes || []) as any[]
 
@@ -44,7 +41,7 @@ export default async function PaymentsPage({
             backHref={`/${locale}/more`}
         />
 
-        <main className="flex-1 pt-24 pb-20 px-4 md:px-8">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
             <div className="max-w-4xl mx-auto space-y-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                     <Trophy className="w-6 h-6 text-yellow-500" />

@@ -24,6 +24,7 @@ export default async function TrainersPage({
     .from('trainers')
     .select('*')
     .order('name_en')
+    .limit(50)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
