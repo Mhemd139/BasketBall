@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { locales, defaultLocale, isValidLocale } from './lib/i18n/config'
+import { verify } from './lib/session'
 
 const publicPaths = ['/login', '/favicon.ico', '/api/auth']
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // 1. Handle Locale Logic
@@ -30,7 +31,8 @@ export function middleware(request: NextRequest) {
 
   // 2. Strict Auth Enforcement
   // Check for admin_session cookie
-  const session = request.cookies.get('admin_session')
+  const sessionCookie = request.cookies.get('admin_session')
+  const session = sessionCookie ? await verify(sessionCookie.value) : null
   
   // Determine if requested path is public
   const pathWithoutLocale = pathnameHasLocale 
