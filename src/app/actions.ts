@@ -3,6 +3,7 @@
 import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { sign, verify } from '@/lib/session'
 
 type AttendanceStatus = 'present' | 'absent' | 'late'
 
@@ -208,11 +209,13 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
 
   // 3. Create Session
   const cookieStore = await cookies()
-  cookieStore.set('admin_session', JSON.stringify({
+  const sessionToken = await sign({
     id: trainer.id,
     name: trainer.name_en || 'Trainer',
     role: 'trainer'
-  }), {
+  })
+
+  cookieStore.set('admin_session', sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -250,11 +253,13 @@ export async function updateProfile(name: string, gender?: 'male' | 'female', av
   
   // Update session cookie with new name
   const cookieStore = await cookies()
-  cookieStore.set('admin_session', JSON.stringify({
+  const sessionToken = await sign({
     ...session,
     name: name,
     gender: gender
-  }), {
+  })
+
+  cookieStore.set('admin_session', sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -364,11 +369,7 @@ export async function getSession() {
   const cookieStore = await cookies()
   const session = cookieStore.get('admin_session')
   if (!session) return null
-  try {
-    return JSON.parse(session.value)
-  } catch {
-    return null
-  }
+  return await verify(session.value)
 }
 
 // --- Attendance Actions ---
