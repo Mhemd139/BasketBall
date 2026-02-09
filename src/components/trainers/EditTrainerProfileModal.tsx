@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { useRouter } from 'next/navigation'
-import { Loader2, CheckCircle2, AlertCircle, Trash2, Phone } from 'lucide-react'
+import { Loader2, CheckCircle2, AlertCircle, Trash2, Phone, User, Calendar } from 'lucide-react'
 import { updateTrainerDetails, deleteAccount } from '@/app/actions'
 import { formatPhoneNumber } from '@/lib/utils'
 
@@ -12,9 +12,10 @@ interface EditTrainerProfileModalProps {
     onClose: () => void
     trainer: any
     locale: string
+    mode?: 'all' | 'personal' | 'schedule'
 }
 
-export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: EditTrainerProfileModalProps) {
+export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode = 'all' }: EditTrainerProfileModalProps) {
     const [name, setName] = useState(trainer.name_en || '')
     const [phone, setPhone] = useState(trainer.phone || '')
     const [gender, setGender] = useState<'male' | 'female'>(trainer.gender || 'male')
@@ -24,20 +25,43 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
     const [confirmDelete, setConfirmDelete] = useState(false)
     const router = useRouter()
 
+    // Reset state when opening/changing mode
+    useEffect(() => {
+        if (isOpen) {
+            // Try to find the best name match based on locale, fallback to name_en
+            const localizedName = trainer[`name_${locale}` as keyof typeof trainer] || trainer.name_en || ''
+            setName(localizedName)
+            
+            setPhone(trainer.phone || '')
+            setGender(trainer.gender || 'male')
+            setAvailability(trainer.availability || [])
+            setError('')
+            setConfirmDelete(false)
+        }
+    }, [isOpen, trainer, locale])
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError('')
 
         try {
-            const res = await updateTrainerDetails(trainer.id, {
-                name_en: name,
-                name_ar: name,
-                name_he: name,
-                phone,
-                gender,
-                availability
-            })
+            // Only send fields relevant to the current mode
+            const updateData: any = {}
+            
+            if (mode === 'all' || mode === 'personal') {
+                updateData.name_en = name
+                updateData.name_ar = name
+                updateData.name_he = name
+                updateData.phone = phone
+                updateData.gender = gender
+            }
+            
+            if (mode === 'all' || mode === 'schedule') {
+                updateData.availability = availability
+            }
+
+            const res = await updateTrainerDetails(trainer.id, updateData)
 
             if (res.success) {
                 // Force a hard refresh of the data
@@ -96,6 +120,15 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
         { id: 'Friday', label: locale === 'ar' ? 'الجمعة' : locale === 'he' ? 'שישי' : 'Friday' },
         { id: 'Saturday', label: locale === 'ar' ? 'السبت' : locale === 'he' ? 'שבת' : 'Saturday' },
     ]
+    
+    // Dynamic titles based on mode
+    const title = mode === 'schedule' 
+        ? (locale === 'ar' ? 'تعديل الجدول' : locale === 'he' ? 'ערוך לוח זמנים' : 'Edit Schedule')
+        : (locale === 'ar' ? 'الملف الشخصي' : locale === 'he' ? 'פרופיל אישי' : 'Edit Profile')
+
+    const subtitle = mode === 'schedule'
+        ? (locale === 'ar' ? 'حدد الأيام التي تكون فيها متاحاً للتدريب' : locale === 'he' ? 'בחר את הימים בהם אתה זמין לאימון' : 'Select days you are available for training')
+        : (locale === 'ar' ? 'قم بتحديث معلوماتك الشخصية' : locale === 'he' ? 'עדכן את הפרטים האישיים שלך' : 'Update your personal information')
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -103,12 +136,14 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
                 {/* Header - Clean & Modern */}
                 <div className="pt-8 pb-2 px-6 text-center">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-[800] text-transparent bg-clip-text bg-gradient-to-br from-navy-900 via-indigo-800 to-indigo-600 tracking-tight animate-in slide-in-from-top-2 fade-in duration-500 delay-100">
-                            {locale === 'ar' ? 'الملف الشخصي' : locale === 'he' ? 'פרופיל אישי' : 'Trainer Profile'}
+                        <DialogTitle className="text-2xl font-[800] text-transparent bg-clip-text bg-gradient-to-br from-navy-900 via-indigo-800 to-indigo-600 tracking-tight animate-in slide-in-from-top-2 fade-in duration-500 delay-100 flex items-center justify-center gap-2">
+                             {mode === 'schedule' && <Calendar className="w-6 h-6 text-indigo-600" />}
+                             {(mode === 'personal' || mode === 'all') && <User className="w-6 h-6 text-indigo-600" />}
+                             {title}
                         </DialogTitle>
                     </DialogHeader>
                     <p className="text-xs text-gray-400 font-medium mt-1 animate-in slide-in-from-top-1 fade-in duration-500 delay-150">
-                        {locale === 'ar' ? 'قم بتحديث معلوماتك وتفضيلات التدريب' : locale === 'he' ? 'עדכן את הפרטים וההעדפות שלך' : 'Update your information and schedule'}
+                        {subtitle}
                     </p>
                 </div>
 
@@ -116,6 +151,10 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
                     
                     {/* Input Group */}
                     <div className="space-y-5">
+                        
+                        {/* Personal Info Fields */}
+                        {(mode === 'all' || mode === 'personal') && (
+                        <>
                         {/* Name Input - Soft & Tactile */}
                         <div className="space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-200">
                             <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">
@@ -175,8 +214,11 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
                                 </button>
                             </div>
                         </div>
+                        </>
+                        )}
 
                         {/* Availability - Modern Pills */}
+                        {(mode === 'all' || mode === 'schedule') && (
                         <div className="space-y-3 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-500">
                             <div className="flex justify-between items-end px-1">
                                 <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
@@ -207,6 +249,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
                                 ))}
                             </div>
                         </div>
+                        )}
                     </div>
 
                     {error && (
@@ -244,7 +287,8 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
                     </div>
 
                     
-                    {/* Delete Account - Minimal & Hidden-ish */}
+                    {/* Delete Account - Minimal & Hidden-ish - Only show in 'all' or 'personal' */}
+                    {(mode === 'all' || mode === 'personal') && (
                     <div className="flex justify-center pt-2 animate-in fade-in duration-1000 delay-1000">
                         <button
                             type="button"
@@ -268,6 +312,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale }: Ed
                             )}
                         </button>
                     </div>
+                    )}
 
                 </form>
             </DialogContent>

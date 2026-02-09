@@ -118,6 +118,7 @@ export async function sendOTP(phone: string) {
                 brand: 'Basketball',
                 code_length: '4',
                 pin_expiry: 300,
+                workflow_id: 6,
             }),
         })
         const data = await resp.json()
@@ -148,6 +149,7 @@ export async function sendOTP(phone: string) {
                     brand: 'Basketball',
                     code_length: '4',
                     pin_expiry: 300,
+                    workflow_id: 6,
                 }),
             })
             const retryData = await retry.json()
@@ -156,7 +158,6 @@ export async function sendOTP(phone: string) {
             }
             return { success: false, error: retryData.error_text || 'SMS failed' }
         } else {
-            console.error('Vonage Verify Error:', data.error_text)
             return { success: false, error: data.error_text || 'SMS failed' }
         }
     } catch (e: any) {

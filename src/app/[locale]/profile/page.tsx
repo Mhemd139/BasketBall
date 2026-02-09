@@ -6,7 +6,7 @@ import { getTrainerProfileServer, logout } from '@/app/actions'
 import { EditTrainerProfileModal } from '@/components/trainers/EditTrainerProfileModal'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { User, Calendar, Edit2, LogOut, Medal, Loader2, Phone } from 'lucide-react'
+import { User, Calendar, Edit2, LogOut, Medal, Loader2, Phone, Settings } from 'lucide-react'
 import type { Locale } from '@/lib/i18n/config'
 import Image from 'next/image'
 import { formatPhoneNumber } from '@/lib/utils'
@@ -26,7 +26,10 @@ export default function ProfilePage() {
   const locale = params.locale as Locale
   const [trainer, setTrainer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [modalState, setModalState] = useState<{ open: boolean, mode: 'all' | 'personal' | 'schedule' }>({
+      open: false,
+      mode: 'all'
+  })
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const router = useRouter()
 
@@ -44,7 +47,7 @@ export default function ProfilePage() {
         }
     }
     fetchTrainer()
-  }, [isEditModalOpen])
+  }, [modalState.open]) // Re-fetch when modal closes
 
   const handleLogout = async () => {
     try {
@@ -56,6 +59,10 @@ export default function ProfilePage() {
     }
   }
 
+  const openModal = (mode: 'personal' | 'schedule') => {
+      setModalState({ open: true, mode })
+  }
+
   if (loading) return (
       <div className="min-h-screen bg-navy-50 flex items-center justify-center">
           <Loader2 className="w-10 h-10 text-gold-500 animate-spin" />
@@ -63,6 +70,9 @@ export default function ProfilePage() {
   )
 
   if (!trainer) return null
+
+  // Determine correct name to display
+  const displayName = trainer[`name_${locale}`] || trainer.name_en || trainer.name || ''
 
   // Custom Avatar Component
   const CoachAvatar = ({ gender }: { gender: string }) => {
@@ -124,16 +134,18 @@ export default function ProfilePage() {
                 <div className="text-center mb-10 relative">
                     <div className="relative inline-block group">
                         <CoachAvatar gender={trainer.gender || 'male'} />
+                        {/* Only Edit Personal Info from here */}
                         <button 
-                            onClick={() => setIsEditModalOpen(true)}
-                            className="absolute bottom-2 right-0 w-12 h-12 bg-white text-navy-900 rounded-2xl shadow-xl border border-gray-100 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group-hover:-translate-y-1 hover:text-gold-500"
+                            onClick={() => openModal('personal')}
+                            className="absolute bottom-2 right-0 w-12 h-12 bg-white text-navy-900 rounded-2xl shadow-xl border border-gray-100 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group-hover:-translate-y-1 hover:text-gold-500 z-10"
+                            aria-label="Edit Personal Info"
                         >
                             <Edit2 size={20} className="w-5 h-5" />
                         </button>
                     </div>
                     
-                    <h1 className="text-4xl md:text-6xl font-black text-navy-900 mt-6 mb-2 tracking-tighter drop-shadow-sm">
-                        {trainer.name}
+                    <h1 className="text-4xl md:text-5xl font-black text-navy-900 mt-6 mb-2 tracking-tighter drop-shadow-sm px-4">
+                        {displayName}
                     </h1>
                     
                     <div className="flex items-center justify-center gap-2">
@@ -150,7 +162,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     {/* Training Schedule Card */}
-                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group">
+                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group flex flex-col h-full">
                         <div className="flex justify-between items-start mb-6">
                              <div>
                                 <h3 className="text-2xl font-black text-navy-900">
@@ -165,7 +177,7 @@ export default function ProfilePage() {
                              </div>
                         </div>
                         
-                        <div className="flex flex-wrap gap-2.5">
+                        <div className="flex flex-wrap gap-2.5 mb-6 flex-1 content-start">
                             {trainer.availability && trainer.availability.length > 0 ? (
                                 trainer.availability.map((dayId: string) => {
                                     // @ts-ignore
@@ -188,10 +200,19 @@ export default function ProfilePage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Dedicated Edit Schedule Button */}
+                        <button 
+                            onClick={() => openModal('schedule')}
+                            className="w-full py-3 rounded-2xl border-2 border-indigo-50 text-indigo-600 font-bold text-sm hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 group-hover:border-indigo-100"
+                        >
+                            <Settings className="w-4 h-4" />
+                            {locale === 'ar' ? 'تعديل الجدول' : locale === 'he' ? 'ערוך לוח זמנים' : 'Edit Schedule'}
+                        </button>
                     </div>
 
                     {/* Personal Info Card */}
-                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group">
+                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group flex flex-col h-full">
                         <div className="flex justify-between items-start mb-6">
                              <div>
                                 <h3 className="text-2xl font-black text-navy-900">
@@ -206,7 +227,7 @@ export default function ProfilePage() {
                              </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 flex-1">
                              <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 hover:bg-white border border-transparent hover:border-gray-100 transition-all duration-300 shadow-sm hover:shadow">
                                 <span className="font-bold text-gray-400 text-xs uppercase tracking-wider">{locale === 'ar' ? 'الجنس' : locale === 'he' ? 'מגדר' : 'Gender'}</span>
                                 <span className="font-black text-navy-900 text-lg flex items-center gap-2">
@@ -266,10 +287,11 @@ export default function ProfilePage() {
 
             {/* Edit Modal Integrated */}
             <EditTrainerProfileModal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
+                isOpen={modalState.open}
+                onClose={() => setModalState({ ...modalState, open: false })}
                 locale={locale}
                 trainer={trainer}
+                mode={modalState.mode}
             />
         </main>
       </div>
