@@ -125,6 +125,36 @@ export async function sendOTP(phone: string) {
         if (data.status === '0') {
             // Success — return request_id for verification step
             return { success: true, requestId: data.request_id }
+        } else if (data.status === '10' && data.request_id) {
+            // Concurrent request — cancel the old one and retry once
+            await fetch('https://api.nexmo.com/verify/control/json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key: vonageKey,
+                    api_secret: vonageSecret,
+                    request_id: data.request_id,
+                    cmd: 'cancel',
+                }),
+            })
+            // Retry
+            const retry = await fetch('https://api.nexmo.com/verify/json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key: vonageKey,
+                    api_secret: vonageSecret,
+                    number: phone,
+                    brand: 'Basketball',
+                    code_length: '4',
+                    pin_expiry: 300,
+                }),
+            })
+            const retryData = await retry.json()
+            if (retryData.status === '0') {
+                return { success: true, requestId: retryData.request_id }
+            }
+            return { success: false, error: retryData.error_text || 'SMS failed' }
         } else {
             console.error('Vonage Verify Error:', data.error_text)
             return { success: false, error: data.error_text || 'SMS failed' }
