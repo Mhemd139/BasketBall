@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { sendOTP, verifyOTP, updateProfile } from '@/app/actions'
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [otpContext, setOtpContext] = useState('') // For Vonage Hash or RequestID
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const verifyingRef = useRef(false)
   const router = useRouter()
   const params = useParams()
   const locale = params.locale as string
@@ -72,15 +73,15 @@ export default function LoginPage() {
     }
   }
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const doVerify = async (code: string, context: string) => {
+    if (verifyingRef.current) return
+    verifyingRef.current = true
     setError('')
     setLoading(true)
 
     try {
-      // Normalize phone again just in case
       const cleanPhone = normalizePhone(phone)
-      const result = await verifyOTP(cleanPhone, otp, otpContext) // Pass hash/context
+      const result = await verifyOTP(cleanPhone, code, context)
 
       if (result.success) {
         if ((result as any).isNew) {
@@ -96,6 +97,20 @@ export default function LoginPage() {
       setError(err.message)
     } finally {
       setLoading(false)
+      verifyingRef.current = false
+    }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    doVerify(otp, otpContext)
+  }
+
+  const handleOtpChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4)
+    setOtp(digits)
+    if (digits.length === 4) {
+      doVerify(digits, otpContext)
     }
   }
 
@@ -288,7 +303,7 @@ export default function LoginPage() {
                     autoComplete="one-time-code"
                     inputMode="numeric"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    onChange={(e) => handleOtpChange(e.target.value)}
                     className="w-full px-4 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-3xl text-center tracking-[1em] font-bold bg-gray-50/50 focus:bg-white"
                     placeholder="••••"
                     maxLength={4}
