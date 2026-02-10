@@ -40,7 +40,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
         gender: trainee.gender || 'male'
     })
 
-    const name = locale === 'ar' ? trainee.name_ar : locale === 'he' ? trainee.name_he : trainee.name_en
+    const name = trainee.name_ar
 
     useEffect(() => {
         getTraineeAttendanceStats(trainee.id).then(res => {
@@ -75,7 +75,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
             router.refresh()
             // Optional: update local trainee state if parent doesn't refresh instantly
         } else {
-            alert(res.error || 'Failed to update player')
+            alert(res.error || 'فشل تحديث بيانات اللاعب')
         }
         setSaving(false)
     }
@@ -115,7 +115,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                            <span className="text-[10px] font-bold tracking-wider text-blue-100 uppercase">Team Profile</span>
                         </div>
                         <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
-                            {teamName || (locale === 'ar' ? 'الفريق' : locale === 'he' ? 'הקבוצה' : 'Team')}
+                            {teamName || 'الفريق'}
                         </h2>
                         {trainerName && (
                             <div className="flex items-center gap-1.5 text-blue-100/90 text-sm">
@@ -147,7 +147,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                 <div className="space-y-4 w-full">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Name (EN)</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{'الاسم (انجليزي)'}</label>
                                             <input 
                                                 className="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none transition-all"
                                                 value={editForm.name_en} 
@@ -155,7 +155,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Phone</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{'رقم الهاتف'}</label>
                                             <input 
                                                 className="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none transition-all"
                                                 value={editForm.phone} 
@@ -164,7 +164,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Jersey #</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{'رقم القميص'}</label>
                                             <input 
                                                 type="number"
                                                 className="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none transition-all"
@@ -180,13 +180,13 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                             className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95"
                                         >
                                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                            Save Changes
+                                            {'حفظ التغييرات'}
                                         </button>
                                         <button 
                                             onClick={() => setIsEditing(false)}
                                             className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all"
                                         >
-                                            Cancel
+                                            {'إلغاء'}
                                         </button>
                                     </div>
                                 </div>
@@ -213,7 +213,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <div className="relative flex items-center gap-2.5">
                                     <CreditCard className="w-4 h-4" />
-                                    <span>Manage Payments</span>
+                                    <span>{'إدارة المدفوعات'}</span>
                                 </div>
                             </button>
                         )}
@@ -228,7 +228,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                         <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600">
                                             <Activity className="w-4 h-4" />
                                         </div>
-                                        Attendance Overview
+                                        {'ملخص الحضور'}
                                     </h3>
                                 </div>
                                 
@@ -240,15 +240,15 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                     <div className="grid grid-cols-3 gap-5">
                                         <div className="group p-5 bg-white border border-green-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
                                             <div className="text-4xl font-extrabold text-green-600 mb-1">{stats.present}</div>
-                                            <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest opacity-60">Present</div>
+                                            <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest opacity-60">{'حاضر'}</div>
                                         </div>
                                         <div className="group p-5 bg-white border border-orange-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
                                             <div className="text-4xl font-extrabold text-orange-500 mb-1">{stats.late}</div>
-                                            <div className="text-[10px] font-bold text-orange-700 uppercase tracking-widest opacity-60">Late</div>
+                                            <div className="text-[10px] font-bold text-orange-700 uppercase tracking-widest opacity-60">{'متأخر'}</div>
                                         </div>
                                         <div className="group p-5 bg-white border border-red-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
                                             <div className="text-4xl font-extrabold text-red-500 mb-1">{stats.absent}</div>
-                                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-widest opacity-60">Absent</div>
+                                            <div className="text-[10px] font-bold text-red-700 uppercase tracking-widest opacity-60">{'غائب'}</div>
                                         </div>
                                     </div>
                                 )}
@@ -261,7 +261,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                         <span className="font-bold text-green-600">₪</span>
                                     </div>
                                     <span className="text-sm font-bold text-gray-800">
-                                        {locale === 'ar' ? 'سجل المدفوعات' : locale === 'he' ? 'היסטוריית תשלומים' : 'Payment History'}
+                                        {'سجل المدفوعات'}
                                     </span>
                                 </div>
                                 
@@ -276,7 +276,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                                 <div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-gray-900">{log.amount} ₪</span>
-                                                        <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-bold">PAID</span>
+                                                        <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-bold">{'تم الدفع'}</span>
                                                     </div>
                                                     {log.note && <p className="text-[10px] text-gray-400 mt-0.5">{log.note}</p>}
                                                 </div>
@@ -287,7 +287,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-center text-xs text-gray-400 py-8 italic">No payments recorded yet</p>
+                                    <p className="text-center text-xs text-gray-400 py-8 italic">{'لا توجد مدفوعات مسجلة بعد'}</p>
                                 )}
                             </div>
                         </>

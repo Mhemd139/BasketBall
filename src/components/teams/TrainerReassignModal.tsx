@@ -44,7 +44,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
             router.refresh()
             onClose()
         } else {
-            alert(res.error || 'Failed to update trainer')
+            alert(res.error || 'فشل تحديث المدرب')
         }
         setSaving(false)
     }
@@ -60,10 +60,10 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">
-                            {locale === 'ar' ? 'تعيين مدرب' : locale === 'he' ? 'הקצאת מאמן' : 'Assign Trainer'}
+                            {'تعيين مدرب'}
                         </h2>
                         <p className="text-xs text-slate-500 font-medium">
-                            {locale === 'ar' ? 'اختر مدرباً لهذا الفريق' : locale === 'he' ? 'בחר מאמן עבור קבוצה זו' : 'Select a trainer for this team'}
+                            {'اختر مدرباً لهذا الفريق'}
                         </p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors text-slate-400">
@@ -76,7 +76,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input 
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-10 py-2.5 text-sm focus:bg-white focus:border-indigo-500 transition-all outline-none"
-                            placeholder={locale === 'ar' ? 'ابحث عن مدرب...' : locale === 'he' ? 'חפש מאמן...' : 'Search trainer...'}
+                            placeholder={'ابحث عن مدرب...'}
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
@@ -86,7 +86,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                         {loading ? (
                             <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
                                 <Loader2 className="w-8 h-8 animate-spin" />
-                                <span className="text-xs font-bold uppercase tracking-widest">Loading Trainers...</span>
+                                <span className="text-xs font-bold uppercase tracking-widest">{'جاري تحميل المدربين...'}</span>
                             </div>
                         ) : filteredTrainers.length > 0 ? (
                             filteredTrainers.map(trainer => (
@@ -107,7 +107,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                                         </div>
                                         <div>
                                             <div className={`font-bold text-sm ${selectedId === trainer.id ? 'text-indigo-900' : 'text-slate-900'}`}>
-                                                {getLocalizedField(trainer, 'name', locale)}
+                                                {getLocalizedField(trainer, 'name', 'ar')}
                                             </div>
                                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                                 {trainer.phone || 'No phone'}
@@ -123,7 +123,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                             ))
                         ) : (
                             <div className="py-12 text-center text-slate-400 italic text-sm">
-                                No trainers found match your search
+                                {'لم يتم العثور على مدرب مطابق لبحثك'}
                             </div>
                         )}
                     </div>
@@ -134,7 +134,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                         onClick={onClose}
                         className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-white/50 transition-colors"
                     >
-                        {locale === 'ar' ? 'إلغاء' : locale === 'he' ? 'ביטול' : 'Cancel'}
+                        {'إلغاء'}
                     </button>
                     <button 
                         disabled={saving || !selectedId || selectedId === currentTrainerId}
@@ -142,7 +142,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                         className="flex-[2] py-3 px-4 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2"
                     >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        {locale === 'ar' ? 'حفظ التغييرات' : locale === 'he' ? 'שמור שינויים' : 'Save Changes'}
+                        {'حفظ التغييرات'}
                     </button>
                 </div>
             </div>

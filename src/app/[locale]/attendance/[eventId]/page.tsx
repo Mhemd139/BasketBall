@@ -10,6 +10,7 @@ import { getLocalizedField, formatTime, formatDate } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import { MapPin, Clock } from 'lucide-react'
+import { getSession } from '@/app/actions'
 
 type Event = Database['public']['Tables']['events']['Row']
 type Hall = Database['public']['Tables']['halls']['Row']
@@ -26,6 +27,7 @@ export default async function AttendancePage({
 }) {
   const { locale, eventId } = await params
   const supabase = await createServerSupabaseClient()
+  const session = await getSession()
 
   // Step 1: event + attendance in parallel
   const [
@@ -80,7 +82,7 @@ export default async function AttendancePage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
 
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header
@@ -96,10 +98,10 @@ export default async function AttendancePage({
             <section className="py-4">
               <div className="flex items-center gap-3 flex-wrap mb-3">
                 <Badge className={event.type === 'game' ? 'badge-error' : 'badge-success'}>
-                  {event.type === 'game'
-                    ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'Game')
-                    : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'Training')
-                  }
+                    {event.type === 'game'
+                      ? 'مباراة'
+                      : 'تدريب'
+                    }
                 </Badge>
                 <span className="text-sm text-gray-500">
                   {formatDate(event.event_date, locale)}
@@ -134,14 +136,11 @@ export default async function AttendancePage({
                   eventId={eventId}
                   trainees={trainees}
                   initialAttendance={(attendanceRecords || []) as { trainee_id: string; status: 'present' | 'absent' | 'late' }[]}
-                  locale={locale}
                 />
               ) : (
                 <div className="card text-center py-12">
                   <p className="text-gray-500">
-                    {locale === 'ar' ? 'لا يوجد لاعبون مسجلون لهذا الحدث'
-                      : locale === 'he' ? 'אין שחקנים רשומים לאירוע זה'
-                      : 'No players registered for this event'}
+                    {'لا يوجد لاعبون مسجلون لهذا الحدث'}
                   </p>
                 </div>
               )}
@@ -149,7 +148,7 @@ export default async function AttendancePage({
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

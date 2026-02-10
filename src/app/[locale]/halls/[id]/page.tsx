@@ -52,7 +52,7 @@ export default async function HallDetailPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
       
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} showBack backHref={`/${locale}/halls`} />
@@ -103,7 +103,7 @@ export default async function HallDetailPage({
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useCallback } from 'react'
 import { saveAttendance, bulkSaveAttendance } from '@/app/actions'
-import { getLocalizedField, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Check, X, Clock, Users, CheckCheck, XCircle } from 'lucide-react'
 
 type AttendanceStatus = 'present' | 'absent' | 'late'
@@ -25,7 +25,6 @@ interface AttendanceSheetProps {
   eventId: string
   trainees: Trainee[]
   initialAttendance: AttendanceRecord[]
-  locale: string
 }
 // ... (rest of interfaces)
 
@@ -38,7 +37,7 @@ const statusConfig = {
     border: 'border-green-200',
     text: 'text-green-700',
     iconBg: 'bg-green-500',
-    label: { ar: 'حاضر', he: 'נוכח', en: 'Present' },
+    label: 'حاضر',
   },
   absent: {
     icon: X,
@@ -46,7 +45,7 @@ const statusConfig = {
     bg: 'bg-red-50',
     text: 'text-red-700',
     iconBg: 'bg-red-500',
-    label: { ar: 'غائب', he: 'חסר', en: 'Absent' },
+    label: 'غائب',
   },
   late: {
     icon: Clock,
@@ -54,11 +53,11 @@ const statusConfig = {
     bg: 'bg-amber-50',
     text: 'text-amber-700',
     iconBg: 'bg-amber-500',
-    label: { ar: 'متأخر', he: 'מאחר', en: 'Late' },
+    label: 'متأخر',
   },
 } as const
 
-export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }: AttendanceSheetProps) {
+export function AttendanceSheet({ eventId, trainees, initialAttendance }: AttendanceSheetProps) {
   const router = useRouter()
   const [showSuccess, setShowSuccess] = useState(false)
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>(() => {
@@ -127,14 +126,14 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
           className="btn flex-1 text-sm py-2.5 px-3 rounded-xl bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors"
         >
           <CheckCheck className="w-4 h-4" />
-          {locale === 'ar' ? 'الكل حاضر' : locale === 'he' ? 'כולם נוכחים' : 'All Present'}
+          {'الكل حاضر'}
         </button>
         <button
           onClick={() => markAll('absent')}
           className="btn flex-1 text-sm py-2.5 px-3 rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
         >
           <XCircle className="w-4 h-4" />
-          {locale === 'ar' ? 'الكل غائب' : locale === 'he' ? 'כולם חסרים' : 'All Absent'}
+          {'الكل غائب'}
         </button>
       </div>
 
@@ -146,10 +145,10 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
               <CheckCheck className="w-10 h-10 text-green-600" strokeWidth={3} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-1">
-              {locale === 'ar' ? 'تم الحفظ بنجاح!' : locale === 'he' ? 'נשמר בהצלחה!' : 'Saved Successfully!'}
+              {'تم الحفظ بنجاح!'}
             </h3>
             <p className="text-gray-500 text-sm">
-              {locale === 'ar' ? 'جاري العودة...' : locale === 'he' ? 'חוזר...' : 'Returning...'}
+              {'جاري العودة...'}
             </p>
           </div>
         </div>
@@ -182,10 +181,10 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
               {/* Name */}
               <div className="flex-1 text-start min-w-0">
                 <p className="font-semibold text-gray-900 truncate">
-                  {getLocalizedField(trainee, 'name', locale)}
+                  {trainee.name_ar}
                 </p>
                 <p className={cn('text-xs font-medium', config.text)}>
-                  {config.label[locale as keyof typeof config.label] || config.label.en}
+                  {config.label}
                 </p>
               </div>
 
@@ -216,7 +215,7 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
                 className="btn btn-primary shadow-xl shadow-indigo-200 animate-in slide-in-from-bottom-4"
             >
                 <CheckCheck className="w-5 h-5" />
-                {locale === 'ar' ? 'إنهاء وحفظ' : locale === 'he' ? 'סיום ושמירה' : 'Finish & Save'}
+                {'إنهاء وحفظ'}
             </button>
         </div>
 

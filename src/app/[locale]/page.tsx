@@ -56,7 +56,7 @@ export default async function HomePage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
       
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
@@ -71,7 +71,7 @@ export default async function HomePage({
                     <Building2 className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                   </div>
                   <div className="stat-value text-xl md:text-3xl font-bold">{hallsCount || 0}</div>
-                  <div className="stat-label text-xs md:text-sm font-medium">{locale === 'ar' ? 'قاعات' : locale === 'he' ? 'אולמות' : 'Halls'}</div>
+                  <div className="stat-label text-xs md:text-sm font-medium">{'قاعات'}</div>
                 </div>
                 
                 <div className="stat-card min-w-[110px] md:min-w-0 p-3 md:p-6 snap-center shrink-0 flex-1 transition-all hover:scale-105">
@@ -79,7 +79,7 @@ export default async function HomePage({
                     <Users className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                   </div>
                   <div className="stat-value text-xl md:text-3xl font-bold">{teamsCount || 0}</div>
-                  <div className="stat-label text-xs md:text-sm font-medium">{locale === 'ar' ? 'فرق' : locale === 'he' ? 'קבוצות' : 'Teams'}</div>
+                  <div className="stat-label text-xs md:text-sm font-medium">{'فرق'}</div>
                 </div>
                 
                 <div className="stat-card min-w-[110px] md:min-w-0 p-3 md:p-6 snap-center shrink-0 flex-1 transition-all hover:scale-105">
@@ -87,7 +87,7 @@ export default async function HomePage({
                     <User className="w-4 h-4 md:w-6 md:h-6" strokeWidth={2.5} />
                   </div>
                   <div className="stat-value text-xl md:text-3xl font-bold">{traineesCount || 0}</div>
-                  <div className="stat-label text-xs md:text-sm font-medium">{locale === 'ar' ? 'لاعبين' : locale === 'he' ? 'שחקנים' : 'Players'}</div>
+                  <div className="stat-label text-xs md:text-sm font-medium">{'لاعبين'}</div>
                 </div>
               </div>
             </section>
@@ -105,7 +105,7 @@ export default async function HomePage({
                      </div>
                      <div className="flex flex-col items-center">
                         <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
-                           {locale === 'ar' ? 'القاعات' : locale === 'he' ? 'אולמות' : 'Halls'}
+                           {'القاعات'}
                         </span>
                      </div>
                   </Card>
@@ -118,7 +118,7 @@ export default async function HomePage({
                      </div>
                      <div className="flex flex-col items-center">
                         <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
-                           {locale === 'ar' ? 'الفرق' : locale === 'he' ? 'קבוצות' : 'Teams'}
+                           {'الفرق'}
                         </span>
                      </div>
                   </Card>
@@ -131,7 +131,7 @@ export default async function HomePage({
                      </div>
                      <div className="flex flex-col items-center">
                         <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
-                           {locale === 'ar' ? 'المدربين' : locale === 'he' ? 'מאמנים' : 'Trainers'}
+                           {'المدربين'}
                         </span>
                      </div>
                   </Card>
@@ -144,7 +144,7 @@ export default async function HomePage({
                      </div>
                      <div className="flex flex-col items-center">
                         <span className="font-bold text-gray-900 text-[10px] md:text-lg leading-tight text-center">
-                           {locale === 'ar' ? 'التقارير' : locale === 'he' ? 'דוחות' : 'Reports'}
+                           {'التقارير'}
                         </span>
                      </div>
                   </Card>
@@ -157,7 +157,7 @@ export default async function HomePage({
               <div className="section-header mb-2">
                 <h2 className="section-title text-base">
                   <Calendar className="w-4 h-4" />
-                  {locale === 'ar' ? 'جدول اليوم' : locale === 'he' ? 'לוח זמנים להיום' : "Today's Schedule"}
+                  {'جدول اليوم'}
                 </h2>
                 <Badge className="badge-primary text-[10px] px-2 py-0.5" variant="secondary">
                   {new Date().toLocaleDateString(locale, { weekday: 'short', day: 'numeric' })}
@@ -185,8 +185,8 @@ export default async function HomePage({
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md' : 'text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md'}`}>
                                 {event.type === 'game' 
-                                  ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'GAME')
-                                  : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'TRAINING')
+                                  ? 'مباراة'
+                                  : 'تدريب'
                                 }
                               </span>
                             </div>
@@ -202,7 +202,7 @@ export default async function HomePage({
                           </div>
                           
                           <div className="text-gray-300 text-lg shrink-0">
-                            {locale === 'ar' || locale === 'he' ? '←' : '→'}
+                            {'←'}
                           </div>
                         </div>
                       </Card>
@@ -216,10 +216,10 @@ export default async function HomePage({
                       <Inbox className="w-16 h-16 text-gray-300" strokeWidth={1.5} />
                     </div>
                     <h3>
-                      {locale === 'ar' ? 'لا توجد فعاليات اليوم' : locale === 'he' ? 'אין אירועים היום' : 'No events today'}
+                      {'لا توجد فعاليات اليوم'}
                     </h3>
                     <p>
-                      {locale === 'ar' ? 'استمتع بيوم راحة!' : locale === 'he' ? 'תהנה מיום מנוחה!' : 'Enjoy your rest day!'}
+                      {'استمتع بيوم راحة!'}
                     </p>
                   </div>
                 </Card>
@@ -228,7 +228,7 @@ export default async function HomePage({
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

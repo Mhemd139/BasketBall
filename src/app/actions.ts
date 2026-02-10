@@ -219,31 +219,45 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   // 1. Try to find existing trainer
   let { data: trainer, error } = await (supabase as any)
     .from('trainers')
-    .select('id, name_en')
+    .select('id, name_en, role') // Select role as well
     .eq('phone', cleanPhone)
     .single()
 
-  // 2. If not found, create new one (Sign Up) via SECURITY DEFINER function
-  let wasCreated = false
-  if (!trainer) {
-    const { data: newTrainer, error: createError } = await (supabase as any).rpc('create_trainer', {
-      p_phone: cleanPhone,
-    })
+  // --- RESTRICTED ACCESS LOGIC ---
+  const HEAD_COACH_NUMBERS = ['972543299106', '972587131002'] // Added developer number
+  
+  const isHeadCoach = HEAD_COACH_NUMBERS.includes(cleanPhone)
 
-    if (createError) {
-      console.error('Signup Error:', createError)
-      return { success: false, error: `Signup failed: ${createError.message}` }
-    }
-    trainer = newTrainer
-    wasCreated = true
+  // Case A: Head Coach Login
+  if (isHeadCoach) {
+      if (!trainer) {
+          // Auto-create Head Coach if not exists
+           const { data: newHeadCoach, error: createError } = await (supabase as any).rpc('create_trainer', {
+              p_phone: cleanPhone,
+            })
+            if (createError) {
+                console.error('Head Coach Signup Error:', createError)
+                return { success: false, error: `Signup failed: ${createError.message}` }
+            }
+            trainer = newHeadCoach
+      }
+  } 
+  // Case B: Regular Trainer Login
+  else {
+      if (!trainer) {
+          // REJECT: User is not in the system
+          return { success: false, error: 'Access Denied: You must be added by the Head Coach.' }
+      }
+      // ALLOW: User exists
   }
 
   // 3. Create Session
   const cookieStore = await cookies()
+  
   const sessionToken = await sign({
     id: trainer.id,
-    name: trainer.name_en || 'Trainer',
-    role: 'trainer'
+    name: trainer.name_en || (isHeadCoach ? 'Head Coach' : 'Trainer'),
+    role: isHeadCoach ? 'headcoach' : 'trainer' // Explicit role in session
   })
 
   cookieStore.set('admin_session', sessionToken, {
@@ -254,7 +268,100 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   })
 
   // Return specific status so UI knows if we need to ask for name
-  return { success: true, isNew: wasCreated }
+  return { success: true, isNew: !trainer.name_en && !isHeadCoach } // Only show new profile setup if no name and not HC (HC usually set up)
+}
+
+// --- Head Coach Actions ---
+
+export async function getTrainers() {
+    const session = await getSession()
+    if (!session || session.role !== 'headcoach') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { data: trainers, error } = await (supabase as any)
+        .from('trainers')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+    if (error) return { success: false, error: error.message }
+    return { success: true, trainers }
+}
+
+export async function upsertTrainer(phone: string, name: string) {
+    const session = await getSession()
+    if (!session || session.role !== 'headcoach') {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    // Basic validation
+    let cleanPhone = phone.replace(/\D/g, '')
+    // Apply IL logic if needed, or trust input
+     if (cleanPhone.startsWith('05')) {
+        cleanPhone = '972' + cleanPhone.substring(1)
+    }
+
+    const supabase = await createServerSupabaseClient()
+    
+    // Check if exists
+    const { data: existing } = await (supabase as any)
+        .from('trainers')
+        .select('id')
+        .eq('phone', cleanPhone)
+        .single()
+
+    if (existing) {
+        // Update
+        const { error } = await (supabase as any)
+            .from('trainers')
+            .update({ name_en: name }) // Update name
+            .eq('id', existing.id)
+        
+        if (error) return { success: false, error: error.message }
+    } else {
+        // Create (using RPC or Insert if policy allows)
+        // Using RPC 'create_trainer' as seen in verifyOTP is safer if direct insert is blocked
+        const { error: createError } = await (supabase as any).rpc('create_trainer', {
+            p_phone: cleanPhone,
+        })
+        
+        if (createError) return { success: false, error: createError.message }
+
+        // Then update name
+         const { error: updateError } = await (supabase as any)
+            .from('trainers')
+            .update({ name_en: name, name_ar: name, name_he: name })
+            .eq('phone', cleanPhone)
+            
+         if (updateError) return { success: false, error: updateError.message }
+    }
+
+    revalidatePath('/[locale]/head-coach')
+    return { success: true }
+}
+
+export async function deleteTrainer(id: string) {
+    const session = await getSession()
+    if (!session || session.role !== 'headcoach') {
+        return { success: false, error: 'Unauthorized' }
+    }
+    
+    // Self-delete prevention
+    if (id === session.id) {
+         return { success: false, error: 'Cannot delete yourself' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any)
+        .from('trainers')
+        .delete()
+        .eq('id', id)
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/[locale]/head-coach')
+    return { success: true }
 }
 
 export async function updateProfile(name: string, gender?: 'male' | 'female', availability?: string[]) {
@@ -507,6 +614,81 @@ export async function getTraineeAttendanceStats(traineeId: string) {
   
   return { success: true, stats: { total, present, late, absent } }
 }
+
+// --- Attendance Actions ---
+
+export async function getTeamAttendanceHistory(classId: string) {
+    const supabase = await createServerSupabaseClient()
+    const session = await getSession()
+    
+    // 1. Get Class Details
+    const { data: team } = await (supabase as any)
+        .from('classes')
+        .select('trainer_id')
+        .eq('id', classId)
+        .single()
+
+    if (!team) return { success: false, error: 'Team not found' }
+
+    // 2. Get Date Range (Last 30 Days)
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 30)
+
+    // 3. Get Trainees for this Class FIRST
+    const { data: trainees } = await (supabase as any)
+        .from('trainees')
+        .select('id, name_ar, name_en')
+        .eq('class_id', classId)
+        .order('name_ar')
+
+    if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {} } }
+
+    const traineeIds = trainees.map((t: any) => t.id)
+
+    // 4. Get Events for Trainer in range (Candidates)
+    const { data: candidateEvents } = await (supabase as any)
+        .from('events')
+        .select('id, event_date, type, title_ar, title_en, title_he, start_time')
+        .eq('trainer_id', team.trainer_id) 
+        .gte('event_date', startDate.toISOString())
+        .lte('event_date', endDate.toISOString())
+        .order('event_date', { ascending: false })
+        .order('start_time', { ascending: false })
+
+    if (!candidateEvents || candidateEvents.length === 0) return { success: true, data: { trainees, events: [], attendanceMap: {} } }
+    
+    const candidateEventIds = candidateEvents.map((e: any) => e.id)
+
+    // 5. Get Attendance for these events AND these trainees
+    const { data: attendance } = await (supabase as any)
+        .from('attendance')
+        .select('*')
+        .in('event_id', candidateEventIds)
+        .in('trainee_id', traineeIds)
+
+    // 6. Filter Events: Only keep events that have at least one record (present/absent/late) for this class
+    // OR if we want to be generous, maybe events that match the class Hall? 
+    // For now, "history" implies things that happened and were tracked.
+    const relevantEventIds = new Set(attendance?.map((a: any) => a.event_id))
+    const relevantEvents = candidateEvents.filter((e: any) => relevantEventIds.has(e.id))
+
+    // 7. Map Attendance
+    const attendanceMap: Record<string, string> = {}
+    attendance?.forEach((record: any) => {
+        attendanceMap[`${record.event_id}_${record.trainee_id}`] = record.status
+    })
+
+    return {
+        success: true,
+        data: {
+            trainees,
+            events: relevantEvents,
+            attendanceMap
+        }
+    }
+}
+
 // --- Attendance Actions ---
 
 export async function getEventAttendance(eventId: string, classId?: string | null) {

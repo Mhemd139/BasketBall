@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
@@ -21,6 +22,7 @@ export default async function HallsPage({
   const { locale } = await params
   const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
+  const session = await getSession()
 
   const { data: halls } = await supabase
     .from('halls')
@@ -30,7 +32,7 @@ export default async function HallsPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
       
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
@@ -44,11 +46,11 @@ export default async function HallsPage({
                   <Building2 className="w-6 h-6 text-white" strokeWidth={2.5} />
                 </div>
                 <h1 className="heading-lg">
-                  {locale === 'ar' ? 'القاعات' : locale === 'he' ? 'אולמות' : 'Halls'}
+                  {'القاعات'}
                 </h1>
               </div>
               <p className="text-gray-500">
-                {locale === 'ar' ? 'استعرض قاعات كرة السلة' : locale === 'he' ? 'צפה באולמות כדורסל' : 'Browse basketball halls'}
+                {'استعرض قاعات كرة السلة'}
               </p>
             </section>
 
@@ -75,19 +77,17 @@ export default async function HallsPage({
                               </h3>
                             </div>
                             <p className="text-xs font-medium text-green-600 bg-green-50 inline-block px-2 py-0.5 rounded-md mb-1">
-                                {locale === 'ar' ? 'مفتوح الآن' : locale === 'he' ? 'פתוח עכשיו' : 'Open Now'}
+                                {'مفتوح الآن'}
                             </p>
                             <p className="text-sm text-gray-500 truncate">
                               {getLocalizedField(hall, 'description', locale) || (
-                                locale === 'ar' ? 'قاعة كرة السلة' :
-                                locale === 'he' ? 'אולם כדורסל' :
-                                'Basketball hall'
+                                'قاعة كرة السلة'
                               )}
                             </p>
                           </div>
                           
                           <div className="text-gray-300 text-lg flex-shrink-0">
-                            {locale === 'ar' || locale === 'he' ? '←' : '→'}
+                            {'←'}
                           </div>
                         </div>
                       </Card>
@@ -101,10 +101,10 @@ export default async function HallsPage({
                       <Building2 className="w-16 h-16 text-gray-300" strokeWidth={1.5} />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {locale === 'ar' ? 'لا توجد قاعات بعد' : locale === 'he' ? 'אין אולמות עדיין' : 'No halls yet'}
+                      {'لا توجد قاعات بعد'}
                     </h3>
                     <p className="text-gray-500 text-sm">
-                      {locale === 'ar' ? 'سيتم إضافة القاعات قريباً' : locale === 'he' ? 'אולמות יתווספו בקרוב' : 'Halls will be added soon'}
+                      {'سيتم إضافة القاعات قريباً'}
                     </p>
                   </CardContent>
                 </Card>
@@ -113,7 +113,7 @@ export default async function HallsPage({
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

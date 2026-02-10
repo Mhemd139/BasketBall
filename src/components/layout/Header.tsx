@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, ChevronLeft, ChevronRight, User, Users, Globe, Check } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, User, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface HeaderProps {
@@ -23,17 +23,12 @@ interface SearchResult {
   href: string;
 }
 
-const LANGUAGES = [
-  { code: 'en', label: 'English', dir: 'ltr' },
-  { code: 'ar', label: 'العربية', dir: 'rtl' },
-  { code: 'he', label: 'עברית', dir: 'rtl' },
-];
+// LANGUAGES constant removed
 
 export function Header({ locale, title, showBack, backHref, onBack }: HeaderProps) {
-  const isRTL = locale === 'ar' || locale === 'he';
-  const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+  const isRTL = true;
+  const BackIcon = ChevronRight;
   const [searchOpen, setSearchOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,7 +39,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
   const router = useRouter();
   const pathname = usePathname();
 
-  const nameField = locale === 'ar' ? 'name_ar' : locale === 'he' ? 'name_he' : 'name_en';
+  const nameField = 'name_ar';
 
   useEffect(() => {
     if (searchOpen) {
@@ -118,15 +113,11 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
           setSearchOpen(false);
-          setLangOpen(false);
       }
     };
     const onClick = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchOpen(false);
-      }
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setLangOpen(false);
       }
     };
     document.addEventListener('keydown', onKey);
@@ -137,12 +128,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
     };
   }, []);
 
-  const switchLanguage = (newLocale: string) => {
-    if (!pathname) return;
-    const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
-    router.push(newPath);
-    setLangOpen(false);
-  };
+// Language switcher logic removed
 
   return (
     <header className="sticky top-0 z-50 w-full glass-header transition-all duration-300">
@@ -172,10 +158,10 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                 </div>
                 <div className="flex flex-col">
                     <h1 className="font-outfit font-bold text-xl md:text-2xl leading-none text-navy-900 tracking-tight">
-                        {title || (locale === 'ar' ? 'باقة الغربية' : locale === 'he' ? 'באקה אל-גרביה' : 'Baqa El-Gharbia')}
+                        {title || 'باقة الغربية'}
                     </h1>
                     <p className="text-[10px] md:text-xs text-gold-600 font-bold tracking-wider uppercase opacity-90">
-                        {locale === 'ar' ? 'النادي الرياضي' : locale === 'he' ? 'מועדון ספורט' : 'Sports Club'}
+                        {'النادي الرياضي'}
                     </p>
                 </div>
               </Link>
@@ -190,7 +176,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                         <input
                             ref={inputRef}
                             type="text"
-                            placeholder={locale === 'ar' ? 'بحث...' : locale === 'he' ? 'חיפוש...' : 'Search...'}
+                            placeholder={'بحث...'}
                             className="bg-transparent border-none outline-none text-sm text-navy-800 placeholder-navy-300 w-full"
                             value={query}
                             onChange={(e) => handleSearch(e.target.value)}
@@ -200,9 +186,9 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                      {/* Search Results Dropdown */}
                      {searchOpen && (query.length > 1 || results.length > 0) && (
                         <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-2 animate-in fade-in zoom-in-95 duration-200 z-50">
-                            {loading && <div className="p-4 text-center text-xs text-gray-400">Loading...</div>}
+                            {loading && <div className="p-4 text-center text-xs text-gray-400">{'جاري التحميل...'}</div>}
                             {!loading && results.length === 0 && query.length > 1 && (
-                                <div className="p-4 text-center text-xs text-gray-400">No results found</div>
+                                <div className="p-4 text-center text-xs text-gray-400">{'لا توجد نتائج'}</div>
                             )}
                             {results.map((result) => (
                                 <Link
@@ -226,39 +212,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                     )}
                 </div>
 
-                {/* Language Switcher */}
-                <div className="relative" ref={langRef}>
-                    <button 
-                        onClick={() => setLangOpen(!langOpen)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-sm ${
-                            langOpen 
-                            ? 'bg-navy-50 border-navy-200 text-navy-800' 
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-gold-300 hover:text-navy-700'
-                        }`}
-                    >
-                        <Globe className="w-4 h-4 text-gold-500" />
-                        <span className="uppercase font-medium">{locale}</span>
-                    </button>
-                    
-                    {langOpen && (
-                        <div className="absolute top-full end-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-1 z-50 animate-in fade-in zoom-in-95">
-                            {LANGUAGES.map((lang) => (
-                                <button
-                                    key={lang.code}
-                                    onClick={() => switchLanguage(lang.code)}
-                                    className={`w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-navy-50 transition-colors ${
-                                        locale === lang.code ? 'text-gold-600 font-bold bg-navy-50/50' : 'text-gray-600'
-                                    }`}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <span>{lang.label}</span>
-                                    </span>
-                                    {locale === lang.code && <Check className="w-3 h-3" />}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
+{/* Language Switcher Removed */}
             </div>
 
             {/* Mobile Actions */}
@@ -283,7 +237,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                 <input
                     autoFocus
                     type="text"
-                    placeholder="Search players, coaches..."
+                    placeholder="بحث عن لاعبين، مدربين..."
                     className="w-full bg-gray-100 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400"
                     value={query}
                     onChange={(e) => handleSearch(e.target.value)}

@@ -19,7 +19,7 @@ export function CreateTeamButton({ locale, canCreate }: { locale: string, canCre
                     <Plus className="w-5 h-5" />
                 </div>
                 <span className="font-bold text-slate-500 group-hover:text-indigo-600 transition-colors">
-                    {locale === 'ar' ? 'إضافة فريق جديد' : locale === 'he' ? 'הוסף קבוצה חדשה' : 'Add New Team'}
+                    {'إضافة فريق جديد'}
                 </span>
             </button>
 

@@ -54,8 +54,8 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                 <DialogHeader>
                     <DialogTitle>
                         {initialEvent 
-                            ? (locale === 'ar' ? 'تعديل الحدث' : locale === 'he' ? 'ערוך אירוע' : 'Edit Event')
-                            : (locale === 'ar' ? 'إضافة حدث جديد' : locale === 'he' ? 'הוסף אירוע חדש' : 'Add New Event')
+                            ? 'تعديل الحدث'
+                            : 'إضافة حدث جديد'
                         }
                     </DialogTitle>
                 </DialogHeader>
@@ -69,7 +69,7 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                                 type === 'training' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                             }`}
                         >
-                            {locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'Training'}
+                            {'تدريب'}
                         </button>
                         <button
                             onClick={() => setType('game')}
@@ -77,14 +77,14 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                                 type === 'game' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                             }`}
                         >
-                            {locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'Game'}
+                            {'مباراة'}
                         </button>
                     </div>
 
                     {/* Titles */}
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-gray-500 uppercase">
-                            {locale === 'ar' ? 'العنوان (إنجليزي)' : locale === 'he' ? 'כותרת (אנגלית)' : 'Title (English)'}
+                            {'العنوان (إنجليزي)'}
                         </label>
                         <input 
                             value={titleEn} onChange={e => setTitleEn(e.target.value)}
@@ -94,7 +94,7 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                     </div>
                      <div className="space-y-2">
                         <label className="text-xs font-semibold text-gray-500 uppercase">
-                            {locale === 'ar' ? 'العنوان (عربي)' : locale === 'he' ? 'כותרת (ערבית)' : 'Title (Arabic)'}
+                            {'العنوان (عربي)'}
                         </label>
                         <input 
                             value={titleAr} onChange={e => setTitleAr(e.target.value)}
@@ -108,7 +108,7 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-gray-500 uppercase">
-                                {locale === 'ar' ? 'وقت البدء' : locale === 'he' ? 'שעת התחלה' : 'Start Time'}
+                                {'وقت البدء'}
                             </label>
                             <div className="relative">
                                 <Clock className="absolute top-2.5 left-2.5 w-4 h-4 text-gray-400" />
@@ -122,7 +122,7 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-gray-500 uppercase">
-                                {locale === 'ar' ? 'وقت الانتهاء' : locale === 'he' ? 'שעת סיום' : 'End Time'}
+                                {'وقت الانتهاء'}
                             </label>
                              <div className="relative">
                                 <Clock className="absolute top-2.5 left-2.5 w-4 h-4 text-gray-400" />
@@ -140,11 +140,11 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                 <DialogFooter>
                     <div className="flex gap-2 w-full justify-end">
                         <Button variant="secondary" onClick={onClose} disabled={loading}>
-                            {locale === 'ar' ? 'إلغاء' : locale === 'he' ? 'ביטול' : 'Cancel'}
+                            {'إلغاء'}
                         </Button>
                         <Button onClick={handleSave} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
                             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            {locale === 'ar' ? 'حفظ' : locale === 'he' ? 'שמור' : 'Save'}
+                            {'حفظ'}
                         </Button>
                     </div>
                 </DialogFooter>

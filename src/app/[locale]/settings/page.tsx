@@ -13,12 +13,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   const settingsItems = [
-    {
-      label: locale === 'ar' ? 'اللغة' : locale === 'he' ? 'שפה' : 'Language',
-      description: locale === 'ar' ? 'تغيير لغة التطبيق' : locale === 'he' ? 'שנה את שפת האפליקציה' : 'Change app language',
-      href: `/${locale}/settings/language`,
-      icon: Globe,
-    },
+    // Language settings removed
   ];
 
   // Add Profile link if logged in

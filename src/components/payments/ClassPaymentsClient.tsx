@@ -26,15 +26,11 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
   const deferredSearch = useDeferredValue(searchTerm)
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null)
 
-  const className = classData
-        ? (locale === 'ar' ? classData.name_ar : locale === 'he' ? classData.name_he : classData.name_en)
-        : ''
-  const trainerName = classData?.trainers
-        ? (locale === 'ar' ? classData.trainers.name_ar : locale === 'he' ? classData.trainers.name_he : classData.trainers.name_en)
-        : ''
+  const className = classData ? classData.name_ar : ''
+  const trainerName = classData?.trainers ? classData.trainers.name_ar : ''
 
   const filteredTrainees = useMemo(() => trainees.filter(t => {
-      const name = locale === 'ar' ? t.name_ar : locale === 'he' ? t.name_he : t.name_en
+      const name = t.name_ar
       return name.toLowerCase().includes(deferredSearch.toLowerCase())
   }), [trainees, deferredSearch, locale])
 
@@ -55,12 +51,12 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
                 {/* Header Info */}
                 <div className="flex justify-between items-end">
                     <div>
-                        <h2 className="text-gray-500 text-sm">{locale === 'ar' ? 'المدرب' : locale === 'he' ? 'מאמן' : 'Trainer'}</h2>
+                        <h2 className="text-gray-500 text-sm">{'المدرب'}</h2>
                         <p className="font-semibold text-lg">{trainerName}</p>
                     </div>
                     <div className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium flex items-center gap-2">
                         <Users className="w-4 h-4 text-gray-500" />
-                        {filteredTrainees.length} {locale === 'ar' ? 'لاعب' : locale === 'he' ? 'שחקנים' : 'Players'}
+                        {filteredTrainees.length} {'لاعب'}
                     </div>
                 </div>
 
@@ -69,7 +65,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input 
                         type="text" 
-                        placeholder={locale === 'ar' ? 'بحث عن لاعب...' : locale === 'he' ? 'חיפוש שחקן...' : 'Search player...'}
+                        placeholder={'بحث عن لاعب...'}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
@@ -87,7 +83,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
                         />
                     ))}
                     {filteredTrainees.length === 0 && (
-                        <div className="text-center py-12 text-gray-400">No players found</div>
+                        <div className="text-center py-12 text-gray-400">{'لم يتم العثور على لاعبين'}</div>
                     )}
                 </div>
             </div>
@@ -97,7 +93,6 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
         {selectedTrainee && (
             <PaymentModal 
                 trainee={selectedTrainee} 
-                locale={locale} 
                 onClose={() => setSelectedTrainee(null)} 
             />
         )}
@@ -107,7 +102,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
 }
 
 function TraineeRow({ trainee, locale, onClick }: { trainee: Trainee, locale: string, onClick: () => void }) {
-    const name = locale === 'ar' ? trainee.name_ar : locale === 'he' ? trainee.name_he : trainee.name_en
+    const name = trainee.name_ar
     const amount = trainee.amount_paid || 0
     const goal = 3000
     const isPaid = amount >= goal

@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/Card'
 import { getSession } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
+import { AttendanceHistory } from '@/components/teams/AttendanceHistory'
 
 type Class = Database['public']['Tables']['classes']['Row']
 type Trainer = Database['public']['Tables']['trainers']['Row']
@@ -74,7 +75,7 @@ export default async function TeamDetailPage({
                   <div className="flex gap-4 text-sm text-gray-500">
                     <span className="flex items-center gap-1.5">
                       <User className="w-4 h-4" />
-                      {trainees.length} {locale === 'ar' ? 'لاعب' : locale === 'he' ? 'שחקנים' : 'Players'}
+                       {trainees.length} {'لاعب'}
                     </span>
                   </div>
                 </div>
@@ -87,7 +88,7 @@ export default async function TeamDetailPage({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3 text-gray-500 text-sm font-medium">
                       <User className="w-4 h-4 text-purple-600" />
-                      {locale === 'ar' ? 'المدرب' : locale === 'he' ? 'מאמן' : 'Coach'}
+                      {'المدرب'}
                     </div>
                     <TrainerReassignButton 
                       classId={classId} 
@@ -99,7 +100,7 @@ export default async function TeamDetailPage({
                   <p className="font-semibold text-gray-900">
                     {teamDetails.trainers 
                       ? getLocalizedField(teamDetails.trainers, 'name', locale)
-                      : (locale === 'ar' ? 'غير معين' : locale === 'he' ? 'לא הוקצה' : 'Unassigned')}
+                      : 'غير معين'}
                   </p>
                   {teamDetails.trainers?.phone && (
                     <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
@@ -113,12 +114,12 @@ export default async function TeamDetailPage({
                 <div className="bg-white p-4 rounded-xl border shadow-sm">
                   <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-medium">
                     <MapPin className="w-4 h-4 text-orange-600" />
-                    {locale === 'ar' ? 'القاعة' : locale === 'he' ? 'אולם' : 'Hall'}
+                    {'القاعة'}
                   </div>
                   <p className="font-semibold text-gray-900">
                     {teamDetails.halls
                       ? getLocalizedField(teamDetails.halls, 'name', locale)
-                      : (locale === 'ar' ? 'غير محدد' : locale === 'he' ? 'לא הוגדר' : 'Not set')}
+                      : 'غير محدد'}
                   </p>
                 </div>
 
@@ -126,10 +127,10 @@ export default async function TeamDetailPage({
                 <div className="bg-white p-4 rounded-xl border shadow-sm">
                   <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-medium">
                     <Calendar className="w-4 h-4 text-green-600" />
-                    {locale === 'ar' ? 'الموعد' : locale === 'he' ? 'זמנים' : 'Schedule'}
+                    {'الموعد'}
                   </div>
                   <p className="font-semibold text-gray-900 text-sm">
-                    {teamDetails.schedule_info || (locale === 'ar' ? 'غير محدد' : locale === 'he' ? 'לא הוגדר' : 'Not set')}
+                    {teamDetails.schedule_info || 'غير محدد'}
                   </p>
                 </div>
               </div>
@@ -139,7 +140,7 @@ export default async function TeamDetailPage({
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {locale === 'ar' ? 'قائمة اللاعبين' : locale === 'he' ? 'סגל השחקנים' : 'Roster'}
+                  {'قائمة اللاعبين'}
                 </h2>
                 <div className="flex items-center gap-2">
                    <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-mono">
@@ -151,7 +152,7 @@ export default async function TeamDetailPage({
                        className="flex items-center gap-1 bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
                      >
                        <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
-                       {locale === 'ar' ? 'إضافة' : locale === 'he' ? 'הוספה' : 'Add'}
+                       {'إضافة'}
                      </Link>
                    )}
                 </div>
@@ -165,6 +166,11 @@ export default async function TeamDetailPage({
                 trainerName={teamDetails.trainers ? getLocalizedField(teamDetails.trainers, 'name', locale) : ''}
               />
             </section>
+
+             {/* Attendance History Section */}
+             <section className="mt-8">
+                 <AttendanceHistory classId={classId} locale={locale} />
+             </section>
           </div>
         </main>
       </div>

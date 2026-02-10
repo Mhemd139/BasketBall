@@ -32,7 +32,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
                 onClose();
             } else {
                 console.error("Failed to update hall", res.error);
-                alert(locale === 'ar' ? 'فشل تحديث القاعة' : 'Failed to update hall');
+                alert('فشل تحديث القاعة');
             }
         } catch (error) {
             console.error("Failed to update hall", error);
@@ -52,7 +52,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md shadow-inner">
                             <Building2 className="w-6 h-6 text-white" />
                         </div>
-                        {locale === 'ar' ? 'تعديل القاعة' : 'Edit Hall'}
+                        {'تعديل القاعة'}
                     </DialogTitle>
                     <button 
                         onClick={onClose}
@@ -66,7 +66,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
-                                {locale === 'ar' ? 'الاسم (English)' : 'Name (English)'}
+                                {'الاسم (انجليزي)'}
                             </label>
                             <div className="relative group">
                                 <input 
@@ -80,7 +80,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
 
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 text-right block">
-                                {locale === 'ar' ? 'الاسم (عربي)' : 'Name (Arabic)'}
+                                {'الاسم (عربي)'}
                             </label>
                             <div className="relative group">
                                 <input 
@@ -95,7 +95,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
 
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 text-right block">
-                                {locale === 'ar' ? 'الاسم (عبري)' : 'Name (Hebrew)'}
+                                {'الاسم (عبري)'}
                             </label>
                             <div className="relative group">
                                 <input 
@@ -115,7 +115,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
                         onClick={onClose}
                         className="px-6 py-3 rounded-xl text-gray-400 font-bold text-sm hover:text-navy-900 hover:bg-gray-50 transition-all"
                     >
-                        {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+                        {'إلغاء'}
                     </button>
                     <motion.button 
                         whileHover={{ scale: 1.02, boxShadow: "0 10px 20px -5px rgba(249, 115, 22, 0.3)" }}
@@ -126,7 +126,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
                     >
                         {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                            <>
-                               {locale === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
+                               {'حفظ التغييرات'}
                                <CheckCircle2 className="w-5 h-5" />
                            </>
                         )}

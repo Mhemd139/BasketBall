@@ -39,7 +39,7 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName }
 
   const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
      e.stopPropagation()
-     if (!confirm(locale === 'ar' ? `حذف ${name}؟` : locale === 'he' ? `למחוק את ${name}?` : `Delete ${name}?`)) return
+     if (!confirm(`حذف ${name}؟`)) return
      
      setLoadingId(id)
      const res = await deleteTrainee(id)
@@ -47,7 +47,7 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName }
      if (res.success) {
         router.refresh()
      } else {
-        alert('Failed to delete')
+        alert('فشل الحذف')
      }
   }
 
@@ -66,7 +66,7 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName }
     <>
       <div className="grid gap-4">
         {trainees.map((trainee) => {
-           const name = locale === 'ar' ? trainee.name_ar : locale === 'he' ? trainee.name_he : trainee.name_en
+           const name = trainee.name_ar
            const isPaid = trainee.is_paid
            
            return (
@@ -159,7 +159,7 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName }
         
         {trainees.length === 0 && (
           <div className="text-center py-10 text-gray-400">
-            <p>{locale === 'ar' ? 'لا يوجد متدربين' : locale === 'he' ? 'אין מתאמנים' : 'No trainees yet'}</p>
+            <p>{'لا يوجد متدربين'}</p>
           </div>
         )}
       </div>

@@ -58,19 +58,12 @@ export default async function MorePage({
       color: 'from-gray-100 to-gray-200',
       iconColor: 'text-gray-600',
     },
-    {
-      icon: Globe,
-      title: locale === 'ar' ? 'اللغة' : locale === 'he' ? 'שפה' : 'Language',
-      description: locale === 'ar' ? 'تغيير اللغة' : locale === 'he' ? 'שנה שפה' : 'Change language',
-      href: `/${locale}/settings/language`,
-      color: 'from-indigo-100 to-indigo-200',
-      iconColor: 'text-indigo-600',
-    },
+    // Language settings removed
   ]
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
       
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
@@ -135,7 +128,7 @@ export default async function MorePage({
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

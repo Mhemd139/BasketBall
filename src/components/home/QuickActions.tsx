@@ -21,7 +21,7 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
     return (
         <section className="mt-8">
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">
-                {locale === 'ar' ? 'إجراءات سريعة' : locale === 'he' ? 'פעולות מהירות' : 'Quick Actions'}
+                {'إجراءات سريعة'}
             </h2>
             
             <div className="grid grid-cols-2 gap-4">
@@ -34,7 +34,7 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
                             <Users className="w-6 h-6" />
                         </div>
                         <span className="font-bold text-indigo-900 text-sm">
-                            {locale === 'ar' ? 'إضافة فريق' : locale === 'he' ? 'הוסף קבוצה' : 'Add Team'}
+                            {'إضافة فريق'}
                         </span>
                     </Card>
                 </button>
@@ -48,7 +48,7 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
                             <UserPlus className="w-6 h-6" />
                         </div>
                         <span className="font-bold text-emerald-900 text-sm">
-                            {locale === 'ar' ? 'إضافة لاعب' : locale === 'he' ? 'הוסף שחקן' : 'Add Player'}
+                            {'إضافة لاعب'}
                         </span>
                     </Card>
                 </button>

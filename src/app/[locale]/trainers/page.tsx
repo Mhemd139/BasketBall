@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { Card } from '@/components/ui/Card'
@@ -18,6 +19,7 @@ export default async function TrainersPage({
 }) {
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
+  const session = await getSession()
 
   // Fetch trainers
   const { data: trainers } = await (supabase as any)
@@ -28,12 +30,12 @@ export default async function TrainersPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
 
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header
           locale={locale}
-          title={locale === 'ar' ? 'المدربين' : locale === 'he' ? 'מאמנים' : 'Trainers'}
+          title={'المدربين'}
           showBack={false}
         />
 
@@ -74,13 +76,13 @@ export default async function TrainersPage({
 
             {(!trainers || trainers.length === 0) && (
               <div className="col-span-full text-center py-20 text-gray-500">
-                {locale === 'ar' ? 'لا يوجد مدربين' : locale === 'he' ? 'אין מאמנים' : 'No trainers found'}
+                {'لا يوجد مدربين'}
               </div>
             )}
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

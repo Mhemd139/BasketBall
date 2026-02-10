@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSession } from '@/app/actions'
 import { getLocalizedField, formatTime, formatDate } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { Calendar as CalendarIcon, MapPin, ChevronRight, Inbox } from 'lucide-react'
@@ -52,12 +53,12 @@ export default async function SchedulePage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={(await getSession())?.role} />
 
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header
           locale={locale}
-          title={locale === 'ar' ? 'الجدول' : locale === 'he' ? 'לוח זמנים' : 'Schedule'}
+          title={'الجدول'}
           showBack={false}
         />
 
@@ -97,8 +98,8 @@ export default async function SchedulePage({
                               <div className="flex items-center gap-2 mb-0.5">
                                 <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md' : 'text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md'}`}>
                                   {event.type === 'game' 
-                                    ? (locale === 'ar' ? 'مباراة' : locale === 'he' ? 'משחק' : 'GAME')
-                                    : (locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'TRAINING')
+                                    ? 'مباراة'
+                                    : 'تدريب'
                                   }
                                 </span>
                               </div>
@@ -113,7 +114,7 @@ export default async function SchedulePage({
                               )}
                             </div>
                             
-                            <ChevronRight className={`text-gray-300 w-5 h-5 shrink-0 ${locale === 'ar' || locale === 'he' ? 'rotate-180' : ''}`} />
+                            <ChevronRight className={`text-gray-300 w-5 h-5 shrink-0 rotate-180`} />
                           </div>
                         </Card>
                       </Link>
@@ -127,14 +128,14 @@ export default async function SchedulePage({
                   <Inbox className="w-10 h-10 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-700">
-                  {locale === 'ar' ? 'لا توجد فعاليات' : locale === 'he' ? 'אין אירועים' : 'No events found'}
+                  {'لا توجد فعاليات'}
                 </h3>
               </div>
             )}
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={(await getSession())?.role} />
       </div>
     </div>
   )

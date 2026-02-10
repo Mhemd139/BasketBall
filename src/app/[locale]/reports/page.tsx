@@ -4,20 +4,24 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card } from '@/components/ui/Card'
 import { BarChart3, TrendingUp, Users, Calendar } from 'lucide-react'
 
+import { BottomNav } from '@/components/layout/BottomNav'
+import { getSession } from '@/app/actions'
+
 export default async function ReportsPage({
   params,
 }: {
   params: Promise<{ locale: Locale }>
 }) {
   const { locale } = await params
+  const session = await getSession()
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex">
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header
           locale={locale}
-          title={locale === 'ar' ? 'التقارير' : locale === 'he' ? 'דוחות' : 'Reports'}
+          title={'التقارير'}
           showBack
           backHref={`/${locale}/more`}
         />
@@ -31,7 +35,7 @@ export default async function ReportsPage({
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                             <Users className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-500 font-medium">{locale === 'ar' ? 'إجمالي اللاعبين' : 'Total Players'}</span>
+                        <span className="text-gray-500 font-medium">{'إجمالي اللاعبين'}</span>
                     </div>
                     <p className="text-3xl font-bold">124</p>
                 </Card>
@@ -40,7 +44,7 @@ export default async function ReportsPage({
                         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                             <TrendingUp className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-500 font-medium">{locale === 'ar' ? 'نسبة الحضور' : 'Attendance Rate'}</span>
+                        <span className="text-gray-500 font-medium">{'نسبة الحضور'}</span>
                     </div>
                     <p className="text-3xl font-bold">88%</p>
                 </Card>
@@ -49,7 +53,7 @@ export default async function ReportsPage({
                         <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
                             <Calendar className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-500 font-medium">{locale === 'ar' ? 'التدريبات هذا الشهر' : 'Sessions this Month'}</span>
+                        <span className="text-gray-500 font-medium">{'التدريبات هذا الشهر'}</span>
                     </div>
                     <p className="text-3xl font-bold">12</p>
                 </Card>
@@ -59,14 +63,15 @@ export default async function ReportsPage({
              <Card className="p-8 flex flex-col items-center justify-center min-h-[300px] text-gray-400 text-center">
                 <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {locale === 'ar' ? 'تحليل الأداء قريباً' : 'Performance Analytics Coming Soon'}
+                    {'تحليل الأداء قريباً'}
                 </h3>
                 <p className="max-w-md">
-                    {locale === 'ar' ? 'سنقوم بإضافة رسوم بيانية تفصيلية هنا قريباً.' : 'We are working on detailed charts for player attendance and payments.'}
+                    {'سنقوم بإضافة رسوم بيانية تفصيلية هنا قريباً.'}
                 </p>
              </Card>
            </div>
         </main>
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

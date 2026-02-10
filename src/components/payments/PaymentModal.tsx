@@ -11,17 +11,16 @@ type Trainee = Database['public']['Tables']['trainees']['Row']
 
 interface PaymentModalProps {
     trainee: Trainee
-    locale: string
     onClose: () => void
 }
 
-export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
+export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
     const [amount, setAmount] = useState(trainee.amount_paid || 0)
     const [comment, setComment] = useState(trainee.payment_comment_en || '')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
     
-    const name = locale === 'ar' ? trainee.name_ar : locale === 'he' ? trainee.name_he : trainee.name_en
+    const name = trainee.name_ar
     const goal = 3000
     const progress = Math.min((amount / goal) * 100, 100)
 
@@ -32,7 +31,7 @@ export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
             router.refresh()
             onClose()
         } else {
-            alert('Error updating')
+            alert('حدث خطأ أثناء التحديث')
         }
         setLoading(false)
     }
@@ -68,7 +67,7 @@ export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
                     {/* Progress */}
                     <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                            <label className="text-sm font-semibold text-gray-500 uppercase">Payment Status</label>
+                            <label className="text-sm font-semibold text-gray-500 uppercase">{'حالة الدفع'}</label>
                             <div className="font-mono font-bold text-xl">
                                 ₪{amount.toLocaleString()} <span className="text-gray-400 text-base">/ ₪{goal.toLocaleString()}</span>
                             </div>
@@ -84,7 +83,7 @@ export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
                     {/* Edit Form */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Total Paid (₪)</label>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">{'المبلغ المدفوع (₪)'}</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-sans">₪</span>
                                 <input 
@@ -96,7 +95,7 @@ export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
                             </div>
                         </div>
                         <div className="space-y-2">
-                             <label className="block text-xs font-semibold text-gray-500 uppercase">Quick Add</label>
+                             <label className="block text-xs font-semibold text-gray-500 uppercase">{'إضافة سريعة'}</label>
                              <div className="flex gap-2">
                                  <button onClick={() => setAmount(c => c + 100)} className="flex-1 py-2 bg-gray-50 hover:bg-gray-100 border rounded-lg text-sm font-medium transition-colors">+100</button>
                                  <button onClick={() => setAmount(c => c + 500)} className="flex-1 py-2 bg-gray-50 hover:bg-gray-100 border rounded-lg text-sm font-medium transition-colors">+500</button>
@@ -105,11 +104,11 @@ export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Comments / History</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">{'ملاحظات / سجل'}</label>
                         <textarea 
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Add notes about payments, discounts, etc."
+                            placeholder="أضف ملاحظات حول الدفعات..."
                             className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] text-sm resize-none"
                         />
                     </div>
@@ -119,7 +118,7 @@ export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
                         disabled={loading}
                         className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-blue-200 transition-all hover:scale-[1.01] active:scale-[0.99]"
                     >
-                        {loading ? <span className="loading loading-spinner text-white" /> : <><Save className="w-5 h-5" /> Save Changes</>}
+                        {loading ? <span className="loading loading-spinner text-white" /> : <><Save className="w-5 h-5" /> {'حفظ التغييرات'}</>}
                     </button>
                 </div>
             </div>

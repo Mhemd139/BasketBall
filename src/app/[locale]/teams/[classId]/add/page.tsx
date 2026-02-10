@@ -30,16 +30,16 @@ export default function AddTraineePage() {
   })
 
   const t = {
-    title: locale === 'ar' ? 'إضافة لاعب' : locale === 'he' ? 'הוסף שחקן' : 'Add Player',
-    existingTitle: locale === 'ar' ? 'لاعب مسجل مسبقاً' : locale === 'he' ? 'שחקן קיים' : 'Existing Player',
-    newTitle: locale === 'ar' ? 'لاعب جديد' : locale === 'he' ? 'שחקן חדש' : 'New Player',
-    name: locale === 'ar' ? 'الاسم' : locale === 'he' ? 'שם' : 'Name',
-    phone: locale === 'ar' ? 'رقم الهاتف' : locale === 'he' ? 'טלפון' : 'Phone',
-    jersey: locale === 'ar' ? 'رقم القميص' : locale === 'he' ? 'מספר חולצה' : 'Jersey Number',
-    searchPlaceholder: locale === 'ar' ? 'ابحث بالاسم أو رقم الهاتف...' : locale === 'he' ? 'חפש לפי שם או טלפון...' : 'Search by name or phone...',
-    transfer: locale === 'ar' ? 'نقل للفريق' : locale === 'he' ? 'העבר לקבוצה' : 'Transfer',
-    save: locale === 'ar' ? 'حفظ' : locale === 'he' ? 'שמור' : 'Save',
-    cancel: locale === 'ar' ? 'إلغاء' : locale === 'he' ? 'ביטول' : 'Cancel',
+    title: 'إضافة لاعب',
+    existingTitle: 'لاعب مسجل مسبقاً',
+    newTitle: 'لاعب جديد',
+    name: 'الاسم',
+    phone: 'رقم الهاتف',
+    jersey: 'رقم القميص',
+    searchPlaceholder: 'ابحث بالاسم أو رقم الهاتف...',
+    transfer: 'نقل للفريق',
+    save: 'حفظ',
+    cancel: 'إلغاء',
   }
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function AddTraineePage() {
   }, [searchQuery, mode])
 
   const handleTransfer = async (trainee: any) => {
-    if (!confirm(locale === 'ar' ? `هل أنت متأكد من نقل ${trainee.name_en}؟` : locale === 'he' ? `האם אתה בטוח שברצונך להעביר את ${trainee.name_he}?` : `Transfer ${trainee.name_en}?`)) return
+    if (!confirm(`هل أنت متأكد من نقل ${trainee.name_ar}؟`)) return
     
     setLoading(true)
     const res = await transferTrainee(trainee.id, classId)
@@ -100,7 +100,7 @@ export default function AddTraineePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex" dir={locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 flex" dir="rtl">
       <Sidebar locale={locale} />
       
       <div className="flex-1 flex flex-col md:ml-[240px]">
@@ -135,7 +135,7 @@ export default function AddTraineePage() {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">{t.existingTitle}</h3>
                       <p className="text-sm text-gray-500 mt-2">
-                        {locale === 'ar' ? 'نقل لاعب مسجل في فريق آخر أو في النظام' : locale === 'he' ? 'העברת שחקן מקבוצה אחרת או מהמערכת' : 'Transfer a player registered in another team'}
+                        {'نقل لاعب مسجل في فريق آخر أو في النظام'}
                       </p>
                     </div>
                   </Card>
@@ -151,7 +151,7 @@ export default function AddTraineePage() {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">{t.newTitle}</h3>
                       <p className="text-sm text-gray-500 mt-2">
-                        {locale === 'ar' ? 'إنشاء سجل جديد للاعب جديد تماماً' : locale === 'he' ? 'יצירת רשומה חדשה לשחקן חדש לגמרי' : 'Create a fresh record for a brand new player'}
+                        {'إنشاء سجل جديد للاعب جديد تماماً'}
                       </p>
                     </div>
                   </Card>
@@ -196,7 +196,7 @@ export default function AddTraineePage() {
                           </div>
                           <div className="min-w-0">
                             <h4 className="font-bold text-gray-900 truncate">
-                                {locale === 'ar' ? trainee.name_ar : locale === 'he' ? trainee.name_he : trainee.name_en}
+                                {trainee.name_ar}
                             </h4>
                             <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                                 <span className="flex items-center gap-1 shrink-0">
@@ -205,7 +205,7 @@ export default function AddTraineePage() {
                                 {trainee.classes && (
                                     <span className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded truncate max-w-[120px]">
                                         <Users className="w-3 h-3" /> 
-                                        {locale === 'ar' ? trainee.classes.name_ar : locale === 'he' ? trainee.classes.name_he : trainee.classes.name_en}
+                                        {trainee.classes.name_ar}
                                     </span>
                                 )}
                             </div>
@@ -230,14 +230,14 @@ export default function AddTraineePage() {
                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                             <Search className="w-8 h-8" />
                         </div>
-                        <p className="font-semibold text-gray-900">{locale === 'ar' ? 'لم يتم العثور على لاعبين' : locale === 'he' ? 'לא נמצאו שחקנים' : 'No players found'}</p>
-                        <p className="text-sm text-gray-500 mt-1 mb-6">{locale === 'ar' ? 'يمكنك تسجيله كلاعب جديد تماماً' : 'You can register them as a new player'}</p>
+                        <p className="font-semibold text-gray-900">{'لم يتم العثور على لاعبين'}</p>
+                        <p className="text-sm text-gray-500 mt-1 mb-6">{'يمكنك تسجيله كلاعب جديد تماماً'}</p>
                         <button 
                             onClick={() => setMode('new')}
                             className="btn btn-primary"
                         >
                             <Plus className="w-5 h-5" />
-                            {locale === 'ar' ? 'تسجيل لاعب جديد' : 'Register New Player'}
+                            {'تسجيل لاعب جديد'}
                         </button>
                       </div>
                     )}
@@ -262,7 +262,7 @@ export default function AddTraineePage() {
                           value={formData.name}
                           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                           className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white font-medium"
-                          placeholder={locale === 'ar' ? 'اسم اللاعب' : 'Player Name'}
+                          placeholder="اسم اللاعب"
                         />
                       </div>
 
@@ -293,7 +293,7 @@ export default function AddTraineePage() {
 
                       <div className="space-y-3">
                         <label className="text-sm font-semibold text-gray-700">
-                          {locale === 'ar' ? 'الجنس' : locale === 'he' ? 'מין' : 'Gender'}
+                          {'الجنس'}
                         </label>
                         <div className="flex gap-4">
                           <button
@@ -306,7 +306,7 @@ export default function AddTraineePage() {
                               }`}
                           >
                             <User className="w-5 h-5" />
-                            {locale === 'ar' ? 'ذكر' : 'Male'}
+                            {'ذكر'}
                           </button>
                           <button
                               type="button"
@@ -318,7 +318,7 @@ export default function AddTraineePage() {
                               }`}
                           >
                             <User className="w-5 h-5" />
-                            {locale === 'ar' ? 'أنثى' : 'Female'}
+                            {'أنثى'}
                           </button>
                         </div>
                       </div>

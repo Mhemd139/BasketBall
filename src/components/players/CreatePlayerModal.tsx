@@ -50,7 +50,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
 
   const handleNext = () => {
     if (!formData.name) {
-      setError(locale === 'ar' ? 'يرجى إدخال اسم اللاعب' : 'Please enter player name')
+      setError('يرجى إدخال اسم اللاعب')
       return
     }
     setError(null)
@@ -63,7 +63,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
 
   const handleSave = async () => {
     if (!formData.classId) {
-      setError(locale === 'ar' ? 'يرجى اختيار فريق' : 'Please select a team')
+      setError('يرجى اختيار فريق')
       return
     }
 
@@ -103,9 +103,9 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
         <div className="bg-navy-900 p-6 pt-8 text-white relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <DialogTitle className="relative z-10 text-2xl font-outfit font-bold flex items-center gap-2">
-            {step === 'details' && <><User className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'تفاصيل اللاعب' : 'Player Details'}</>}
-            {step === 'team' && <><Users className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'اختيار الفريق' : 'Team Selection'}</>}
-            {step === 'success' && <><CheckCircle2 className="w-6 h-6 text-green-400" /> {locale === 'ar' ? 'تمت الإضافة!' : 'Success!'}</>}
+            {step === 'details' && <><User className="w-6 h-6 text-gold-400" /> {'تفاصيل اللاعب'}</>}
+            {step === 'team' && <><Users className="w-6 h-6 text-gold-400" /> {'اختيار الفريق'}</>}
+            {step === 'success' && <><CheckCircle2 className="w-6 h-6 text-green-400" /> {'تمت الإضافة!'}</>}
           </DialogTitle>
           
           {/* Progress Indicator */}
@@ -130,13 +130,13 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                      {locale === 'ar' ? 'اسم اللاعب' : 'Player Name'}
+                      {'اسم اللاعب'}
                     </label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 outline-none transition-all text-sm font-bold"
-                        placeholder={locale === 'ar' ? 'مثال: محمد علي' : 'e.g. John Doe'}
+                        placeholder={'مثال: محمد علي'}
                         value={formData.name}
                         onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
                       />
@@ -146,7 +146,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                        {locale === 'ar' ? 'رقم الهاتف' : 'Phone'}
+                        {'رقم الهاتف'}
                       </label>
                       <div className="relative">
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -161,7 +161,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                        {locale === 'ar' ? 'رقم القميص' : 'Jersey'}
+                        {'رقم القميص'}
                       </label>
                       <div className="relative">
                         <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -178,20 +178,20 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                      {locale === 'ar' ? 'الجنس' : 'Gender'}
+                      {'الجنس'}
                     </label>
                     <div className="flex bg-slate-100/80 p-1.5 rounded-2xl">
                       <button 
                         onClick={() => setFormData(p => ({ ...p, gender: 'male' }))}
                         className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${formData.gender === 'male' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}
                       >
-                        {locale === 'ar' ? 'ذكر' : 'MALE'}
+                        {'ذكر'}
                       </button>
                       <button 
                         onClick={() => setFormData(p => ({ ...p, gender: 'female' }))}
                         className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${formData.gender === 'female' ? 'bg-white shadow-sm text-pink-600' : 'text-slate-500'}`}
                       >
-                        {locale === 'ar' ? 'أنثى' : 'FEMALE'}
+                        {'أنثى'}
                       </button>
                     </div>
                   </div>
@@ -202,7 +202,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                      {locale === 'ar' ? 'اختر الفريق' : 'Target Team'}
+                      {'اختر الفريق'}
                     </label>
                     <div className="grid grid-cols-1 gap-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                       {classes.map(c => (
@@ -220,7 +220,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                               <Users className="w-4 h-4" />
                             </div>
                             <span className="font-bold text-sm">
-                              {locale === 'ar' ? c.name_ar : locale === 'he' ? c.name_he : c.name_en}
+                              {c.name_ar}
                             </span>
                           </div>
                           {formData.classId === c.id && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
@@ -237,10 +237,10 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-black text-navy-900">
-                    {locale === 'ar' ? 'تمت إضافة اللاعب بنجاح!' : 'Player Added Successfully!'}
+                    {'تمت إضافة اللاعب بنجاح!'}
                   </h3>
                   <p className="text-slate-500 text-sm font-medium px-8">
-                    {formData.name} {locale === 'ar' ? 'أصبح الآن عضواً في الفريق.' : 'is now a member of the team.'}
+                    {formData.name} {'أصبح الآن عضواً في الفريق.'}
                   </p>
                 </div>
               )}
@@ -260,7 +260,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
               onClick={handleNext} 
               className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 group"
             >
-              {locale === 'ar' ? 'التالي' : 'NEXT STEP'}
+              {'التالي'}
               <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           )}
@@ -273,14 +273,14 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                 className="flex-1 h-14 rounded-2xl font-bold bg-slate-50 text-slate-500 hover:bg-slate-100"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {locale === 'ar' ? 'رجوع' : 'BACK'}
+                {'رجوع'}
               </Button>
               <Button 
                 onClick={handleSave} 
                 className="flex-[2] h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-100"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (locale === 'ar' ? 'إضافة اللاعب' : 'FINISH & ADD')}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'إضافة اللاعب'}
               </Button>
             </div>
           )}
@@ -290,7 +290,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
               onClick={handleDone} 
               className="w-full h-14 bg-navy-900 hover:bg-navy-800 text-white rounded-2xl font-black shadow-lg"
             >
-              {locale === 'ar' ? 'إغلاق' : 'DONE'}
+              {'إغلاق'}
             </Button>
           )}
         </DialogFooter>

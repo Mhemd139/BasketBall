@@ -23,7 +23,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
             router.refresh()
         } else {
             console.error('Failed to update event:', res.error)
-            alert(locale === 'ar' ? 'فشل تحديث الحدث' : 'Failed to update event')
+            alert('فشل تحديث الحدث')
         }
     }
 
@@ -34,7 +34,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
             router.push(`/${locale}/schedule`)
         } else {
             console.error('Failed to delete event:', res.error)
-            alert(locale === 'ar' ? 'فشل حذف الحدث' : 'Failed to delete event')
+            alert('فشل حذف الحدث')
         }
     }
 
@@ -47,7 +47,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
                         setIsOpen(true);
                     }}
                     className="w-9 h-9 rounded-xl flex items-center justify-center text-navy-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all active:scale-95"
-                    title={locale === 'ar' ? 'تعديل الحدث' : 'Edit Event'}
+                    title={'تعديل الحدث'}
                 >
                     <Pencil className="w-4 h-4" />
                 </button>
@@ -58,7 +58,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
                         setIsOpen(true);
                     }}
                     className="w-9 h-9 rounded-xl flex items-center justify-center text-navy-400 hover:bg-red-50 hover:text-red-500 transition-all active:scale-95 group"
-                    title={locale === 'ar' ? 'حذف الحدث' : 'Delete Event'}
+                    title={'حذف الحدث'}
                 >
                     <Trash2 className="w-4 h-4 transition-transform group-hover:rotate-12" />
                 </button>

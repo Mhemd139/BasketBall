@@ -159,7 +159,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
         const others: Trainee[] = [];
 
         trainees.forEach(t => {
-            const name = (locale === 'ar' ? t.name_ar : locale === 'he' ? t.name_he : t.name_en) || '';
+            const name = t.name_ar || '';
             const phone = t.phone || '';
             if (name.toLowerCase().includes(query) || phone.includes(query)) {
                 if (t.class_id === targetClassId) roster.push(t);
@@ -172,7 +172,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
 
     const getTraineeName = (t: Trainee) => {
         if (!t) return '';
-        return locale === 'ar' ? t.name_ar || t.name_en : locale === 'he' ? t.name_he || t.name_en : t.name_en;
+        return t.name_ar || t.name_en;
     };
 
     const renderTraineeCard = (trainee: Trainee, isRoster: boolean) => {
@@ -207,7 +207,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                             )}
                         </h4>
                         <p className="text-[10px] text-gray-400 font-medium">
-                            {trainee.phone || (locale === 'ar' ? 'بدون رقم' : 'No phone')}
+                            {trainee.phone || 'بدون رقم'}
                         </p>
                     </div>
                 </div>
@@ -256,11 +256,11 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                     <DialogTitle className="flex justify-between items-start">
                         <div>
                             <h2 className="text-xl font-bold font-outfit text-navy-900 uppercase tracking-tight">
-                                {locale === 'ar' ? 'تسجيل الحضور' : locale === 'he' ? 'מעקב נוכחות' : 'Attendance Tracking'}
+                                {'تسجيل الحضور'}
                             </h2>
                             <p className="text-sm text-gray-500 font-normal mt-1 flex items-center gap-2">
                                 <span className="font-bold text-indigo-600">
-                                    {locale === 'ar' ? event?.title_ar : locale === 'he' ? event?.title_he : event?.title_en}
+                                    {event?.title_ar}
                                 </span>
                                 <span>•</span>
                                 <span className="text-xs">{event?.event_date}</span>
@@ -286,7 +286,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <input 
-                                            placeholder={locale === 'ar' ? 'بحث عن لاعب...' : locale === 'he' ? 'חפש שחקן...' : 'Search for player/phone...'}
+                                            placeholder={'بحث عن لاعب...'}
                                             className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -298,7 +298,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                     {loading ? (
                                         <div className="flex flex-col items-center justify-center h-40 gap-3 text-slate-400">
                                             <Loader2 className="w-8 h-8 animate-spin" />
-                                            <span className="text-xs font-bold uppercase tracking-widest">Fetching Roster...</span>
+                                            <span className="text-xs font-bold uppercase tracking-widest">{'جاري تحميل القائمة...'}</span>
                                         </div>
                                     ) : (
                                         <>
@@ -306,8 +306,8 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                             {sortedAndFilteredTrainees.roster.length > 0 && (
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between items-center px-1">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Team Roster</span>
-                                                        <span className="text-[10px] font-bold text-slate-300">{sortedAndFilteredTrainees.roster.length} Players</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{'قائمة الفريق'}</span>
+                                                        <span className="text-[10px] font-bold text-slate-300">{sortedAndFilteredTrainees.roster.length} {'لاعبين'}</span>
                                                     </div>
                                                     {sortedAndFilteredTrainees.roster.map(t => renderTraineeCard(t, true))}
                                                 </div>
@@ -317,8 +317,8 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                             {sortedAndFilteredTrainees.others.length > 0 && (
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between items-center px-1">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-400">Global Search / Guests</span>
-                                                        <span className="text-[10px] font-bold text-slate-300">{sortedAndFilteredTrainees.others.length} Found</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-400">{'بحث عام / ضيوف'}</span>
+                                                        <span className="text-[10px] font-bold text-slate-300">{sortedAndFilteredTrainees.others.length} {'لاعبين'}</span>
                                                     </div>
                                                     {sortedAndFilteredTrainees.others.map(t => renderTraineeCard(t, false))}
                                                 </div>
@@ -330,14 +330,14 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
                                                         <Search className="w-8 h-8" />
                                                     </div>
-                                                    <p className="text-sm font-bold text-slate-900">No results found</p>
-                                                    <p className="text-xs text-slate-500 mb-6">Can't find the player? Add them quickly.</p>
+                                                    <p className="text-sm font-bold text-slate-900">{'لا توجد نتائج'}</p>
+                                                    <p className="text-xs text-slate-500 mb-6">{'لم تجد اللاعب؟ أضفه بسرعة.'}</p>
                                                     <Button 
                                                         onClick={() => setIsRegistering(true)}
                                                         className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-6"
                                                     >
                                                         <UserPlus className="w-4 h-4 mr-2" />
-                                                        Register New Player
+                                                        {'تسجيل لاعب جديد'}
                                                     </Button>
                                                 </div>
                                             )}
@@ -355,12 +355,12 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                     <button onClick={() => setIsRegistering(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
                                         <ArrowLeft className="w-5 h-5" />
                                     </button>
-                                    <h3 className="text-lg font-bold text-navy-900">New Player Onboarding</h3>
+                                    <h3 className="text-lg font-bold text-navy-900">{'تسجيل لاعب جديد'}</h3>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Name (Required)</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{'الاسم (مطلوب)'}</label>
                                         <input 
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all"
                                             placeholder="Full Name"
@@ -369,7 +369,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Phone</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{'رقم الهاتف'}</label>
                                         <input 
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all"
                                             placeholder="Phone Number"
@@ -379,7 +379,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Jersey Number</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{'رقم القميص'}</label>
                                         <div className="relative">
                                             <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <input 
@@ -392,19 +392,19 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Gender</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{'الجنس'}</label>
                                         <div className="flex bg-slate-100 p-1 rounded-xl">
                                             <button 
                                                 onClick={() => setRegForm(p => ({ ...p, gender: 'male' }))}
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${regForm.gender === 'male' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}
                                             >
-                                                Male
+                                                {'ذكر'}
                                             </button>
                                             <button 
                                                 onClick={() => setRegForm(p => ({ ...p, gender: 'female' }))}
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${regForm.gender === 'female' ? 'bg-white shadow-sm text-pink-600' : 'text-slate-500'}`}
                                             >
-                                                Female
+                                                {'أنثى'}
                                             </button>
                                         </div>
                                     </div>
@@ -412,7 +412,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
 
                                 <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
                                     <p className="text-xs text-indigo-800 font-medium">
-                                        💡 Registration will automatically assign the player to this team and mark them as <b>Present</b> for this event.
+                                        💡 {'التسجيل سيقوم تلقائياً بتعيين اللاعب لهذا الفريق وتسجيله كـ "حاضر" لهذا الحدث.'}
                                     </p>
                                 </div>
 
@@ -422,7 +422,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                         variant="secondary"
                                         className="flex-1 rounded-xl py-6 font-bold"
                                     >
-                                        Cancel
+                                        {'إلغاء'}
                                     </Button>
                                     <Button 
                                         disabled={saving || !regForm.name_en}
@@ -430,7 +430,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                         className="flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-6 font-bold shadow-lg shadow-indigo-200"
                                     >
                                         {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-                                        Save & Mark Present
+                                        {'حفظ وتسجيل حضور'}
                                     </Button>
                                 </div>
                             </motion.div>
@@ -440,7 +440,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
 
                 <DialogFooter className="p-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
                     <Button onClick={onClose} className="w-full bg-navy-600 hover:bg-navy-700 text-white font-bold h-12 rounded-xl">
-                        {locale === 'ar' ? 'إغلاق' : locale === 'he' ? 'סגור' : 'Done'}
+                        {'إغلاق'}
                     </Button>
                 </DialogFooter>
 

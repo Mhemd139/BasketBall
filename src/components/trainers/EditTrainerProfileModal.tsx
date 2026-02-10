@@ -29,7 +29,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
     useEffect(() => {
         if (isOpen) {
             // Try to find the best name match based on locale, fallback to name_en
-            const localizedName = trainer[`name_${locale}` as keyof typeof trainer] || trainer.name_en || ''
+            const localizedName = trainer.name_ar || ''
             setName(localizedName)
             
             setPhone(trainer.phone || '')
@@ -71,7 +71,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                     onClose()
                 }, 100)
             } else {
-                setError(res.error || 'Failed to update')
+                setError(res.error || 'فشل التحديث')
             }
         } catch (err: any) {
             setError(err.message)
@@ -94,7 +94,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                 router.push(`/${locale}`)
                 router.refresh()
             } else {
-                setError(res.error || 'Failed to delete account')
+                setError(res.error || 'فشل حذف الحساب')
                 setLoading(false)
             }
         } catch (err: any) {
@@ -112,23 +112,23 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
     }
 
     const days = [
-        { id: 'Sunday', label: locale === 'ar' ? 'الأحد' : locale === 'he' ? 'ראשון' : 'Sunday' },
-        { id: 'Monday', label: locale === 'ar' ? 'الإثنين' : locale === 'he' ? 'שני' : 'Monday' },
-        { id: 'Tuesday', label: locale === 'ar' ? 'الثلاثاء' : locale === 'he' ? 'שלישי' : 'Tuesday' },
-        { id: 'Wednesday', label: locale === 'ar' ? 'الأربعاء' : locale === 'he' ? 'רביעי' : 'Wednesday' },
-        { id: 'Thursday', label: locale === 'ar' ? 'الخميس' : locale === 'he' ? 'חמישי' : 'Thursday' },
-        { id: 'Friday', label: locale === 'ar' ? 'الجمعة' : locale === 'he' ? 'שישי' : 'Friday' },
-        { id: 'Saturday', label: locale === 'ar' ? 'السبت' : locale === 'he' ? 'שבת' : 'Saturday' },
+        { id: 'Sunday', label: 'الأحد' },
+        { id: 'Monday', label: 'الإثنين' },
+        { id: 'Tuesday', label: 'الثلاثاء' },
+        { id: 'Wednesday', label: 'الأربعاء' },
+        { id: 'Thursday', label: 'الخميس' },
+        { id: 'Friday', label: 'الجمعة' },
+        { id: 'Saturday', label: 'السبت' },
     ]
     
     // Dynamic titles based on mode
     const title = mode === 'schedule' 
-        ? (locale === 'ar' ? 'تعديل الجدول' : locale === 'he' ? 'ערוך לוח זמנים' : 'Edit Schedule')
-        : (locale === 'ar' ? 'الملف الشخصي' : locale === 'he' ? 'פרופיל אישי' : 'Edit Profile')
+        ? 'تعديل الجدول'
+        : 'الملف الشخصي'
 
     const subtitle = mode === 'schedule'
-        ? (locale === 'ar' ? 'حدد الأيام التي تكون فيها متاحاً للتدريب' : locale === 'he' ? 'בחר את הימים בהם אתה זמין לאימון' : 'Select days you are available for training')
-        : (locale === 'ar' ? 'قم بتحديث معلوماتك الشخصية' : locale === 'he' ? 'עדכן את הפרטים האישיים שלך' : 'Update your personal information')
+        ? 'حدد الأيام التي تكون فيها متاحاً للتدريب'
+        : 'قم بتحديث معلوماتك الشخصية'
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -158,21 +158,21 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                         {/* Name Input - Soft & Tactile */}
                         <div className="space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-200">
                             <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">
-                                {locale === 'ar' ? 'الاسم' : locale === 'he' ? 'שם' : 'Name'}
+                                {'الاسم'}
                             </label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-0 text-navy-900 font-bold text-sm focus:ring-2 focus:ring-indigo-100 focus:bg-white transition-all duration-300 placeholder:text-gray-300 shadow-sm hover:shadow-md focus:shadow-lg focus:-translate-y-0.5"
-                                placeholder="Trainer Name"
+                                placeholder="اسم المدرب"
                             />
                         </div>
 
                         {/* Phone Input */}
                         <div className="space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-250">
                             <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">
-                                {locale === 'ar' ? 'رقم الهاتف' : locale === 'he' ? 'טלפון' : 'Phone'}
+                                {'رقم الهاتف'}
                             </label>
                             <div className="relative">
                                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -190,12 +190,12 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                         {/* Gender Toggle - iOS Style */}
                         <div className="space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-300">
                              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">
-                                {locale === 'ar' ? 'الجنس' : locale === 'he' ? 'מגדר' : 'Gender'}
+                                {'الجنس'}
                             </label>
                             <div className="flex bg-gray-50 p-1.5 rounded-2xl relative cursor-pointer group">
                                 <div 
                                     className={`absolute inset-y-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                                        gender === 'female' ? (locale === 'ar' ? 'left-1.5' : 'right-1.5') : (locale === 'ar' ? 'right-1.5' : 'left-1.5')
+                                        gender === 'female' ? 'left-1.5' : 'right-1.5'
                                     }`} 
                                 />
                                 <button
@@ -203,14 +203,14 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                                     onClick={() => setGender('male')}
                                     className={`flex-1 relative z-10 py-2.5 rounded-xl text-xs font-bold transition-colors duration-300 active:scale-95 ${gender === 'male' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
                                 >
-                                    {locale === 'ar' ? 'ذكر' : locale === 'he' ? 'זכר' : 'Male'}
+                                    {'ذكر'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setGender('female')}
                                     className={`flex-1 relative z-10 py-2.5 rounded-xl text-xs font-bold transition-colors duration-300 active:scale-95 ${gender === 'female' ? 'text-pink-600' : 'text-gray-400 hover:text-gray-600'}`}
                                 >
-                                    {locale === 'ar' ? 'أنثى' : locale === 'he' ? 'נקבה' : 'Female'}
+                                    {'أنثى'}
                                 </button>
                             </div>
                         </div>
@@ -222,12 +222,12 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                         <div className="space-y-3 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-500">
                             <div className="flex justify-between items-end px-1">
                                 <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                    {locale === 'ar' ? 'أيام التدريب' : locale === 'he' ? 'ימי אימון' : 'Schedule'}
+                                    {'أيام التدريب'}
                                 </label>
                                 <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full transition-all duration-300 ${
                                     availability.length > 0 ? 'text-indigo-500 bg-indigo-50 scale-100' : 'text-gray-300 bg-gray-50 scale-90 opacity-50'
                                 }`}>
-                                    {availability.length} {locale === 'ar' ? 'نشط' : locale === 'he' ? 'פעיל' : 'Active'}
+                                    {availability.length} {'نشط'}
                                 </span>
                             </div>
                             
@@ -269,11 +269,11 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                         >
                             <div className={`flex items-center gap-2 transition-all duration-300 ${loading ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
                                 <CheckCircle2 className="w-4 h-4" />
-                                {locale === 'ar' ? 'حفظ التغييرات' : locale === 'he' ? 'שמור שינויים' : 'Save Changes'}
+                                {'حفظ التغييرات'}
                             </div>
                             <div className={`absolute inset-0 flex items-center justify-center gap-2 transition-all duration-300 ${loading ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <span>{locale === 'ar' ? 'جاري الحفظ...' : locale === 'he' ? 'שומר...' : 'Saving...'}</span>
+                                <span>{'جاري الحفظ...'}</span>
                             </div>
                         </button>
                         
@@ -282,7 +282,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                             onClick={onClose}
                             className="w-full py-3 font-bold rounded-2xl text-gray-400 text-xs hover:bg-gray-50 hover:text-gray-600 transition-colors active:scale-95"
                         >
-                            {locale === 'ar' ? 'إلغاء' : locale === 'he' ? 'ביטול' : 'Cancel'}
+                            {'إلغاء'}
                         </button>
                     </div>
 
@@ -302,12 +302,12 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                             {confirmDelete ? (
                                 <>
                                     <Loader2 className={`w-3 h-3 ${loading ? 'animate-spin' : 'hidden'}`} />
-                                    <span className="text-[10px] font-bold">{locale === 'ar' ? 'تأكيد الحذف' : locale === 'he' ? 'אשר מחיקה' : 'Confirm'}</span>
+                                    <span className="text-[10px] font-bold">{'تأكيد الحذف'}</span>
                                 </>
                             ) : (
                                 <>
                                     <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-                                    <span className="text-[10px] font-bold">{locale === 'ar' ? 'حذف الحساب' : locale === 'he' ? 'מחק חשבון' : 'Delete Account'}</span>
+                                    <span className="text-[10px] font-bold">{'حذف الحساب'}</span>
                                 </>
                             )}
                         </button>

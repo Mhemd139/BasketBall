@@ -26,7 +26,7 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
     const [teams, setTeams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const isRTL = locale === 'ar' || locale === 'he';
+    const isRTL = true;
 
     useEffect(() => {
         const fetchTrainer = async () => {
@@ -55,7 +55,7 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
         fetchTrainer();
     }, [trainerId]);
 
-    const name = trainer ? (locale === 'ar' ? trainer.name_ar : locale === 'he' ? trainer.name_he : trainer.name_en) : '';
+    const name = trainer ? trainer.name_ar : '';
     const isFemale = trainer?.gender === 'female';
     
     // Theme Colors based on Gender
@@ -99,7 +99,7 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                             <h2 className="text-2xl font-bold text-gray-900">{name}</h2>
                             <div className="flex items-center gap-1.5 text-gray-500 text-sm font-medium mt-1">
                                 <span className={`px-2 py-0.5 rounded-md text-xs uppercase tracking-wider ${isFemale ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}`}>
-                                    {trainer?.role === 'admin' ? 'Head Coach' : 'Coach'}
+                                    {trainer?.role === 'admin' ? 'رئيس المدربين' : 'مدرب'}
                                 </span>
                                 {trainer?.phone && (
                                     <div className="flex items-center gap-1 ml-2">
@@ -116,19 +116,19 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                         <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100">
                             <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                 <Users className="w-3.5 h-3.5" />
-                                <span>Teams</span>
+                                <span>{'الفرق'}</span>
                             </div>
                             <div className="text-2xl font-black text-gray-800">{teams.length}</div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100">
                             <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                 <Calendar className="w-3.5 h-3.5" />
-                                <span>Availability</span>
+                                <span>{'التوفر'}</span>
                             </div>
                             <div className="text-sm font-semibold text-gray-800">
                                 {trainer?.availability && trainer.availability.length > 0 
                                     ? trainer.availability.join(', ') 
-                                    : <span className="text-gray-400 text-xs italic">Not set</span>
+                                    : <span className="text-gray-400 text-xs italic">{'غير محدد'}</span>
                                 }
                             </div>
                         </div>
@@ -138,7 +138,7 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                     <div className="mt-6">
                         <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
                             <Activity className={`w-4 h-4 ${theme.text}`} />
-                            Active Teams
+                            {'الفرق النشطة'}
                         </h3>
                         
                         {teams.length > 0 ? (
@@ -150,7 +150,7 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                                         </div>
                                         <div>
                                             <div className="font-bold text-sm text-gray-800">
-                                                {locale === 'ar' ? team.name_ar : locale === 'he' ? team.name_he : team.name_en}
+                                                {team.name_ar}
                                             </div>
                                             {team.schedule_info && (
                                                 <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
@@ -164,7 +164,7 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                             </div>
                         ) : (
                             <p className="text-center text-sm text-gray-400 py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                No active teams assigned.
+                                {'لا توجد فرق نشطة معيّنة.'}
                             </p>
                         )}
                     </div>

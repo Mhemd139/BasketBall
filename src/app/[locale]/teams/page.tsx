@@ -30,7 +30,7 @@ export default async function TeamsPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
-      <Sidebar locale={locale} />
+      <Sidebar locale={locale} role={session?.role} />
 
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
@@ -44,11 +44,11 @@ export default async function TeamsPage({
                   <Users className="w-6 h-6 text-white" strokeWidth={2.5} />
                 </div>
                 <h1 className="heading-lg">
-                  {locale === 'ar' ? 'الفرق' : locale === 'he' ? 'קבוצות' : 'Teams'}
+                  {'الفرق'}
                 </h1>
               </div>
               <p className="text-gray-500 mb-6">
-                {locale === 'ar' ? 'إدارة فرق كرة السلة' : locale === 'he' ? 'ניהול קבוצות כדורסל' : 'Manage basketball teams'}
+                {'إدارة فرق كرة السلة'}
               </p>
             </section>
 
@@ -75,10 +75,10 @@ export default async function TeamsPage({
                       <Users className="w-16 h-16 text-gray-300" strokeWidth={1.5} />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {locale === 'ar' ? 'لا توجد فرق بعد' : locale === 'he' ? 'אין קבוצות עדיין' : 'No teams yet'}
+                      {'لا توجد فرق بعد'}
                     </h3>
                     <p className="text-gray-500 text-sm">
-                      {locale === 'ar' ? 'سيتم إضافة الفرق قريباً' : locale === 'he' ? 'קבוצות יתווספו בקרוב' : 'Teams will be added soon'}
+                      {'سيتم إضافة الفرق قريباً'}
                     </p>
                   </CardContent>
                 </Card>
@@ -87,7 +87,7 @@ export default async function TeamsPage({
           </div>
         </main>
 
-        <BottomNav locale={locale} />
+        <BottomNav locale={locale} role={session?.role} />
       </div>
     </div>
   )

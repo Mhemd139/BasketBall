@@ -41,8 +41,8 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
     const [events, setEvents] = useState<Event[]>(initialEvents);
     const [loading, setLoading] = useState(false);
 
-    const dateLocale = locale === 'ar' ? arSA : locale === 'he' ? he : enUS;
-    const isRTL = locale === 'ar' || locale === 'he';
+    const dateLocale = arSA;
+    const isRTL = true;
 
     // Fetch events when month changes
     useEffect(() => {
@@ -155,7 +155,7 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg flex items-center gap-2 text-gray-800">
                         <Calendar className="w-5 h-5 text-gold-500" />
-                        {locale === 'ar' ? 'جدول القاعة' : locale === 'he' ? 'לוח זמנים' : 'Hall Schedule'}
+                        {'جدول القاعة'}
                     </h3>
                     
                     <div className="flex items-center gap-2">
@@ -244,7 +244,7 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
                 <div className="flex items-center justify-between mb-4">
                     <h4 className="font-bold text-gray-800 flex items-center gap-2">
                          <Clock className="w-4 h-4 text-indigo-500" />
-                         {locale === 'ar' ? 'أحداث اليوم' : locale === 'he' ? 'אירועי היום' : 'Today\'s Events'}
+                         {'أحداث اليوم'}
                     </h4>
                     {isEditable && (
                         <button 
@@ -257,7 +257,7 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
                             disabled={isBefore(startOfDay(selectedDate), startOfDay(new Date()))}
                         >
                             <span className="text-lg leading-none">+</span>
-                            {locale === 'ar' ? 'إضافة حدث' : locale === 'he' ? 'הוסף אירוע' : 'Add Event'}
+                            {'إضافة حدث'}
                         </button>
                     )}
                 </div>
@@ -294,7 +294,7 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
                                                 <h4 className={`font-bold text-sm ${
                                                     event.type === 'game' ? 'text-orange-900' : 'text-blue-900'
                                                 }`}>
-                                                    {locale === 'ar' ? event.title_ar : locale === 'he' ? event.title_he : event.title_en}
+                                                    {event.title_ar}
                                                 </h4>
                                                 {isCurrent && (
                                                     <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
@@ -327,7 +327,7 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
                                                         handleEditEvent(event);
                                                     }}
                                                 >
-                                                    Edit
+                                                    {'تعديل'}
                                                 </button>
                                             </div>
                                         )}
@@ -341,10 +341,10 @@ export function HallSchedule({ hallId, events: initialEvents, locale, isEditable
                                 <Clock className="w-8 h-8 text-gray-300" />
                             </div>
                             <p className="font-medium">
-                                {locale === 'ar' ? 'لا توجد أحداث لهذا اليوم' : locale === 'he' ? 'אין אירועים ליום זה' : 'No events scheduled for this day'}
+                                {'لا توجد أحداث لهذا اليوم'}
                             </p>
                             <p className="text-xs max-w-[200px] text-center mt-1 opacity-70">
-                                {locale === 'ar' ? 'القاعة متاحة للحجز' : locale === 'he' ? 'האולם פנוי להזמנה' : 'The hall is available for booking'}
+                                {'القاعة متاحة للحجز'}
                             </p>
                         </div>
                     )}

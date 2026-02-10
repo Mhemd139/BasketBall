@@ -23,45 +23,46 @@ export function TeamCard({ cls, locale, isEditable }: TeamCardProps) {
                 <Link href={`/${locale}/teams/${cls.id}`}>
                     <Card
                         interactive
-                        className="transition-all hover:border-purple-200"
+                        className="transition-all hover:border-purple-200 group-hover:shadow-md"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center flex-shrink-0">
-                                <Users className="w-6 h-6 text-purple-600" strokeWidth={2.5} />
+                        <div className="flex items-center gap-4 p-1">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center flex-shrink-0 text-purple-600">
+                                <Users className="w-6 h-6" strokeWidth={2.5} />
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h3 className="text-base font-bold text-gray-900 mb-1">
-                                    {getLocalizedField(cls, 'name', locale)}
+                                <h3 className="text-base font-bold text-gray-900 mb-1 truncate">
+                                    {cls.name_ar}
                                 </h3>
                                 <div className="flex items-center gap-2 text-sm text-gray-500">
                                     <User className="w-3.5 h-3.5" />
                                     <span>
-                                        {traineeCount} {locale === 'ar' ? 'لاعب' : locale === 'he' ? 'שחקנים' : 'players'}
+                                        {traineeCount} {'لاعب'}
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="text-gray-300 text-lg flex-shrink-0">
-                                {locale === 'ar' || locale === 'he' ? '←' : '→'}
+                            <div className="flex items-center gap-2">
+                                {isEditable && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setIsEditOpen(true)
+                                        }}
+                                        className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-100"
+                                        title="Edit Team"
+                                    >
+                                        <Settings2 className="w-5 h-5" />
+                                    </button>
+                                )}
+                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-purple-50 group-hover:text-purple-500 transition-colors">
+                                     <span className="text-lg leading-none pb-1">←</span>
+                                </div>
                             </div>
                         </div>
                     </Card>
                 </Link>
-
-                {isEditable && (
-                    <button 
-                        onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setIsEditOpen(true)
-                        }}
-                        className="absolute top-1/2 -translate-y-1/2 end-12 p-2 rounded-full bg-white shadow-sm border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-md transition-all md:opacity-0 group-hover:opacity-100 z-10"
-                        title="Edit Team"
-                    >
-                        <Settings2 className="w-4 h-4" />
-                    </button>
-                )}
             </div>
 
             <CreateTeamModal 

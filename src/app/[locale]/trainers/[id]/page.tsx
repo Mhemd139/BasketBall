@@ -26,13 +26,13 @@ export default async function TrainerProfilePage({
 
     // Map days to localized labels for display
     const daysMap: Record<string, string> = {
-        'Sunday': locale === 'ar' ? 'الأحد' : locale === 'he' ? 'ראשון' : 'Sunday',
-        'Monday': locale === 'ar' ? 'الإثنين' : locale === 'he' ? 'שני' : 'Monday',
-        'Tuesday': locale === 'ar' ? 'الثلاثاء' : locale === 'he' ? 'שלישי' : 'Tuesday',
-        'Wednesday': locale === 'ar' ? 'الأربعاء' : locale === 'he' ? 'רביעי' : 'Wednesday',
-        'Thursday': locale === 'ar' ? 'الخميس' : locale === 'he' ? 'חמישי' : 'Thursday',
-        'Friday': locale === 'ar' ? 'الجمعة' : locale === 'he' ? 'שישי' : 'Friday',
-        'Saturday': locale === 'ar' ? 'السبت' : locale === 'he' ? 'שבת' : 'Saturday',
+        'Sunday': 'الأحد',
+        'Monday': 'الإثنين',
+        'Tuesday': 'الثلاثاء',
+        'Wednesday': 'الأربعاء',
+        'Thursday': 'الخميس',
+        'Friday': 'الجمعة',
+        'Saturday': 'السبت',
     }
 
     return (
@@ -67,7 +67,7 @@ export default async function TrainerProfilePage({
                                     <div className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2">
                                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
-                                            {locale === 'ar' ? 'أيام التدريب المتاحة' : locale === 'he' ? 'ימי אימון זמינים' : 'Available Days'}
+                                            {'أيام التدريب المتاحة'}
                                         </h3>
                                         <div className="flex flex-wrap gap-2">
                                             {trainer.availability.map((day: string) => (
@@ -81,10 +81,10 @@ export default async function TrainerProfilePage({
                                     <div className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2 opacity-60">
                                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
-                                            {locale === 'ar' ? 'أيام التدريب المتاحة' : locale === 'he' ? 'ימי אימון זמינים' : 'Available Days'}
+                                            {'أيام التدريب المتاحة'}
                                         </h3>
                                         <p className="text-sm text-gray-400 italic">
-                                            {locale === 'ar' ? 'غير محدد' : locale === 'he' ? 'לא צוין' : 'Not specified'}
+                                            {'غير محدد'}
                                         </p>
                                     </div>
                                 )}
@@ -98,8 +98,8 @@ export default async function TrainerProfilePage({
                                     <div className="flex items-center gap-2 text-indigo-600 font-medium">
                                         <Shield className="w-4 h-4" />
                                         {trainer.role === 'admin' 
-                                            ? (locale === 'ar' ? 'رئيس المدربين' : locale === 'he' ? 'מאמן ראשי' : 'Head Coach')
-                                            : (locale === 'ar' ? 'مدرب' : locale === 'he' ? 'מאמן' : 'Trainer')}
+                                            ? 'رئيس المدربين'
+                                            : 'مدرب'}
                                     </div>
                                 </div>
 
@@ -114,7 +114,7 @@ export default async function TrainerProfilePage({
                                         <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
                                             <Trophy className="w-4 h-4" />
                                         </div>
-                                        <span>{teams.length} {locale === 'ar' ? 'فرق' : locale === 'he' ? 'קבוצות' : 'Teams'}</span>
+                                        <span>{teams.length} {'فرق'}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-gray-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
                                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${trainer.gender === 'female' ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'}`}>
@@ -122,8 +122,8 @@ export default async function TrainerProfilePage({
                                         </div>
                                         <span>
                                             {trainer.gender === 'female' 
-                                                ? (locale === 'ar' ? 'أنثى' : locale === 'he' ? 'נקבה' : 'Female')
-                                                : (locale === 'ar' ? 'ذكر' : locale === 'he' ? 'זכר' : 'Male')}
+                                                ? 'أنثى'
+                                                : 'ذكر'}
                                         </span>
                                     </div>
                                 </div>
@@ -136,7 +136,7 @@ export default async function TrainerProfilePage({
                         <section className="space-y-4">
                             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                 <Trophy className="w-5 h-5 text-gold-500" />
-                                {locale === 'ar' ? 'الفرق المسؤولة عنها' : locale === 'he' ? 'קבוצות באחריותו' : 'Responsible Teams'}
+                                {'الفرق المسؤولة عنها'}
                             </h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -170,7 +170,7 @@ export default async function TrainerProfilePage({
                                 
                                 {teams.length === 0 && (
                                     <div className="col-span-full py-12 text-center text-gray-400 bg-white rounded-2xl border-2 border-dashed border-slate-100">
-                                        {locale === 'ar' ? 'لا توجد فرق مخصصة حالياً' : locale === 'he' ? 'אין קבוצות מוקצות כרגע' : 'No teams assigned currently'}
+                                        {'لا توجد فرق مخصصة حالياً'}
                                     </div>
                                 )}
                             </div>

@@ -113,12 +113,12 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     const generateTitle = () => {
         if (type === 'training') {
             const trainer = refData.trainers.find(t => t.id === selectedTrainer);
-            const trainerName = trainer ? (locale === 'ar' ? trainer.name_ar : locale === 'he' ? trainer.name_he : trainer.name_en) : '';
+            const trainerName = trainer ? trainer.name_ar : '';
             
             const cls = refData.classes.find(c => c.id === selectedClass);
-            const className = cls ? (locale === 'ar' ? cls.name_ar : locale === 'he' ? cls.name_he : cls.name_en) : '';
+            const className = cls ? cls.name_ar : '';
 
-            let base = locale === 'ar' ? 'تدريب' : locale === 'he' ? 'אימון' : 'Training';
+            let base = 'تدريب';
             
             if (className) base += ` - ${className}`;
             if (trainerName) base += ` (${trainerName})`;
@@ -126,12 +126,12 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
             return base;
         } else {
             const home = refData.classes.find(c => c.id === homeTeam);
-            const homeName = home ? (locale === 'ar' ? home.name_ar : locale === 'he' ? home.name_he : home.name_en) : 'Home';
+            const homeName = home ? home.name_ar : 'Home';
             
             let awayName = 'Away';
             if (gameType === 'internal') {
                 const away = refData.classes.find(c => c.id === awayTeamId);
-                awayName = away ? (locale === 'ar' ? away.name_ar : locale === 'he' ? away.name_he : away.name_en) : 'Away';
+                awayName = away ? away.name_ar : 'Away';
             } else {
                 awayName = awayTeamName || 'External Team';
             }
@@ -171,7 +171,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         }
     };
 
-    const getName = (item: any) => locale === 'ar' ? item.name_ar : locale === 'he' ? item.name_he : item.name_en;
+    const getName = (item: any) => item.name_ar;
 
     const handleDelete = async () => {
         if (!onDelete || !initialEvent) return;
@@ -192,10 +192,10 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                 <div className="bg-navy-900 p-6 pt-8 text-white relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                     <DialogTitle className="relative z-10 text-2xl font-outfit font-bold flex items-center gap-2">
-                        {step === 'type' && <><CalendarIcon className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'نوع الحدث' : 'Event Type'}</>}
-                        {step === 'details' && <><Users className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'التفاصيل' : 'Details'}</>}
-                        {step === 'time' && <><Clock className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'التوقيت' : 'Timing'}</>}
-                        {step === 'review' && <><CheckCircle2 className="w-6 h-6 text-gold-400" /> {locale === 'ar' ? 'مراجعة' : 'Review'}</>}
+                        {step === 'type' && <><CalendarIcon className="w-6 h-6 text-gold-400" /> {'نوع الحدث'}</>}
+                        {step === 'details' && <><Users className="w-6 h-6 text-gold-400" /> {'التفاصيل'}</>}
+                        {step === 'time' && <><Clock className="w-6 h-6 text-gold-400" /> {'التوقيت'}</>}
+                        {step === 'review' && <><CheckCircle2 className="w-6 h-6 text-gold-400" /> {'مراجعة'}</>}
                     </DialogTitle>
                     {/* Progress Bar (Hide on Delete Confirm) */}
                     {step !== 'delete-confirm' && (
@@ -234,7 +234,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                         <div className={`p-5 rounded-2xl transition-colors ${type === 'training' ? 'bg-navy-600 text-white shadow-lg shadow-navy-200' : 'bg-gray-100 group-hover:bg-navy-50'}`}>
                                             <User className="w-8 h-8" />
                                         </div>
-                                        <span className="font-outfit font-bold text-lg">{locale === 'ar' ? 'تدريب' : 'Training'}</span>
+                                        <span className="font-outfit font-bold text-lg">{'تدريب'}</span>
                                     </motion.button>
                                     
                                     <motion.button 
@@ -250,7 +250,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                         <div className={`p-5 rounded-2xl transition-colors ${type === 'game' ? 'bg-gold-500 text-white shadow-lg shadow-gold-200' : 'bg-gray-100 group-hover:bg-gold-50'}`}>
                                             <Trophy className="w-8 h-8" />
                                         </div>
-                                        <span className="font-outfit font-bold text-lg">{locale === 'ar' ? 'مباراة' : 'Game'}</span>
+                                        <span className="font-outfit font-bold text-lg">{'مباراة'}</span>
                                     </motion.button>
                                 </div>
                             )}
@@ -261,14 +261,14 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                         <div className="space-y-6">
                                             <div className="space-y-3">
                                                 <label className="text-sm font-bold text-navy-900">
-                                                    {locale === 'ar' ? 'المدرب المسؤول' : 'Assign Trainer'}
+                                                    {'المدرب المسؤول'}
                                                 </label>
                                                 <select 
                                                     value={selectedTrainer}
                                                     onChange={(e) => setSelectedTrainer(e.target.value)}
                                                     className="w-full p-4 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-navy-600 outline-none transition-all text-sm"
                                                 >
-                                                    <option value="">{locale === 'ar' ? 'اختر مدرب...' : 'Select Trainer...'}</option>
+                                                    <option value="">{'اختر مدرب...'}</option>
                                                     {refData.trainers.map(t => (
                                                         <option key={t.id} value={t.id}>{getName(t)}</option>
                                                     ))}
@@ -277,20 +277,20 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
 
                                             <div className="space-y-3">
                                                 <label className="text-sm font-bold text-navy-900">
-                                                    {locale === 'ar' ? 'الفريق المستهدف (للحضور)' : 'Target Team (for Attendance)'}
+                                                    {'الفريق المستهدف (للحضور)'}
                                                 </label>
                                                 <select 
                                                     value={selectedClass}
                                                     onChange={(e) => setSelectedClass(e.target.value)}
                                                     className="w-full p-4 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-navy-600 outline-none transition-all text-sm"
                                                 >
-                                                    <option value="">{locale === 'ar' ? 'اختر فريق...' : 'Select Team...'}</option>
+                                                    <option value="">{'اختر فريق...'}</option>
                                                     {refData.classes.map(c => (
                                                         <option key={c.id} value={c.id}>{getName(c)}</option>
                                                     ))}
                                                 </select>
                                                 <p className="text-[10px] text-gray-400 font-medium">
-                                                    {locale === 'ar' ? 'هذا سيقوم بتجهيز قائمة الحضور بهذا الفريق' : 'This will prioritize this team\'s roster for attendance.'}
+                                                    {'هذا سيقوم بتجهيز قائمة الحضور بهذا الفريق'}
                                                 </p>
                                             </div>
                                         </div>
@@ -303,13 +303,13 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                                     onClick={() => setGameType('internal')}
                                                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${gameType === 'internal' ? 'bg-white shadow-sm text-navy-900' : 'text-gray-500'}`}
                                                 >
-                                                    {locale === 'ar' ? 'داخلي' : 'Home vs Home'}
+                                                    {'داخلي'}
                                                 </button>
                                                 <button 
                                                     onClick={() => setGameType('external')}
                                                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${gameType === 'external' ? 'bg-white shadow-sm text-navy-900' : 'text-gray-500'}`}
                                                 >
-                                                    {locale === 'ar' ? 'خارجي' : 'Home vs Away'}
+                                                    {'خارجي'}
                                                 </button>
                                             </div>
 
@@ -409,7 +409,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             onClick={() => setStep('delete-confirm')}
                                             className="text-red-500 text-xs font-bold hover:text-red-600 underline"
                                         >
-                                            {locale === 'ar' ? 'حذف هذا الحدث' : 'Delete This Event'}
+                                            {'حذف هذا الحدث'}
                                         </button>
                                     )}
                                 </div>
@@ -426,12 +426,10 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                     
                                     <div className="space-y-3 z-10">
                                         <h3 className="text-3xl font-black text-navy-900 tracking-tight">
-                                            {locale === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?'}
+                                            {'هل أنت متأكد؟'}
                                         </h3>
                                         <p className="text-gray-500 text-sm max-w-[80%] mx-auto leading-relaxed">
-                                            {locale === 'ar' 
-                                                ? 'سيتم حذف هذا الحدث نهائياً ولا يمكن استرجاعه. هل ترغب حقاً في المتابعة؟' 
-                                                : 'This action cannot be undone. This event will be permanently deleted from the schedule.'}
+                                                'سيتم حذف هذا الحدث نهائياً ولا يمكن استرجاعه. هل ترغب حقاً في المتابعة؟'
                                         </p>
                                     </div>
 
@@ -441,13 +439,13 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             disabled={loading} 
                                             className="w-full bg-red-500 hover:bg-red-600 text-white rounded-2xl py-7 font-bold text-lg shadow-lg shadow-red-200 ring-4 ring-red-50 transition-all active:scale-[0.98]"
                                         >
-                                            {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (locale === 'ar' ? 'نعم، احذف الحدث' : 'Yes, Delete Event')}
+                                            {loading ? <Loader2 className="animate-spin w-6 h-6" /> : 'نعم، احذف الحدث'}
                                         </Button>
                                         <button 
                                             onClick={() => setStep('review')}
                                             className="text-gray-400 font-bold text-sm hover:text-navy-900 hover:bg-gray-100 px-6 py-3 rounded-xl transition-all"
                                         >
-                                            {locale === 'ar' ? 'لا، تراجع' : 'No, Keep Event'}
+                                            {'لا، تراجع'}
                                         </button>
                                     </div>
                                 </div>
@@ -462,7 +460,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                             onClick={handleBack} 
                             className="text-gray-400 hover:text-navy-600 font-bold font-outfit flex items-center gap-2 transition-all hover:-translate-x-1 px-4 py-2 rounded-xl hover:bg-gray-50"
                         >
-                            <ArrowLeft className="w-5 h-5" /> {locale === 'ar' ? 'رجوع' : 'Back'}
+                            <ArrowLeft className="w-5 h-5" /> {'رجوع'}
                         </button>
                     ) : <div></div>}
 
@@ -474,7 +472,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                          >
                              {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (
                                 <span className="flex items-center gap-3">
-                                    {locale === 'ar' ? 'تأكيد الحدث' : 'Confirm Event'} <CheckCircle2 className="w-5 h-5" />
+                                    {'تأكيد الحدث'} <CheckCircle2 className="w-5 h-5" />
                                 </span>
                              )}
                          </Button>
@@ -486,7 +484,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                             className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-300 hover:to-gold-500 text-navy-950 rounded-2xl px-8 py-7 font-outfit font-bold text-lg shadow-lg shadow-gold-500/20 hover:shadow-gold-500/40 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                         >
                             <span className="flex items-center gap-2">
-                                {locale === 'ar' ? 'التالي' : 'Next'} <ArrowRight className="w-5 h-5" />
+                                {'التالي'} <ArrowRight className="w-5 h-5" />
                             </span>
                         </Button>
                     )}
