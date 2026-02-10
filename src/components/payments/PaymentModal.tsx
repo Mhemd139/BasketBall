@@ -11,11 +11,10 @@ type Trainee = Database['public']['Tables']['trainees']['Row']
 
 interface PaymentModalProps {
     trainee: Trainee
-    locale: string
     onClose: () => void
 }
 
-export function PaymentModal({ trainee, locale, onClose }: PaymentModalProps) {
+export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
     const [amount, setAmount] = useState(trainee.amount_paid || 0)
     const [comment, setComment] = useState(trainee.payment_comment_en || '')
     const [loading, setLoading] = useState(false)

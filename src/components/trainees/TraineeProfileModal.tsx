@@ -81,7 +81,7 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
     }
 
     if (showPayment) {
-        return <PaymentModal trainee={trainee} locale={locale} onClose={() => setShowPayment(false)} />
+        return <PaymentModal trainee={trainee} onClose={() => setShowPayment(false)} />
     }
 
     return (
