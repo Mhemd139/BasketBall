@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, memo } from 'react'
 import { saveAttendance, bulkSaveAttendance } from '@/app/actions'
 import { getLocalizedField, cn } from '@/lib/utils'
 import { Check, X, Clock, Users, CheckCheck, XCircle } from 'lucide-react'
@@ -58,6 +58,60 @@ const statusConfig = {
   },
 } as const
 
+// Memoized item component to prevent unnecessary re-renders of the entire list
+const TraineeItem = memo(({
+  trainee,
+  status,
+  isSaving,
+  onToggle,
+  locale
+}: {
+  trainee: Trainee,
+  status: AttendanceStatus,
+  isSaving: boolean,
+  onToggle: (id: string, currentStatus: AttendanceStatus) => void,
+  locale: string
+}) => {
+  const config = statusConfig[status]
+  const StatusIcon = config.icon
+
+  return (
+    <button
+      onClick={() => onToggle(trainee.id, status)}
+      disabled={isSaving}
+      className={cn(
+        'w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-[0.98]',
+        config.bg, config.border,
+        isSaving && 'opacity-60'
+      )}
+    >
+      {/* Jersey Number */}
+      <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center font-bold text-lg text-gray-800 shadow-sm flex-shrink-0">
+        #{trainee.jersey_number ?? '—'}
+      </div>
+
+      {/* Name */}
+      <div className="flex-1 text-start min-w-0">
+        <p className="font-semibold text-gray-900 truncate">
+          {getLocalizedField(trainee, 'name', locale)}
+        </p>
+        <p className={cn('text-xs font-medium', config.text)}>
+          {config.label[locale as keyof typeof config.label] || config.label.en}
+        </p>
+      </div>
+
+      {/* Status Icon */}
+      <div className={cn(
+        'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform',
+        config.iconBg,
+      )}>
+        <StatusIcon className="w-5 h-5 text-white" strokeWidth={3} />
+      </div>
+    </button>
+  )
+})
+TraineeItem.displayName = 'TraineeItem'
+
 export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }: AttendanceSheetProps) {
   const router = useRouter()
   const [showSuccess, setShowSuccess] = useState(false)
@@ -69,8 +123,10 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
   })
   const [saving, setSaving] = useState<Record<string, boolean>>({})
 
-  const toggleStatus = useCallback(async (traineeId: string) => {
-    const current = attendance[traineeId] || 'absent'
+  // Updated toggleStatus to accept currentStatus, removing dependency on 'attendance' state
+  const toggleStatus = useCallback(async (traineeId: string, currentStatus: AttendanceStatus) => {
+    // const current = attendance[traineeId] || 'absent' // Removed usage of state
+    const current = currentStatus
     const currentIndex = statusCycle.indexOf(current)
     const next = statusCycle[(currentIndex + 1) % statusCycle.length]
 
@@ -88,7 +144,7 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
     }
 
     setSaving(prev => ({ ...prev, [traineeId]: false }))
-  }, [attendance, eventId])
+  }, [eventId])
 
   const markAll = useCallback(async (status: AttendanceStatus) => {
     const prev = { ...attendance }
@@ -159,44 +215,17 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance, locale }
       <div className="space-y-2">
         {trainees.map((trainee) => {
           const status = attendance[trainee.id] || 'absent'
-          const config = statusConfig[status]
-          const StatusIcon = config.icon
-          const isSaving = saving[trainee.id]
+          const isSaving = saving[trainee.id] || false
 
           return (
-            <button
+            <TraineeItem
               key={trainee.id}
-              onClick={() => toggleStatus(trainee.id)}
-              disabled={isSaving}
-              className={cn(
-                'w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-[0.98]',
-                config.bg, config.border,
-                isSaving && 'opacity-60'
-              )}
-            >
-              {/* Jersey Number */}
-              <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center font-bold text-lg text-gray-800 shadow-sm flex-shrink-0">
-                #{trainee.jersey_number ?? '—'}
-              </div>
-
-              {/* Name */}
-              <div className="flex-1 text-start min-w-0">
-                <p className="font-semibold text-gray-900 truncate">
-                  {getLocalizedField(trainee, 'name', locale)}
-                </p>
-                <p className={cn('text-xs font-medium', config.text)}>
-                  {config.label[locale as keyof typeof config.label] || config.label.en}
-                </p>
-              </div>
-
-              {/* Status Icon */}
-              <div className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform',
-                config.iconBg,
-              )}>
-                <StatusIcon className="w-5 h-5 text-white" strokeWidth={3} />
-              </div>
-            </button>
+              trainee={trainee}
+              status={status}
+              isSaving={isSaving}
+              onToggle={toggleStatus}
+              locale={locale}
+            />
           )
         })}
       </div>
