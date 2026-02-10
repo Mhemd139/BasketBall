@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/Card'
+
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { PaymentModal } from '@/components/payments/PaymentModal'
 import { getTraineeAttendanceStats, updateTrainee } from '@/app/actions'
