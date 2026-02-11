@@ -174,7 +174,7 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
 
                             <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-4" dir="ltr">
                                 <Phone className="w-4 h-4" />
-                                {trainer.phone}
+                                {trainer.phone?.startsWith('972') ? '0' + trainer.phone.slice(3) : trainer.phone}
                             </div>
 
                             <div className="flex items-center gap-2">
