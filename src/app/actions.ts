@@ -216,39 +216,42 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
     .single()
 
   // --- RESTRICTED ACCESS LOGIC ---
-  const HEAD_COACH_NUMBERS = ['972543299106', '972587131002'] // Added developer number
-  
-  const isHeadCoach = HEAD_COACH_NUMBERS.includes(cleanPhone)
+  // Seed phone numbers — these auto-create as headcoach if not in DB yet
+  const SEED_HEADCOACH_NUMBERS = ['972543299106', '972587131002']
+  const isSeedHeadCoach = SEED_HEADCOACH_NUMBERS.includes(cleanPhone)
 
-  // Case A: Head Coach Login
-  if (isHeadCoach) {
-      if (!trainer) {
-          // Auto-create Head Coach if not exists
-           const { data: newHeadCoach, error: createError } = await (supabase as any).rpc('create_trainer', {
+  if (!trainer) {
+      if (isSeedHeadCoach) {
+          // Auto-create seed head coach
+          const { data: newTrainer, error: createError } = await (supabase as any).rpc('create_trainer', {
               p_phone: cleanPhone,
-            })
-            if (createError) {
-                return { success: false, error: `Signup failed: ${createError.message}` }
-            }
-            trainer = newHeadCoach
-      }
-  } 
-  // Case B: Regular Trainer Login
-  else {
-      if (!trainer) {
-          // REJECT: User is not in the system
+          })
+          if (createError) {
+              return { success: false, error: `Signup failed: ${createError.message}` }
+          }
+          // Set role to headcoach
+          if (newTrainer?.id) {
+              await (supabase as any).rpc('update_trainer_rpc', {
+                  p_id: newTrainer.id,
+                  p_data: { role: 'headcoach' }
+              })
+          }
+          trainer = { ...newTrainer, role: 'headcoach' }
+      } else {
           return { success: false, error: 'Access Denied: You must be added by the Head Coach.' }
       }
-      // ALLOW: User exists
   }
+
+  // Read role from DB (seed headcoaches also get their role from DB after first login)
+  const role = trainer.role === 'headcoach' ? 'headcoach' : 'trainer'
 
   // 3. Create Session
   const cookieStore = await cookies()
-  
+
   const sessionToken = await sign({
     id: trainer.id,
-    name: trainer.name_ar || trainer.name_en || (isHeadCoach ? 'Head Coach' : 'Trainer'),
-    role: isHeadCoach ? 'headcoach' : 'trainer' // Explicit role in session
+    name: trainer.name_ar || trainer.name_en || 'مدرب',
+    role
   })
 
   cookieStore.set('admin_session', sessionToken, {
@@ -258,8 +261,9 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
     path: '/',
   })
 
-  // Return specific status so UI knows if we need to ask for name
-  return { success: true, isNew: !trainer.name_ar && !isHeadCoach } // Only show new profile setup if no name and not HC (HC usually set up)
+  // If trainer was pre-named by head coach, skip profile setup
+  const hasName = !!(trainer.name_ar || trainer.name_en)
+  return { success: true, isNew: !hasName }
 }
 
 // --- Head Coach Actions ---
@@ -280,7 +284,7 @@ export async function getTrainers() {
     return { success: true, trainers }
 }
 
-export async function upsertTrainer(phone: string, name: string) {
+export async function upsertTrainer(phone: string, name: string, role: 'headcoach' | 'trainer' = 'trainer') {
     const session = await getSession()
     if (!session || session.role !== 'headcoach') {
         return { success: false, error: 'Unauthorized' }
@@ -288,13 +292,12 @@ export async function upsertTrainer(phone: string, name: string) {
 
     // Basic validation
     let cleanPhone = phone.replace(/\D/g, '')
-    // Apply IL logic if needed, or trust input
-     if (cleanPhone.startsWith('05')) {
+    if (cleanPhone.startsWith('05')) {
         cleanPhone = '972' + cleanPhone.substring(1)
     }
 
     const supabase = await createServerSupabaseClient()
-    
+
     // Check if exists
     const { data: existing } = await (supabase as any)
         .from('trainers')
@@ -302,10 +305,12 @@ export async function upsertTrainer(phone: string, name: string) {
         .eq('phone', cleanPhone)
         .single()
 
+    const trainerData = { name_en: name, name_ar: name, name_he: name, role }
+
     if (existing) {
         const { error } = await (supabase as any).rpc('update_trainer_rpc', {
             p_id: existing.id,
-            p_data: { name_en: name, name_ar: name, name_he: name }
+            p_data: trainerData
         })
         if (error) return { success: false, error: error.message }
     } else {
@@ -314,7 +319,7 @@ export async function upsertTrainer(phone: string, name: string) {
         })
         if (createError) return { success: false, error: createError.message }
 
-        // Get the newly created trainer's ID, then update name
+        // Get the newly created trainer's ID, then update name + role
         const { data: newTrainer } = await (supabase as any)
             .from('trainers')
             .select('id')
@@ -324,7 +329,7 @@ export async function upsertTrainer(phone: string, name: string) {
         if (newTrainer) {
             const { error: updateError } = await (supabase as any).rpc('update_trainer_rpc', {
                 p_id: newTrainer.id,
-                p_data: { name_en: name, name_ar: name, name_he: name }
+                p_data: trainerData
             })
             if (updateError) return { success: false, error: updateError.message }
         }

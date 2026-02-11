@@ -4,6 +4,15 @@
 -- ============================================================
 
 -- ============================================================
+-- 0. Standardize trainer roles (migration)
+-- ============================================================
+
+-- Set seed head coaches
+UPDATE trainers SET role = 'headcoach' WHERE phone IN ('972543299106', '972587131002');
+-- Normalize all other trainers
+UPDATE trainers SET role = 'trainer' WHERE role IS NULL OR role NOT IN ('headcoach', 'trainer');
+
+-- ============================================================
 -- 1. Fix function search_path warnings
 -- ============================================================
 
@@ -353,6 +362,7 @@ BEGIN
     name_he = COALESCE(p_data->>'name_he', name_he),
     phone = CASE WHEN p_data ? 'phone' THEN p_data->>'phone' ELSE phone END,
     gender = CASE WHEN p_data ? 'gender' THEN p_data->>'gender' ELSE gender END,
+    role = CASE WHEN p_data ? 'role' THEN p_data->>'role' ELSE role END,
     availability = CASE WHEN p_data ? 'availability' THEN ARRAY(SELECT jsonb_array_elements_text(p_data->'availability')) ELSE availability END,
     updated_at = now()
   WHERE id = p_id;

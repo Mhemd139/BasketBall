@@ -27,18 +27,12 @@ All English references removed from UI. App now supports Arabic + Hebrew with la
 
 ### Step 1: Run the SQL (PENDING — you need to do this)
 - [ ] Open Supabase SQL Editor for project `amzfssqkjefzzbilqmfe`
-- [ ] Paste and execute `rls_security.sql` (all sections)
+- [ ] Paste and execute `rls_security.sql` (all sections — includes role migration)
 - [ ] Verify in Supabase dashboard: all tables show RLS enabled, no linter warnings
 
 ### Step 2: Convert server actions to RPC — DONE
-- [x] Convert event mutations (`upsert_event`, `delete_event`)
-- [x] Convert hall mutations (`update_hall_rpc`)
-- [x] Convert class mutations (`insert_class`, `update_class`, `delete_class`)
-- [x] Convert trainee mutations (`insert_trainee`, `update_trainee_rpc`, `delete_trainee`)
-- [x] Convert attendance mutations (`upsert_attendance`, `bulk_upsert_attendance`)
-- [x] Convert payment mutations (`insert_payment_log`, `update_trainee_payment_rpc`)
-- [x] Convert trainer mutations (`update_trainer_rpc`, `delete_trainer_rpc`)
-- [x] Removed `createServiceRoleClient` import (no longer needed)
+- [x] Convert all 23 mutations to `.rpc()` calls
+- [x] Removed `createServiceRoleClient` import
 - [x] Cleaned all `console.error`/`console.warn` from `actions.ts`
 - [x] Build verification passes clean
 
@@ -47,46 +41,46 @@ All English references removed from UI. App now supports Arabic + Hebrew with la
 - [ ] Test all write operations through RPCs
 - [ ] Verify no Supabase dashboard linter warnings
 
-### RPC function reference:
+---
 
-| Function | Purpose |
-|----------|---------|
-| `upsert_event(p_data jsonb)` | Create/update events |
-| `delete_event(p_id uuid)` | Delete event |
-| `update_hall_rpc(p_id, p_name_en, p_name_ar, p_name_he)` | Update hall names |
-| `insert_class(p_data jsonb)` | Create team/class |
-| `update_class(p_id, p_data jsonb)` | Update team/class |
-| `delete_class(p_id uuid)` | Delete team/class |
-| `insert_trainee(p_data jsonb)` | Add trainee |
-| `update_trainee_rpc(p_id, p_data jsonb)` | Update trainee |
-| `delete_trainee(p_id uuid)` | Delete trainee |
-| `upsert_attendance(p_trainee_id, p_event_id, p_status, p_marked_by)` | Mark attendance |
-| `insert_payment_log(p_trainee_id, p_amount, p_note, p_season)` | Log payment |
-| `update_trainee_payment_rpc(p_trainee_id, p_amount, p_comment)` | Update payment amount |
-| `update_trainer_rpc(p_id, p_data jsonb)` | Update trainer profile/details |
-| `delete_trainer_rpc(p_id uuid)` | Delete trainer/account |
-| `bulk_upsert_attendance(p_records jsonb)` | Bulk mark attendance |
+## Part 3: Head Coach Role Feature — COMPLETE
+
+- [x] Created `implementation.md` with feature spec
+- [x] SQL migration added to `rls_security.sql` (section 0: standardize roles)
+- [x] `update_trainer_rpc` updated to support `role` field
+- [x] `upsertTrainer()` accepts `role` parameter (`'headcoach' | 'trainer'`)
+- [x] `verifyOTP()` reads role from DB instead of hardcoded phone array
+- [x] `TrainerManager.tsx` — role selector in add modal (polished card UI)
+- [x] Role badges now read from DB `role` field (not hardcoded phone numbers)
+- [x] Pre-named trainers skip profile-setup on first login
+- [x] Removed `force-dynamic` from head-coach page
+- [x] Build verification passes clean
+
+### How it works:
+1. Head coach opens **Admin Panel** (`/head-coach`)
+2. Clicks **"Add Trainer"** → enters phone, name, and selects role (Trainer or Head Coach)
+3. Name + role saved to DB immediately
+4. When new trainer logs in via OTP → role read from DB, name pre-filled → skips profile setup
+5. Seed head coach phones (`972543299106`, `972587131002`) auto-create as headcoach if not in DB
 
 ---
 
-## Part 3: Head Coach Role Feature — Documentation Only
+## Part 4: Excel Import/Export — Planning Only
 
-See `implementation.md` for full spec.
+See `excel-import-export-plan.md` for full spec.
 
-- [x] Created `implementation.md` with feature spec, code examples, and migration plan
-- [ ] Implement when ready (5 steps described in the doc)
+- [x] Created plan document with technical approach
+- [ ] Implement when ready
 
-### Summary of what to implement later:
-1. SQL migration — standardize `trainers.role` values to `'headcoach'`/`'trainer'`
-2. Modify `upsertTrainer()` — accept role parameter
-3. Modify `verifyOTP()` — read role from DB instead of hardcoded phone array
-4. Modify `TrainerManager.tsx` — add role selector (headcoach vs trainer)
-5. Deploy + migration path with fallback
+### Summary:
+- **Import:** Upload `.xlsx` → parse client-side with SheetJS → bulk insert trainees into a team
+- **Export:** Download roster/attendance/payments as `.xlsx` from existing page data
+- **Library:** `xlsx` (SheetJS), client-side only (no server upload)
 
 ---
 
 ## Execution Order for Remaining Work
 
-1. **Run `rls_security.sql`** in Supabase SQL Editor (the only manual step left)
-2. **Test** — verify reads + writes work after RLS is enabled
-3. **Head Coach role feature** — implement when ready per `implementation.md`
+1. **Run `rls_security.sql`** in Supabase SQL Editor (includes role migration)
+2. **Test** — verify reads + writes work, verify role assignment flow
+3. **Excel import/export** — implement when ready per plan doc

@@ -4,8 +4,6 @@ import TrainerManager from '@/components/admin/TrainerManager'
 import { ShieldCheck, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
-
 export default async function HeadCoachPage({ params }: { params: { locale: string } }) {
   const session = await getSession()
   const { locale } = await params
