@@ -65,6 +65,26 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
     try {
         const res = await upsertTrainer(newPhone, newName, newRole)
         if (res.success) {
+            // Optimistic update — add to local state so UI updates immediately
+            let cleanPhone = newPhone.replace(/\D/g, '')
+            if (cleanPhone.startsWith('05')) {
+                cleanPhone = '972' + cleanPhone.substring(1)
+            }
+            const existing = trainers.find(t => t.phone === cleanPhone)
+            if (existing) {
+                setTrainers(trainers.map(t => t.phone === cleanPhone
+                    ? { ...t, name_ar: newName, name_en: newName, role: newRole }
+                    : t
+                ))
+            } else {
+                setTrainers([...trainers, {
+                    id: crypto.randomUUID(),
+                    name_ar: newName,
+                    name_en: newName,
+                    phone: cleanPhone,
+                    role: newRole,
+                }])
+            }
             setIsAddModalOpen(false)
             resetForm()
             router.refresh()

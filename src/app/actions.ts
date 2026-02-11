@@ -231,13 +231,14 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
               return { success: false, error: `Signup failed: ${createError.message}` }
           }
           // Set role to headcoach
-          if (newTrainer?.id) {
+          const created = Array.isArray(newTrainer) ? newTrainer[0] : newTrainer
+          if (created?.id) {
               await (supabase as any).rpc('update_trainer_rpc', {
-                  p_id: newTrainer.id,
+                  p_id: created.id,
                   p_data: { role: 'headcoach' }
               })
           }
-          trainer = { ...newTrainer, role: 'headcoach' }
+          trainer = { ...created, role: 'headcoach' }
       } else {
           return { success: false, error: 'Access Denied: You must be added by the Head Coach.' }
       }
@@ -322,16 +323,17 @@ export async function upsertTrainer(phone: string, name: string, role: 'headcoac
         if (createError) return { success: false, error: createError.message }
 
         // Update role if needed (create_trainer defaults to 'trainer')
-        if (newTrainer?.id && role !== 'trainer') {
+        const created = Array.isArray(newTrainer) ? newTrainer[0] : newTrainer
+        if (created?.id && role !== 'trainer') {
             const { error: updateError } = await (supabase as any).rpc('update_trainer_rpc', {
-                p_id: newTrainer.id,
+                p_id: created.id,
                 p_data: { role }
             })
             if (updateError) return { success: false, error: updateError.message }
         }
     }
 
-    revalidatePath('/[locale]/head-coach')
+    revalidatePath('/[locale]/head-coach', 'page')
     return { success: true }
 }
 
@@ -351,7 +353,7 @@ export async function deleteTrainer(id: string) {
 
     if (error) return { success: false, error: error.message }
 
-    revalidatePath('/[locale]/head-coach')
+    revalidatePath('/[locale]/head-coach', 'page')
     return { success: true }
 }
 
@@ -407,7 +409,7 @@ export async function deleteTrainee(traineeId: string) {
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/teams/[classId]')
+  revalidatePath('/[locale]/teams/[classId]', 'page')
   return { success: true }
 }
 
@@ -961,8 +963,8 @@ export async function deleteEvent(id: string) {
         return { success: false, error: 'Failed to delete event' }
     }
 
-    revalidatePath('/[locale]/schedule')
-    revalidatePath('/[locale]/halls/[id]')
+    revalidatePath('/[locale]/schedule', 'page')
+    revalidatePath('/[locale]/halls/[id]', 'page')
     return { success: true }
 }
 
