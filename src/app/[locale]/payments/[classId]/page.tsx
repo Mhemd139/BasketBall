@@ -15,7 +15,7 @@ export default async function ClassPaymentsPage({
 
   const [{ data: classData }, { data: trainees, error }] = await Promise.all([
     supabase.from('classes').select('*, trainers (name_en, name_ar, name_he)').eq('id', classId).single(),
-    supabase.from('trainees').select('*, classes (name_en, name_ar, name_he)').eq('class_id', classId).order('name_en'),
+    supabase.from('trainees').select('*, classes (name_en, name_ar, name_he)').eq('class_id', classId).order('name_ar'),
   ])
 
   return (

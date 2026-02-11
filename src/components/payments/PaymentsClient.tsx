@@ -259,7 +259,7 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
                     className="w-full py-2 flex items-center justify-center gap-2 text-blue-600 hover:bg-blue-50 border border-blue-100 rounded-lg transition-colors font-medium text-sm"
                 >
                     <Edit2 className="w-4 h-4" />
-                    {locale === 'ar' ? 'تعديل الدفع' : 'تعديل الدفع'}
+                    {'تعديل الدفع'}
                 </button>
             )}
         </Card>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, User, MapPin, Save, Loader2, Globe, Languages, Trash2, AlertTriangle } from 'lucide-react'
+import { X, Users, User, MapPin, Save, Loader2, Languages, Trash2, AlertTriangle } from 'lucide-react'
 import { getEventRefData, createTeam, updateTeam, deleteTeam } from '@/app/actions'
 
 interface CreateTeamModalProps {
@@ -24,7 +24,6 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [refData, setRefData] = useState<{ trainers: any[], halls: any[] }>({ trainers: [], halls: [] })
     const [formData, setFormData] = useState({
-        name_en: initialData?.name_en || '',
         name_ar: initialData?.name_ar || '',
         name_he: initialData?.name_he || '',
         trainer_id: initialData?.trainer_id || '',
@@ -36,9 +35,9 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
             const fetchRefData = async () => {
                 const res = await getEventRefData()
                 if (res.success) {
-                    setRefData({ 
-                        trainers: res.trainers || [], 
-                        halls: res.halls || [] 
+                    setRefData({
+                        trainers: res.trainers || [],
+                        halls: res.halls || []
                     })
                 }
             }
@@ -46,43 +45,42 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
 
             if (isEdit && initialData) {
                 setFormData({
-                    name_en: initialData.name_en,
                     name_ar: initialData.name_ar,
                     name_he: initialData.name_he,
                     trainer_id: initialData.trainer_id || '',
                     hall_id: initialData.hall_id || ''
                 })
             } else {
-                setFormData({ name_en: '', name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
+                setFormData({ name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
             }
         }
     }, [isOpen, isEdit, initialData])
 
     const handleSubmit = async () => {
-        if (!formData.name_en || !formData.name_ar || !formData.name_he) {
-            alert('يرجى ملء جميع الأسماء')
+        if (!formData.name_ar || !formData.name_he) {
+            alert(locale === 'he' ? 'נא למלא את כל השדות' : 'يرجى ملء جميع الأسماء')
             return
         }
 
         setLoading(true)
         const payload = {
-            name_en: formData.name_en,
+            name_en: formData.name_ar,
             name_ar: formData.name_ar,
             name_he: formData.name_he,
             trainer_id: formData.trainer_id || null,
             hall_id: formData.hall_id || null
         }
 
-        const res = isEdit && initialData?.id 
+        const res = isEdit && initialData?.id
             ? await updateTeam(initialData.id, payload)
             : await createTeam(payload)
 
         if (res.success) {
             onClose()
             setStep(1)
-            setFormData({ name_en: '', name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
+            setFormData({ name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
         } else {
-            alert(res.error || 'فشلت العملية')
+            alert(res.error || (locale === 'he' ? 'הפעולה נכשלה' : 'فشلت العملية'))
         }
         setLoading(false)
     }
@@ -94,24 +92,26 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
         if (res.success) {
             onClose()
         } else {
-            alert(res.error || 'فشل حذف الفريق')
+            alert(res.error || (locale === 'he' ? 'מחיקת הקבוצה נכשלה' : 'فشل حذف الفريق'))
         }
         setLoading(false)
     }
 
     if (!isOpen) return null
 
+    const getName = (item: any) => locale === 'he' ? (item.name_he || item.name_ar) : (item.name_ar || item.name_he)
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
                 className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
-            
-            <motion.div 
+
+            <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -126,21 +126,23 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                         </div>
                         <div>
                             <h2 className="text-lg font-black text-slate-900">
-                                {isEdit 
-                                    ? 'تعديل الفريق'
-                                    : 'إنشاء فريق جديد'}
+                                {isEdit
+                                    ? (locale === 'he' ? 'עריכת קבוצה' : 'تعديل الفريق')
+                                    : (locale === 'he' ? 'יצירת קבוצה חדשה' : 'إنشاء فريق جديد')}
                             </h2>
                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                                {step === 1 ? 'الخطوة 1: المعلومات الأساسية' : 'الخطوة 2: التعيين'}
+                                {step === 1
+                                    ? (locale === 'he' ? 'שלב 1: מידע בסיסי' : 'الخطوة 1: المعلومات الأساسية')
+                                    : (locale === 'he' ? 'שלב 2: הקצאה' : 'الخطوة 2: التعيين')}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         {isEdit && (
-                            <button 
+                            <button
                                 onClick={() => setShowDeleteConfirm(true)}
                                 className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-400"
-                                title="حذف الفريق"
+                                title={locale === 'he' ? 'מחק קבוצה' : 'حذف الفريق'}
                             >
                                 <Trash2 className="w-5 h-5" />
                             </button>
@@ -154,7 +156,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                 {/* Delete Confirmation Overlay */}
                 <AnimatePresence>
                     {showDeleteConfirm && (
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -163,24 +165,26 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                             <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center text-red-600 mb-6 animate-bounce">
                                 <AlertTriangle className="w-10 h-10" />
                             </div>
-                            <h3 className="text-xl font-black text-slate-900 mb-2">{'هل أنت متأكد من حذف هذا الفريق؟'}</h3>
+                            <h3 className="text-xl font-black text-slate-900 mb-2">
+                                {locale === 'he' ? 'האם אתה בטוח שברצונך למחוק קבוצה זו?' : 'هل أنت متأكد من حذف هذا الفريق؟'}
+                            </h3>
                             <p className="text-sm text-slate-500 mb-8 max-w-[250px]">
-                                {'سيتم حذف جميع البيانات المرتبطة بالفريق نهائياً.'}
+                                {locale === 'he' ? 'כל הנתונים המקושרים לקבוצה יימחקו לצמיתות.' : 'سيتم حذف جميع البيانات المرتبطة بالفريق نهائياً.'}
                             </p>
                             <div className="flex gap-4 w-full">
-                                <button 
+                                <button
                                     onClick={() => setShowDeleteConfirm(false)}
                                     className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold transition-all"
                                 >
-                                    {'إلغاء'}
+                                    {locale === 'he' ? 'ביטול' : 'إلغاء'}
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleDelete}
                                     disabled={loading}
                                     className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-red-100"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                    {'حذف'}
+                                    {locale === 'he' ? 'מחק' : 'حذف'}
                                 </button>
                             </div>
                         </motion.div>
@@ -191,7 +195,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                 <div className="p-8">
                     <AnimatePresence mode="wait">
                         {step === 1 ? (
-                            <motion.div 
+                            <motion.div
                                 key="step1"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -201,20 +205,9 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                 <div className="space-y-4">
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] uppercase font-black text-slate-400 px-1 tracking-widest flex items-center gap-2">
-                                            <Globe className="w-3.5 h-3.5" /> {'الاسم (انجليزي)'}
+                                            <Languages className="w-3.5 h-3.5 text-emerald-500" /> {locale === 'he' ? 'שם בערבית' : 'الاسم بالعربية'}
                                         </label>
-                                        <input 
-                                            value={formData.name_en}
-                                            onChange={(e) => setFormData(p => ({ ...p, name_en: e.target.value }))}
-                                            placeholder="e.g. Under 14 Elite"
-                                            className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-all font-bold text-slate-900"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-black text-slate-400 px-1 tracking-widest flex items-center gap-2">
-                                            <Languages className="w-3.5 h-3.5 text-emerald-500" /> بالعربية
-                                        </label>
-                                        <input 
+                                        <input
                                             value={formData.name_ar}
                                             onChange={(e) => setFormData(p => ({ ...p, name_ar: e.target.value }))}
                                             placeholder="مثال: تحت الـ 14 نخبة"
@@ -224,9 +217,9 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] uppercase font-black text-slate-400 px-1 tracking-widest flex items-center gap-2">
-                                            <Languages className="w-3.5 h-3.5 text-orange-500" /> עברית
+                                            <Languages className="w-3.5 h-3.5 text-orange-500" /> {locale === 'he' ? 'שם בעברית' : 'الاسم بالعبرية'}
                                         </label>
-                                        <input 
+                                        <input
                                             value={formData.name_he}
                                             onChange={(e) => setFormData(p => ({ ...p, name_he: e.target.value }))}
                                             placeholder="לדוגמה: מתחת לגיל 14 עילית"
@@ -235,15 +228,15 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                         />
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setStep(2)}
                                     className="w-full btn btn-primary py-4 text-sm"
                                 >
-                                    {'متابعة'}
+                                    {locale === 'he' ? 'המשך' : 'متابعة'}
                                 </button>
                             </motion.div>
                         ) : (
-                            <motion.div 
+                            <motion.div
                                 key="step2"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -253,7 +246,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                 <div className="space-y-5">
                                     <div className="space-y-2">
                                         <label className="text-sm font-semibold text-gray-700 px-1 flex items-center gap-2">
-                                            <User className="w-4 h-4 text-indigo-500" /> {'تعيين المدرب الرئيسي'}
+                                            <User className="w-4 h-4 text-indigo-500" /> {locale === 'he' ? 'מאמן ראשי' : 'تعيين المدرب الرئيسي'}
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {refData.trainers.map(trainer => (
@@ -269,7 +262,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                                                         <User className="w-4 h-4" />
                                                     </div>
-                                                    <span className="truncate">{trainer.name_en}</span>
+                                                    <span className="truncate">{getName(trainer)}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -277,7 +270,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-semibold text-gray-700 px-1 flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-emerald-500" /> {'القاعة الرئيسية'}
+                                            <MapPin className="w-4 h-4 text-emerald-500" /> {locale === 'he' ? 'אולם ראשי' : 'القاعة الرئيسية'}
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {refData.halls.map(hall => (
@@ -293,7 +286,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                                                         <MapPin className="w-4 h-4" />
                                                     </div>
-                                                    <span className="truncate">{hall.name_en}</span>
+                                                    <span className="truncate">{getName(hall)}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -301,19 +294,21 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <button 
+                                    <button
                                         onClick={() => setStep(1)}
                                         className="btn btn-secondary flex-1 py-4"
                                     >
-                                        {'رجوع'}
+                                        {locale === 'he' ? 'חזור' : 'رجوع'}
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleSubmit}
                                         disabled={loading}
                                         className="btn btn-primary flex-[2] py-4"
                                     >
                                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                        {isEdit ? 'حفظ التغييرات' : 'إنشاء الفريق'}
+                                        {isEdit
+                                            ? (locale === 'he' ? 'שמור שינויים' : 'حفظ التغييرات')
+                                            : (locale === 'he' ? 'צור קבוצה' : 'إنشاء الفريق')}
                                     </button>
                                 </div>
                             </motion.div>

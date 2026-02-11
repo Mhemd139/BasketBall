@@ -28,7 +28,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
             const { data } = await supabase
                 .from('trainers')
                 .select('*')
-                .order('name_en')
+                .order('name_ar')
             
             if (data) setTrainers(data)
             setLoading(false)
@@ -107,10 +107,10 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                                         </div>
                                         <div>
                                             <div className={`font-bold text-sm ${selectedId === trainer.id ? 'text-indigo-900' : 'text-slate-900'}`}>
-                                                {getLocalizedField(trainer, 'name', 'ar')}
+                                                {getLocalizedField(trainer, 'name', locale)}
                                             </div>
                                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                {trainer.phone || 'No phone'}
+                                                {trainer.phone || (locale === 'he' ? 'אין טלפון' : 'بدون هاتف')}
                                             </div>
                                         </div>
                                     </div>

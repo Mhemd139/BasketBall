@@ -20,8 +20,8 @@ export default async function MorePage({
   const menuItems = [
     {
       icon: session ? User : LogIn,
-      title: session ? (locale === 'ar' ? 'الملف الشخصي' : locale === 'he' ? 'פרופיל' : 'Profile') : (locale === 'ar' ? 'تسجيل دخول' : locale === 'he' ? 'התחברות' : 'Trainer Login'),
-      description: session ? session.name : (locale === 'ar' ? 'دخول المدربين' : locale === 'he' ? 'גישת מאמנים' : 'Trainer Access'),
+      title: session ? (locale === 'he' ? 'פרופיל' : 'الملف الشخصي') : (locale === 'he' ? 'התחברות' : 'تسجيل دخول'),
+      description: session ? session.name : (locale === 'he' ? 'גישת מאמנים' : 'دخول المدربين'),
       href: session ? `/${locale}/profile` : `/${locale}/login`,
       color: session ? 'from-orange-100 to-orange-200' : 'from-indigo-100 to-indigo-200',
       iconColor: session ? 'text-orange-600' : 'text-indigo-600',
@@ -29,7 +29,7 @@ export default async function MorePage({
     {
       icon: Dumbbell,
       title: dict.trainers.title,
-      description: locale === 'ar' ? 'إدارة المدربين' : locale === 'he' ? 'נהל מאמנים' : 'Manage trainers',
+      description: locale === 'he' ? 'נהל מאמנים' : 'إدارة المدربين',
       href: `/${locale}/trainers`,
       color: 'from-blue-100 to-blue-200',
       iconColor: 'text-blue-600',
@@ -37,15 +37,15 @@ export default async function MorePage({
     {
       icon: DollarSign,
       title: dict.payments.title,
-      description: locale === 'ar' ? 'إدارة المدفوعات' : locale === 'he' ? 'נהל תשלומים' : 'Manage payments',
+      description: locale === 'he' ? 'נהל תשלומים' : 'إدارة المدفوعات',
       href: `/${locale}/payments`,
       color: 'from-green-100 to-green-200',
       iconColor: 'text-green-600',
     },
     {
       icon: BarChart3,
-      title: locale === 'ar' ? 'التقارير' : locale === 'he' ? 'דוחות' : 'Reports',
-      description: locale === 'ar' ? 'تحليلات الحضور' : locale === 'he' ? 'אנליטיקת נוכחות' : 'Attendance analytics',
+      title: locale === 'he' ? 'דוחות' : 'التقارير',
+      description: locale === 'he' ? 'אנליטיקת נוכחות' : 'تحليلات الحضور',
       href: `/${locale}/reports`,
       color: 'from-purple-100 to-purple-200',
       iconColor: 'text-purple-600',
@@ -53,7 +53,7 @@ export default async function MorePage({
     {
       icon: Settings,
       title: dict.admin.settings,
-      description: locale === 'ar' ? 'إعدادات التطبيق' : locale === 'he' ? 'הגדרות אפליקציה' : 'App settings',
+      description: locale === 'he' ? 'הגדרות אפליקציה' : 'إعدادات التطبيق',
       href: `/${locale}/settings`,
       color: 'from-gray-100 to-gray-200',
       iconColor: 'text-gray-600',
@@ -77,11 +77,11 @@ export default async function MorePage({
                   <Settings className="w-6 h-6 text-white" strokeWidth={2.5} />
                 </div>
                 <h1 className="heading-lg">
-                  {locale === 'ar' ? 'المزيد' : locale === 'he' ? 'עוד' : 'More'}
+                  {locale === 'he' ? 'עוד' : 'المزيد'}
                 </h1>
               </div>
               <p className="text-gray-500">
-                {locale === 'ar' ? 'الإعدادات والإدارة' : locale === 'he' ? 'הגדרות וניהול' : 'Settings & Management'}
+                {locale === 'he' ? 'הגדרות וניהול' : 'الإعدادات والإدارة'}
               </p>
             </section>
 
@@ -111,7 +111,7 @@ export default async function MorePage({
                           </div>
                           
                           <div className="text-gray-300 text-lg flex-shrink-0">
-                            {locale === 'ar' || locale === 'he' ? '←' : '→'}
+                            {'←'}
                           </div>
                         </div>
                       </Card>

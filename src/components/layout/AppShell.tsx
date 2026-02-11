@@ -20,7 +20,7 @@ export function AppShell({
   backHref
 }: AppShellProps) {
   return (
-    <div className="min-h-screen text-white" style={{ backgroundColor: '#0a1628' }} dir={locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen text-white" style={{ backgroundColor: '#0a1628' }} dir="rtl">
       <Header 
         locale={locale} 
         title={headerTitle}

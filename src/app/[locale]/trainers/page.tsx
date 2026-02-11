@@ -25,7 +25,7 @@ export default async function TrainersPage({
   const { data: trainers } = await (supabase as any)
     .from('trainers')
     .select('*')
-    .order('name_en')
+    .order('name_ar')
     .limit(50)
 
   return (

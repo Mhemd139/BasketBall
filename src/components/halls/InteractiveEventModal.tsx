@@ -171,7 +171,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         }
     };
 
-    const getName = (item: any) => item.name_ar;
+    const getName = (item: any) => locale === 'he' ? (item.name_he || item.name_ar) : (item.name_ar || item.name_he);
 
     const handleDelete = async () => {
         if (!onDelete || !initialEvent) return;
@@ -314,13 +314,13 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             </div>
 
                                             <div className="space-y-3">
-                                                <label className="text-sm font-bold text-navy-900">Home Team</label>
-                                                <select 
+                                                <label className="text-sm font-bold text-navy-900">{locale === 'he' ? 'קבוצת בית' : 'الفريق المضيف'}</label>
+                                                <select
                                                     value={homeTeam}
                                                     onChange={(e) => setHomeTeam(e.target.value)}
                                                     className="w-full p-3 rounded-xl border border-gray-200 bg-white"
                                                 >
-                                                    <option value="">Select Team...</option>
+                                                    <option value="">{locale === 'he' ? 'בחר קבוצה...' : 'اختر فريق...'}</option>
                                                     {refData.classes.map(c => (
                                                         <option key={c.id} value={c.id}>{getName(c)}</option>
                                                     ))}
@@ -330,14 +330,14 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             <div className="flex items-center justify-center font-bold text-lg text-gold-500">VS</div>
 
                                             <div className="space-y-3">
-                                                <label className="text-sm font-bold text-navy-900">Away Team</label>
+                                                <label className="text-sm font-bold text-navy-900">{locale === 'he' ? 'קבוצת חוץ' : 'الفريق الضيف'}</label>
                                                 {gameType === 'internal' ? (
-                                                     <select 
+                                                     <select
                                                         value={awayTeamId}
                                                         onChange={(e) => setAwayTeamId(e.target.value)}
                                                         className="w-full p-3 rounded-xl border border-gray-200 bg-white"
                                                     >
-                                                        <option value="">Select Team...</option>
+                                                        <option value="">{locale === 'he' ? 'בחר קבוצה...' : 'اختر فريق...'}</option>
                                                         {refData.classes.filter(c => c.id !== homeTeam).map(c => (
                                                             <option key={c.id} value={c.id}>{getName(c)}</option>
                                                         ))}
@@ -346,7 +346,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                                     <input 
                                                         value={awayTeamName}
                                                         onChange={(e) => setAwayTeamName(e.target.value)}
-                                                        placeholder="Enter Away Team Name"
+                                                        placeholder={locale === 'he' ? 'הזן שם קבוצת חוץ' : 'أدخل اسم الفريق الضيف'}
                                                         className="w-full p-3 rounded-xl border border-gray-200 bg-white"
                                                     />
                                                 )}
@@ -360,7 +360,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                 <div className="space-y-6 pt-4">
                                      <div className="space-y-2">
                                         <label className="text-sm font-bold text-navy-900 flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-gold-500" /> Start Time
+                                            <Clock className="w-4 h-4 text-gold-500" /> {locale === 'he' ? 'שעת התחלה' : 'وقت البدء'}
                                         </label>
                                         <input 
                                             type="time" 
@@ -371,7 +371,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-navy-900 flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-gray-400" /> End Time
+                                            <Clock className="w-4 h-4 text-gray-400" /> {locale === 'he' ? 'שעת סיום' : 'وقت الانتهاء'}
                                         </label>
                                          <input 
                                             type="time" 
@@ -395,11 +395,11 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                     
                                     <div className="bg-white p-4 rounded-xl border border-gray-100 w-full shadow-sm text-sm text-gray-600 space-y-2">
                                         <div className="flex justify-between border-b pb-2">
-                                            <span>Date:</span>
+                                            <span>{locale === 'he' ? 'תאריך:' : 'التاريخ:'}</span>
                                             <span className="font-bold text-navy-900">{initialDate ? format(initialDate, 'dd/MM/yyyy') : ''}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span>Time:</span>
+                                            <span>{locale === 'he' ? 'שעה:' : 'الوقت:'}</span>
                                             <span className="font-bold text-navy-900">{startTime} - {endTime}</span>
                                         </div>
                                     </div>

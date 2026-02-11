@@ -1,14 +1,12 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 
 import { use } from 'react';
 
 const LANGUAGES = [
-  { code: 'en', label: 'English', native: 'English', flag: '🇺🇸', dir: 'ltr' },
   { code: 'ar', label: 'Arabic', native: 'العربية', flag: '🇵🇸', dir: 'rtl' },
   { code: 'he', label: 'Hebrew', native: 'עברית', flag: '🇮🇱', dir: 'rtl' },
 ];
@@ -21,16 +19,11 @@ export default function LanguageSettingsPage({ params }: LanguagePageProps) {
   const { locale } = use(params);
   const router = useRouter();
   const pathname = usePathname();
-  const isRTL = locale === 'ar' || locale === 'he';
-  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
-  const currentPath = pathname || ''; // Ensure pathname is defined
+  const currentPath = pathname || '';
 
   const switchLanguage = (newLocale: string) => {
-    // Replace current locale segment with new one
-    // Assuming pathname starts with `/${locale}`
     const segments = currentPath.split('/');
-    // segments[0] is empty, segments[1] is locale
     if (segments.length >= 2) {
       segments[1] = newLocale;
       const newPath = segments.join('/');
@@ -44,10 +37,10 @@ export default function LanguageSettingsPage({ params }: LanguagePageProps) {
       <div className="bg-white p-4 shadow-sm border-b border-gray-100 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <Link href={`/${locale}/more`} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
-            <BackIcon className="w-5 h-5 text-gray-600" />
+            <ArrowRight className="w-5 h-5 text-gray-600" />
           </Link>
           <h1 className="font-outfit font-bold text-lg text-navy-900">
-            {locale === 'ar' ? 'اللغة' : locale === 'he' ? 'שפה' : 'Language'}
+            {locale === 'he' ? 'שפה' : 'اللغة'}
           </h1>
         </div>
       </div>
@@ -75,7 +68,7 @@ export default function LanguageSettingsPage({ params }: LanguagePageProps) {
                     </p>
                   </div>
                 </div>
-                
+
                 {isActive && (
                   <div className="w-8 h-8 rounded-full bg-gold-400 text-navy-900 flex items-center justify-center shadow-sm">
                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
@@ -88,11 +81,9 @@ export default function LanguageSettingsPage({ params }: LanguagePageProps) {
 
         <div className="mt-6 text-center text-xs text-gray-400 px-8">
           <p>
-            {locale === 'ar' 
-              ? 'تغيير اللغة سيقوم بإعادة تحميل التطبيق لتطبيق الإعدادات الجديدة.'
-              : locale === 'he'
+            {locale === 'he'
               ? 'שינוי השפה יגרום טעינה מחדש של היישום להחלת ההגדרות החדשות.'
-              : 'Changing the language will reload the application to apply the new settings.'
+              : 'تغيير اللغة سيقوم بإعادة تحميل التطبيق لتطبيق الإعدادات الجديدة.'
             }
           </p>
         </div>

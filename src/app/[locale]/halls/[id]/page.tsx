@@ -82,9 +82,7 @@ export default async function HallDetailPage({
                   
                   <p className="text-orange-50 max-w-md mx-auto font-medium opacity-90">
                     {getLocalizedField(hallData, 'description', locale) || (
-                      locale === 'ar' ? 'قاعة كرة السلة' :
-                      locale === 'he' ? 'אולם כדורסל' :
-                      'Basketball hall'
+                      locale === 'he' ? 'אולם כדורסל' : 'قاعة كرة السلة'
                     )}
                   </p>
                 </div>

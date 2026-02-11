@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Date formatting helper
-export function formatDate(date: string | Date, locale: string = 'en'): string {
+export function formatDate(date: string | Date, locale: string = 'ar'): string {
   const d = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
@@ -16,7 +16,7 @@ export function formatDate(date: string | Date, locale: string = 'en'): string {
 }
 
 // Time formatting helper
-export function formatTime(time: string, locale: string = 'en'): string {
+export function formatTime(time: string, locale: string = 'ar'): string {
   const [hours, minutes] = time.split(':')
   const date = new Date()
   date.setHours(parseInt(hours), parseInt(minutes))
@@ -33,7 +33,7 @@ export function getLocalizedField<T extends Record<string, any>>(
   locale: string
 ): string {
   const localizedFieldName = `${fieldName}_${locale}`
-  return obj[localizedFieldName] || obj[`${fieldName}_en`] || ''
+  return obj[localizedFieldName] || obj[`${fieldName}_ar`] || ''
 }
 
 // Phone number formatting helper

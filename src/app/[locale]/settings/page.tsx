@@ -9,7 +9,7 @@ interface SettingsPageProps {
 export default async function SettingsPage({ params }: SettingsPageProps) {
   const { locale } = await params;
   const session = await getSession();
-  const isRTL = locale === 'ar' || locale === 'he';
+  const isRTL = true; // Both AR and HE are RTL
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   const settingsItems = [
@@ -19,8 +19,8 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   // Add Profile link if logged in
   if (session && session.id) {
     settingsItems.unshift({
-      label: locale === 'ar' ? 'ملفي الشخصي' : locale === 'he' ? 'הפרופיל שלי' : 'My Profile',
-      description: locale === 'ar' ? 'تعديل المعلومات وحذف الحساب' : locale === 'he' ? 'עריכת פרטים ומחיקת חשבון' : 'Edit details & delete account',
+      label: locale === 'he' ? 'הפרופיל שלי' : 'ملفي الشخصي',
+      description: locale === 'he' ? 'עריכת פרטים ומחיקת חשבון' : 'تعديل المعلومات وحذف الحساب',
       href: `/${locale}/trainers/${session.id}`,
       icon: User,
     });
@@ -35,7 +35,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
             <BackIcon className="w-5 h-5 text-gray-600" />
           </Link>
           <h1 className="font-outfit font-bold text-lg text-navy-900">
-             {locale === 'ar' ? 'الإعدادات' : locale === 'he' ? 'הגדרות' : 'Settings'}
+             {locale === 'he' ? 'הגדרות' : 'الإعدادات'}
           </h1>
         </div>
       </div>

@@ -10,6 +10,7 @@ import { deleteTrainer, upsertTrainer } from '@/app/actions'
 interface Trainer {
   id: string
   name_en: string | null
+  name_ar: string | null
   phone: string | null
   role?: string
 }
@@ -26,8 +27,8 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
   const [newName, setNewName] = useState('')
   const [error, setError] = useState('')
 
-  const filteredTrainers = trainers.filter(t => 
-    (t.name_en?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+  const filteredTrainers = trainers.filter(t =>
+    (t.name_ar?.toLowerCase() || t.name_en?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (t.phone || '').includes(searchQuery)
   )
 
@@ -131,7 +132,7 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
                             </div>
 
                             <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                {trainer.name_en || 'بدون اسم'}
+                                {trainer.name_ar || trainer.name_en || 'بدون اسم'}
                             </h3>
                             
                             <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-4" dir="ltr">

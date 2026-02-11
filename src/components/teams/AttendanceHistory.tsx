@@ -5,7 +5,7 @@ import { getTeamAttendanceHistory } from '@/app/actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Loader2, Check, X, Clock, Calendar } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { ar, enUS } from 'date-fns/locale'
+import { ar, he } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
 interface AttendanceHistoryProps {
@@ -36,7 +36,7 @@ export function AttendanceHistory({ classId, locale }: AttendanceHistoryProps) {
     const formatDate = (dateString: string, formatStr: string) => {
         try {
             const date = parseISO(dateString)
-            return format(date, formatStr, { locale: locale === 'ar' ? ar : enUS })
+            return format(date, formatStr, { locale: locale === 'he' ? he : ar })
         } catch (e) {
             return dateString
         }
@@ -79,7 +79,7 @@ export function AttendanceHistory({ classId, locale }: AttendanceHistoryProps) {
                                                      {formatDate(event.event_date, 'EEEE')}
                                                  </span>
                                                  <span className="whitespace-nowrap font-medium text-gray-400 max-w-[80px] truncate">
-                                                    {locale === 'ar' ? event.title_ar : (event.title_en || event.title_ar)}
+                                                    {locale === 'he' ? (event.title_he || event.title_ar) : event.title_ar}
                                                 </span>
                                                 <span className="whitespace-nowrap opacity-70 text-[9px]">
                                                     {event.start_time?.slice(0, 5)}

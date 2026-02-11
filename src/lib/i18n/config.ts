@@ -1,21 +1,16 @@
-// @ts-ignore - Ignore type error during transition
-export const locales = ['ar'] as const
+export const locales = ['ar', 'he'] as const
 export type Locale = (typeof locales)[number]
 
 export const defaultLocale: Locale = 'ar'
 
-// @ts-ignore
 export const directions: Record<Locale, 'rtl' | 'ltr'> = {
   ar: 'rtl',
-  // he: 'rtl',
-  // en: 'ltr',
+  he: 'rtl',
 }
 
-// @ts-ignore
 export const localeNames: Record<Locale, string> = {
   ar: 'العربية',
-  // he: 'עברית',
-  // en: 'English',
+  he: 'עברית',
 }
 
 export function isValidLocale(locale: string): locale is Locale {

@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { sign, verify } from '@/lib/session'
@@ -17,8 +17,7 @@ const getTwilioClient = () => {
     try {
       const twilio = require('twilio')
       return twilio(sid, token)
-    } catch (error) {
-      console.error('Twilio package issue:', error)
+    } catch {
       return null
     }
   }
@@ -36,8 +35,7 @@ const getVonageClient = () => {
       
       const credentials = new Auth({ apiKey: key, apiSecret: secret })
       return new Vonage(credentials)
-    } catch (error) {
-      console.error('Vonage package issue:', error)
+    } catch {
       return null
     }
   }
@@ -72,17 +70,12 @@ export async function upsertEvent(eventData: any) {
   // Inject trainer_id if creating or updating
   const payload = {
       ...eventData,
-      trainer_id: eventData.trainer_id || session.id // Use provided trainer or fallback to session
+      trainer_id: eventData.trainer_id || session.id
   }
 
-  const { data, error } = await (supabase as any)
-    .from('events')
-    .upsert(payload)
-    .select()
-    .single()
+  const { data, error } = await (supabase as any).rpc('upsert_event', { p_data: payload })
 
   if (error) {
-      console.error('Upsert Event Error:', error)
       return { success: false, error: error.message }
   }
 
@@ -161,7 +154,6 @@ export async function sendOTP(phone: string) {
             return { success: false, error: data.error_text || 'SMS failed' }
         }
     } catch (e: any) {
-        console.error('Vonage Verify Error:', e)
         return { success: false, error: e.message || 'Vonage Failed' }
     }
   }
@@ -219,7 +211,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   // 1. Try to find existing trainer
   let { data: trainer, error } = await (supabase as any)
     .from('trainers')
-    .select('id, name_en, role') // Select role as well
+    .select('id, name_ar, name_en, role')
     .eq('phone', cleanPhone)
     .single()
 
@@ -236,7 +228,6 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
               p_phone: cleanPhone,
             })
             if (createError) {
-                console.error('Head Coach Signup Error:', createError)
                 return { success: false, error: `Signup failed: ${createError.message}` }
             }
             trainer = newHeadCoach
@@ -256,7 +247,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   
   const sessionToken = await sign({
     id: trainer.id,
-    name: trainer.name_en || (isHeadCoach ? 'Head Coach' : 'Trainer'),
+    name: trainer.name_ar || trainer.name_en || (isHeadCoach ? 'Head Coach' : 'Trainer'),
     role: isHeadCoach ? 'headcoach' : 'trainer' // Explicit role in session
   })
 
@@ -268,7 +259,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   })
 
   // Return specific status so UI knows if we need to ask for name
-  return { success: true, isNew: !trainer.name_en && !isHeadCoach } // Only show new profile setup if no name and not HC (HC usually set up)
+  return { success: true, isNew: !trainer.name_ar && !isHeadCoach } // Only show new profile setup if no name and not HC (HC usually set up)
 }
 
 // --- Head Coach Actions ---
@@ -312,29 +303,31 @@ export async function upsertTrainer(phone: string, name: string) {
         .single()
 
     if (existing) {
-        // Update
-        const { error } = await (supabase as any)
-            .from('trainers')
-            .update({ name_en: name }) // Update name
-            .eq('id', existing.id)
-        
+        const { error } = await (supabase as any).rpc('update_trainer_rpc', {
+            p_id: existing.id,
+            p_data: { name_en: name, name_ar: name, name_he: name }
+        })
         if (error) return { success: false, error: error.message }
     } else {
-        // Create (using RPC or Insert if policy allows)
-        // Using RPC 'create_trainer' as seen in verifyOTP is safer if direct insert is blocked
         const { error: createError } = await (supabase as any).rpc('create_trainer', {
             p_phone: cleanPhone,
         })
-        
         if (createError) return { success: false, error: createError.message }
 
-        // Then update name
-         const { error: updateError } = await (supabase as any)
+        // Get the newly created trainer's ID, then update name
+        const { data: newTrainer } = await (supabase as any)
             .from('trainers')
-            .update({ name_en: name, name_ar: name, name_he: name })
+            .select('id')
             .eq('phone', cleanPhone)
-            
-         if (updateError) return { success: false, error: updateError.message }
+            .single()
+
+        if (newTrainer) {
+            const { error: updateError } = await (supabase as any).rpc('update_trainer_rpc', {
+                p_id: newTrainer.id,
+                p_data: { name_en: name, name_ar: name, name_he: name }
+            })
+            if (updateError) return { success: false, error: updateError.message }
+        }
     }
 
     revalidatePath('/[locale]/head-coach')
@@ -353,13 +346,10 @@ export async function deleteTrainer(id: string) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('trainers')
-        .delete()
-        .eq('id', id)
+    const { error } = await (supabase as any).rpc('delete_trainer_rpc', { p_id: id })
 
     if (error) return { success: false, error: error.message }
-    
+
     revalidatePath('/[locale]/head-coach')
     return { success: true }
 }
@@ -370,22 +360,18 @@ export async function updateProfile(name: string, gender?: 'male' | 'female', av
 
   const supabase = await createServerSupabaseClient()
 
-  // Update trainer profile directly
-  const { data, error } = await (supabase as any)
-    .from('trainers')
-    .update({
-        name_en: name,
-        name_ar: name,
-        name_he: name,
-        gender: gender,
-        availability: availability
-    })
-    .eq('id', session.id)
-    .select()
-    .single()
+  const { error } = await (supabase as any).rpc('update_trainer_rpc', {
+      p_id: session.id,
+      p_data: {
+          name_en: name,
+          name_ar: name,
+          name_he: name,
+          gender: gender,
+          ...(availability ? { availability } : {})
+      }
+  })
 
   if (error) {
-      console.error('Update Profile Error:', error)
       return { success: false, error: error.message }
   }
   
@@ -416,13 +402,10 @@ export async function deleteTrainee(traineeId: string) {
   if (!session) return { success: false, error: 'Unauthorized' }
 
   const supabase = await createServerSupabaseClient()
-  const { error } = await (supabase as any)
-    .from('trainees')
-    .delete()
-    .eq('id', traineeId)
-  
+  const { error } = await (supabase as any).rpc('delete_trainee', { p_id: traineeId })
+
   if (error) return { success: false, error: error.message }
-  
+
   revalidatePath('/teams/[classId]')
   return { success: true }
 }
@@ -436,43 +419,33 @@ export async function updateTraineePayment(traineeId: string, amount: number, co
   const supabase = await createServerSupabaseClient()
   
   // 1. Insert into Payment Logs
-  const { error: logError } = await (supabase as any)
-    .from('payment_logs')
-    .insert({
-        trainee_id: traineeId,
-        amount: amount,
-        note: comment,
-        season: '2025-2026' // Default for now
-    })
+  const { error: logError } = await (supabase as any).rpc('insert_payment_log', {
+      p_trainee_id: traineeId,
+      p_amount: amount,
+      p_note: comment,
+      p_season: '2025-2026'
+  })
 
   if (logError) {
-     console.error('Log Payment Error:', logError)
      return { success: false, error: logError.message }
   }
 
-  // 2. Update Trainee Total (Atomic Increment) - "Materialized View" pattern
-  // We first fetch current total to allow incrementing (Supabase doesn't have simple 'inc' via JS client easily without RPC)
-  // Better approach: Create an RPC, but for now we'll do read-modify-write which is okay for low volume
-  
+  // 2. Update Trainee Total — fetch current, compute new, update via RPC
   const { data: trainee } = await (supabase as any)
     .from('trainees')
     .select('amount_paid')
     .eq('id', traineeId)
     .single()
-    
+
   const newTotal = (trainee?.amount_paid || 0) + amount
 
-  const { error: updateError } = await (supabase as any)
-    .from('trainees')
-    .update({
-      amount_paid: newTotal,
-      is_paid: newTotal >= 3000,
-      payment_date: new Date().toISOString() // Last payment date
-    })
-    .eq('id', traineeId)
+  const { error: updateError } = await (supabase as any).rpc('update_trainee_payment_rpc', {
+      p_trainee_id: traineeId,
+      p_amount: newTotal,
+      p_comment: comment
+  })
 
   if (updateError) {
-     console.error('Update Payment Error:', updateError)
      return { success: false, error: updateError.message }
   }
 
@@ -486,10 +459,10 @@ export async function toggleTraineePayment(traineeId: string, isPaid: boolean) {
   if (!session) return { success: false, error: 'Unauthorized' }
 
   const supabase = await createServerSupabaseClient()
-  const { error } = await (supabase as any)
-    .from('trainees')
-    .update({ is_paid: isPaid })
-    .eq('id', traineeId)
+  const { error } = await (supabase as any).rpc('update_trainee_rpc', {
+      p_id: traineeId,
+      p_data: { is_paid: isPaid }
+  })
 
   if (error) return { success: false, error: error.message }
 
@@ -513,21 +486,19 @@ export async function getSession() {
 // --- Attendance Actions ---
 
 export async function saveAttendance(
-  traineeId: string, 
-  eventId: string, 
+  traineeId: string,
+  eventId: string,
   status: AttendanceStatus
 ) {
   const supabase = await createServerSupabaseClient()
-  
-  const { error } = await (supabase as any)
-    .from('attendance')
-    .upsert(
-      { trainee_id: traineeId, event_id: eventId, status },
-      { onConflict: 'trainee_id,event_id' }
-    )
+
+  const { error } = await (supabase as any).rpc('upsert_attendance', {
+      p_trainee_id: traineeId,
+      p_event_id: eventId,
+      p_status: status
+  })
 
   if (error) {
-    console.error('Error saving attendance:', error)
     return { success: false, error: error.message }
   }
 
@@ -539,12 +510,11 @@ export async function bulkSaveAttendance(
 ) {
   const supabase = await createServerSupabaseClient()
 
-  const { error } = await (supabase as any)
-    .from('attendance')
-    .upsert(records, { onConflict: 'trainee_id,event_id' })
+  const { error } = await (supabase as any).rpc('bulk_upsert_attendance', {
+      p_records: records
+  })
 
   if (error) {
-    console.error('Error bulk saving attendance:', error)
     return { success: false, error: error.message }
   }
 
@@ -572,12 +542,10 @@ export async function addTrainee({
     return { success: false, error: 'Unauthorized' }
   }
 
-  const { data, error } = await (supabase as any)
-    .from('trainees')
-    .insert([
-      { 
+  const { data, error } = await (supabase as any).rpc('insert_trainee', {
+      p_data: {
         class_id: classId,
-        name_en: name, // Defaulting everything to name for now
+        name_en: name,
         name_ar: name,
         name_he: name,
         phone: phone || null,
@@ -585,15 +553,13 @@ export async function addTrainee({
         is_paid: false,
         gender: gender || 'male'
       }
-    ])
-    .select()
+  })
 
   if (error) {
-    console.error('Error adding trainee:', error)
     return { success: false, error: error.message }
   }
 
-  return { success: true, trainee: data[0] }
+  return { success: true, trainee: data }
 }
 
 
@@ -705,11 +671,10 @@ export async function getEventAttendance(eventId: string, classId?: string | nul
   }
   
   const { data: trainees, error: traineesError } = await query
-    .order('name_en', { ascending: true })
+    .order('name_ar', { ascending: true })
     .limit(classId ? 200 : 100) // Safety limit
 
   if (traineesError) {
-    console.error('Error fetching trainees:', traineesError)
     return { success: false, error: traineesError.message }
   }
 
@@ -720,7 +685,6 @@ export async function getEventAttendance(eventId: string, classId?: string | nul
     .eq('event_id', eventId)
 
   if (attendanceError) {
-    console.error('Error fetching attendance:', attendanceError)
     return { success: false, error: attendanceError.message }
   }
 
@@ -733,26 +697,19 @@ export async function updateAttendance(eventId: string, traineeId: string, statu
 
   const supabase = await createServerSupabaseClient()
 
-  // Upsert attendance record
-  const { data, error } = await (supabase as any)
-    .from('attendance')
-    .upsert({
-      event_id: eventId,
-      trainee_id: traineeId,
-      status: status,
-      marked_by: session.id,
-      marked_at: new Date().toISOString()
-    }, { onConflict: 'event_id, trainee_id' })
-    .select()
-    .single()
+  const { error } = await (supabase as any).rpc('upsert_attendance', {
+      p_trainee_id: traineeId,
+      p_event_id: eventId,
+      p_status: status,
+      p_marked_by: session.id
+  })
 
   if (error) {
-    console.error('Error updating attendance:', error)
     return { success: false, error: error.message }
   }
 
   revalidatePath('/[locale]/halls/[id]', 'page')
-  return { success: true, data }
+  return { success: true }
 }
 
 export async function getEventRefData() {
@@ -762,22 +719,21 @@ export async function getEventRefData() {
     const { data: trainers, error: trainersError } = await (supabase as any)
       .from('trainers')
       .select('id, name_en, name_ar, name_he')
-      .order('name_en')
+      .order('name_ar')
   
     // Fetch Classes (Teams)
     const { data: classes, error: classesError } = await (supabase as any)
       .from('classes')
       .select('id, name_en, name_ar, name_he')
-      .order('name_en')
+      .order('name_ar')
 
     // Fetch Halls
     const { data: halls, error: hallsError } = await (supabase as any)
       .from('halls')
       .select('id, name_en, name_ar, name_he')
-      .order('name_en')
+      .order('name_ar')
   
     if (trainersError || classesError || hallsError) {
-      console.error('Error fetching ref data:', trainersError || classesError || hallsError)
       return { success: false, error: 'Failed to fetch reference data' }
     }
   
@@ -797,7 +753,6 @@ export async function fetchHallEvents(hallId: string, startDate: string, endDate
         .order('start_time', { ascending: true })
 
     if (error) {
-        console.error('Error fetching hall events:', error)
         return { success: false, error: error.message }
     }
 
@@ -823,13 +778,13 @@ export async function transferTrainee(traineeId: string, classId: string) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('trainees')
-        .update({ class_id: classId })
-        .eq('id', traineeId)
+    const { error } = await (supabase as any).rpc('update_trainee_rpc', {
+        p_id: traineeId,
+        p_data: { class_id: classId }
+    })
 
     if (error) return { success: false, error: error.message }
-    
+
     revalidatePath('/[locale]/teams/[classId]', 'page')
     return { success: true }
 }
@@ -841,13 +796,13 @@ export async function updateTrainee(traineeId: string, updateData: any) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('trainees')
-        .update(updateData)
-        .eq('id', traineeId)
+    const { error } = await (supabase as any).rpc('update_trainee_rpc', {
+        p_id: traineeId,
+        p_data: updateData
+    })
 
     if (error) return { success: false, error: error.message }
-    
+
     revalidatePath('/[locale]/teams/[classId]', 'page')
     return { success: true }
 }
@@ -880,13 +835,13 @@ export async function updateTeamTrainer(classId: string, trainerId: string) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('classes')
-        .update({ trainer_id: trainerId })
-        .eq('id', classId)
+    const { error } = await (supabase as any).rpc('update_class', {
+        p_id: classId,
+        p_data: { trainer_id: trainerId }
+    })
 
     if (error) return { success: false, error: error.message }
-    
+
     revalidatePath('/[locale]/teams/[classId]', 'page')
     return { success: true }
 }
@@ -897,17 +852,14 @@ export async function quickRegisterAndAssign(traineeData: any, classId: string) 
     }
 
     const supabase = await createServerSupabaseClient()
-    const { data: trainee, error: traineeError } = await (supabase as any)
-        .from('trainees')
-        .insert({
+    const { data: trainee, error: traineeError } = await (supabase as any).rpc('insert_trainee', {
+        p_data: {
             ...traineeData,
             class_id: classId
-        })
-        .select()
-        .single()
+        }
+    })
 
     if (traineeError) {
-        console.error('Error in quick register:', traineeError)
         return { success: false, error: traineeError.message }
     }
 
@@ -922,13 +874,13 @@ export async function assignTraineeToTeam(traineeId: string, classId: string) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('trainees')
-        .update({ class_id: classId })
-        .eq('id', traineeId)
+    const { error } = await (supabase as any).rpc('update_trainee_rpc', {
+        p_id: traineeId,
+        p_data: { class_id: classId }
+    })
 
     if (error) return { success: false, error: error.message }
-    
+
     revalidatePath('/[locale]/halls/[id]', 'page')
     return { success: true }
 }
@@ -946,14 +898,9 @@ export async function createTeam(teamData: {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { data, error } = await (supabase as any)
-        .from('classes')
-        .insert(teamData)
-        .select()
-        .single()
+    const { data, error } = await (supabase as any).rpc('insert_class', { p_data: teamData })
 
     if (error) {
-        console.error('Error creating team:', error)
         return { success: false, error: error.message }
     }
 
@@ -968,15 +915,12 @@ export async function updateTeam(id: string, teamData: any) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { data, error } = await (supabase as any)
-        .from('classes')
-        .update(teamData)
-        .eq('id', id)
-        .select()
-        .single()
+    const { data, error } = await (supabase as any).rpc('update_class', {
+        p_id: id,
+        p_data: teamData
+    })
 
     if (error) {
-        console.error('Error updating team:', error)
         return { success: false, error: error.message }
     }
 
@@ -992,13 +936,9 @@ export async function deleteTeam(id: string) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('classes')
-        .delete()
-        .eq('id', id)
+    const { error } = await (supabase as any).rpc('delete_class', { p_id: id })
 
     if (error) {
-        console.error('Error deleting team:', error)
         return { success: false, error: error.message }
     }
 
@@ -1014,13 +954,9 @@ export async function deleteEvent(id: string) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('events')
-        .delete()
-        .eq('id', id)
+    const { error } = await (supabase as any).rpc('delete_event', { p_id: id })
 
     if (error) {
-        console.error('Delete Event Error:', error)
         return { success: false, error: 'Failed to delete event' }
     }
 
@@ -1036,18 +972,17 @@ export async function updateHall(id: string, name_en: string, name_ar: string, n
     }
 
     const supabase = await createServerSupabaseClient()
-    const { data, error } = await (supabase as any)
-        .from('halls')
-        .update({ name_en, name_ar, name_he })
-        .eq('id', id)
-        .select()
-        .single()
+    const { data, error } = await (supabase as any).rpc('update_hall_rpc', {
+        p_id: id,
+        p_name_en: name_en,
+        p_name_ar: name_ar,
+        p_name_he: name_he
+    })
 
     if (error) {
-        console.error('Error updating hall:', error)
         return { success: false, error: error.message }
     }
-    
+
     revalidatePath('/[locale]/halls/[id]', 'page')
     revalidatePath('/[locale]/halls', 'page')
     return { success: true, hall: data }
@@ -1059,23 +994,16 @@ export async function updateTrainerDetails(id: string, data: any) {
         return { success: false, error: 'Unauthorized' }
     }
 
-    const supabase = await createServiceRoleClient()
-    const { data: updatedData, error } = await (supabase as any)
-        .from('trainers')
-        .update(data)
-        .eq('id', id)
-        .select()
+    const supabase = await createServerSupabaseClient()
+    const { error } = await (supabase as any).rpc('update_trainer_rpc', {
+        p_id: id,
+        p_data: data
+    })
 
     if (error) {
-        console.error('Error updating trainer:', error)
         return { success: false, error: error.message }
     }
-    
-    // If no rows updated, it might mean the ID wasn't found, but we shouldn't throw 500
-    if (!updatedData || updatedData.length === 0) {
-         console.warn(`Trainer update: ID ${id} not found or no changes made.`)
-    }
-    
+
     revalidatePath('/', 'layout')
     revalidatePath('/[locale]/trainers', 'page')
     return { success: true }
@@ -1088,13 +1016,9 @@ export async function deleteAccount() {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await (supabase as any)
-        .from('trainers')
-        .delete()
-        .eq('id', session.id)
+    const { error } = await (supabase as any).rpc('delete_trainer_rpc', { p_id: session.id })
 
     if (error) {
-        console.error('Error deleting account:', error)
         return { success: false, error: error.message }
     }
 

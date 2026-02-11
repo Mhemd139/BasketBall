@@ -83,7 +83,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
       for (const t of traineeRes.data) {
         mapped.push({
           id: t.id,
-          name: t[nameField] || t.name_en,
+          name: t[nameField] || t.name_he,
           type: 'trainee',
           subtitle: t.phone || undefined,
           href: `/${locale}/teams/${t.class_id}`,
@@ -95,7 +95,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
       for (const t of trainerRes.data) {
         mapped.push({
           id: t.id,
-          name: t[nameField] || t.name_en,
+          name: t[nameField] || t.name_he,
           type: 'trainer',
           subtitle: t.phone || undefined,
           href: `/${locale}/trainers`,

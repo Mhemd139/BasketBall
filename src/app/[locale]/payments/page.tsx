@@ -28,7 +28,7 @@ export default async function PaymentsPage({
       trainees (count),
       trainers (name_en, name_ar, name_he)
     `)
-    .order('name_en')
+    .order('name_ar')
     .limit(50)
 
   const safeClasses = (classes || []) as any[]

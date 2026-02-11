@@ -147,11 +147,11 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
                                 <div className="space-y-4 w-full">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{'الاسم (انجليزي)'}</label>
-                                            <input 
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{'الاسم (عربي)'}</label>
+                                            <input
                                                 className="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none transition-all"
-                                                value={editForm.name_en} 
-                                                onChange={e => setEditForm(p => ({ ...p, name_en: e.target.value }))}
+                                                value={editForm.name_ar}
+                                                onChange={e => setEditForm(p => ({ ...p, name_ar: e.target.value }))}
                                             />
                                         </div>
                                         <div className="space-y-1">
