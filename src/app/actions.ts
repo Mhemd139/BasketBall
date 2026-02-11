@@ -587,12 +587,19 @@ export async function getTeamAttendanceHistory(classId: string) {
     const supabase = await createServerSupabaseClient()
     const session = await getSession()
     
-    // 1. Get Class Details
-    const { data: team } = await (supabase as any)
-        .from('classes')
-        .select('trainer_id')
-        .eq('id', classId)
-        .single()
+    // 1. Get Class Details & Trainees in Parallel
+    const [{ data: team }, { data: trainees }] = await Promise.all([
+        (supabase as any)
+            .from('classes')
+            .select('trainer_id')
+            .eq('id', classId)
+            .single(),
+        (supabase as any)
+            .from('trainees')
+            .select('id, name_ar, name_en')
+            .eq('class_id', classId)
+            .order('name_ar')
+    ])
 
     if (!team) return { success: false, error: 'Team not found' }
 
@@ -600,13 +607,6 @@ export async function getTeamAttendanceHistory(classId: string) {
     const endDate = new Date()
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - 30)
-
-    // 3. Get Trainees for this Class FIRST
-    const { data: trainees } = await (supabase as any)
-        .from('trainees')
-        .select('id, name_ar, name_en')
-        .eq('class_id', classId)
-        .order('name_ar')
 
     if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {} } }
 
@@ -660,29 +660,30 @@ export async function getTeamAttendanceHistory(classId: string) {
 export async function getEventAttendance(eventId: string, classId?: string | null) {
   const supabase = await createServerSupabaseClient()
   
-  // 1. Get trainees
-  // If classId is provided, we fetch the roster + some others
-  // If not, we fetch all (limited for performance)
-  let query = (supabase as any).from('trainees').select('*')
+  // 1. Prepare Trainees Query
+  let traineesQuery = (supabase as any).from('trainees').select('*')
   
   if (classId) {
     // Prioritize roster, then others
-    query = query.order('class_id', { ascending: false }) // This is a bit weak for priority, but we'll filter in UI anyway
+    traineesQuery = traineesQuery.order('class_id', { ascending: false })
   }
-  
-  const { data: trainees, error: traineesError } = await query
+
+  traineesQuery = traineesQuery
     .order('name_ar', { ascending: true })
-    .limit(classId ? 200 : 100) // Safety limit
+    .limit(classId ? 200 : 100)
+
+  // 2. Execute Parallel Queries
+  const [
+    { data: trainees, error: traineesError },
+    { data: attendance, error: attendanceError }
+  ] = await Promise.all([
+    traineesQuery,
+    (supabase as any).from('attendance').select('*').eq('event_id', eventId)
+  ])
 
   if (traineesError) {
     return { success: false, error: traineesError.message }
   }
-
-  // 2. Get existing attendance for this event
-  const { data: attendance, error: attendanceError } = await (supabase as any)
-    .from('attendance')
-    .select('*')
-    .eq('event_id', eventId)
 
   if (attendanceError) {
     return { success: false, error: attendanceError.message }
