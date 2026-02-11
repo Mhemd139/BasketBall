@@ -225,6 +225,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
           // Auto-create seed head coach
           const { data: newTrainer, error: createError } = await (supabase as any).rpc('create_trainer', {
               p_phone: cleanPhone,
+              p_name: '',
           })
           if (createError) {
               return { success: false, error: `Signup failed: ${createError.message}` }
@@ -314,22 +315,17 @@ export async function upsertTrainer(phone: string, name: string, role: 'headcoac
         })
         if (error) return { success: false, error: error.message }
     } else {
-        const { error: createError } = await (supabase as any).rpc('create_trainer', {
+        const { data: newTrainer, error: createError } = await (supabase as any).rpc('create_trainer', {
             p_phone: cleanPhone,
+            p_name: name,
         })
         if (createError) return { success: false, error: createError.message }
 
-        // Get the newly created trainer's ID, then update name + role
-        const { data: newTrainer } = await (supabase as any)
-            .from('trainers')
-            .select('id')
-            .eq('phone', cleanPhone)
-            .single()
-
-        if (newTrainer) {
+        // Update role if needed (create_trainer defaults to 'trainer')
+        if (newTrainer?.id && role !== 'trainer') {
             const { error: updateError } = await (supabase as any).rpc('update_trainer_rpc', {
                 p_id: newTrainer.id,
-                p_data: trainerData
+                p_data: { role }
             })
             if (updateError) return { success: false, error: updateError.message }
         }
