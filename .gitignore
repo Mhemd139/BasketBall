@@ -57,3 +57,5 @@ next-env.d.ts
 Thumbs.db
 
 .vercel
+nul
+/nul
