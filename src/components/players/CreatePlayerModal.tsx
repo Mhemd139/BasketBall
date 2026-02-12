@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
-import { Loader2, User, Phone, Hash, ChevronRight, ArrowLeft, CheckCircle2, Users } from 'lucide-react'
+import { Loader2, User, Phone, Hash, ChevronLeft, ArrowRight, CheckCircle2, Users } from 'lucide-react'
 import { getEventRefData, addTrainee } from '@/app/actions'
 import { formatPhoneNumber } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -261,7 +261,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
               className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 group"
             >
               {'التالي'}
-              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ChevronLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             </Button>
           )}
 
@@ -272,7 +272,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
                 onClick={handleBack} 
                 className="flex-1 h-14 rounded-2xl font-bold bg-slate-50 text-slate-500 hover:bg-slate-100"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowRight className="w-4 h-4 ml-2" />
                 {'رجوع'}
               </Button>
               <Button 

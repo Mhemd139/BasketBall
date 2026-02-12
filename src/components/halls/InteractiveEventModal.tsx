@@ -460,7 +460,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                             onClick={handleBack} 
                             className="text-gray-400 hover:text-navy-600 font-bold font-outfit flex items-center gap-2 transition-all hover:-translate-x-1 px-4 py-2 rounded-xl hover:bg-gray-50"
                         >
-                            <ArrowLeft className="w-5 h-5" /> {'رجوع'}
+                            <ArrowRight className="w-5 h-5" /> {'رجوع'}
                         </button>
                     ) : <div></div>}
 
@@ -484,7 +484,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                             className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-300 hover:to-gold-500 text-navy-950 rounded-2xl px-8 py-7 font-outfit font-bold text-lg shadow-lg shadow-gold-500/20 hover:shadow-gold-500/40 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                         >
                             <span className="flex items-center gap-2">
-                                {'التالي'} <ArrowRight className="w-5 h-5" />
+                                {'التالي'} <ArrowLeft className="w-5 h-5" />
                             </span>
                         </Button>
                     )}
