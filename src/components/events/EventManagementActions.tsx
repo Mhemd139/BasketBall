@@ -5,6 +5,7 @@ import { InteractiveEventModal } from '@/components/halls/InteractiveEventModal'
 import { Pencil, Trash2 } from 'lucide-react'
 import { upsertEvent, deleteEvent } from '@/app/actions'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
 
 interface EventManagementActionsProps {
     event: any
@@ -15,15 +16,16 @@ export function EventManagementActions({ event, locale }: EventManagementActions
     const [isOpen, setIsOpen] = useState(false)
     const [initialStep, setInitialStep] = useState<'type' | 'delete-confirm'>('type')
     const router = useRouter()
+    const { toast } = useToast()
 
     const handleSave = async (eventData: any) => {
         const res = await upsertEvent({ ...eventData, id: event.id })
         if (res.success) {
             setIsOpen(false)
+            toast('تم تحديث الحدث بنجاح', 'success')
             router.refresh()
         } else {
-            console.error('Failed to update event:', res.error)
-            alert('فشل تحديث الحدث')
+            toast('فشل تحديث الحدث', 'error')
         }
     }
 
@@ -31,10 +33,10 @@ export function EventManagementActions({ event, locale }: EventManagementActions
         const res = await deleteEvent(eventId)
         if (res.success) {
             setIsOpen(false)
+            toast('تم حذف الحدث بنجاح', 'success')
             router.push(`/${locale}/schedule`)
         } else {
-            console.error('Failed to delete event:', res.error)
-            alert('فشل حذف الحدث')
+            toast('فشل حذف الحدث', 'error')
         }
     }
 

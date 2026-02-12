@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/Card'
 import { addTrainee, searchTrainees, transferTrainee } from '@/app/actions'
 import { Header } from '@/components/layout/Header'
+import { useConfirm } from '@/components/ui/ConfirmModal'
+import { useToast } from '@/components/ui/Toast'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { User, Phone, Hash, Save, Loader2, Users, Search, UserPlus, RefreshCw, Check, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -15,6 +17,8 @@ export default function AddTraineePage() {
   const locale = params.locale as string
   const classId = params.classId as string
   const router = useRouter()
+  const { confirm } = useConfirm()
+  const { toast } = useToast()
   
   const [mode, setMode] = useState<'choice' | 'existing' | 'new'>('choice')
   const [loading, setLoading] = useState(false)
@@ -59,15 +63,23 @@ export default function AddTraineePage() {
   }, [searchQuery, mode])
 
   const handleTransfer = async (trainee: any) => {
-    if (!confirm(`هل أنت متأكد من نقل ${trainee.name_ar}؟`)) return
-    
+    const confirmed = await confirm({
+      title: 'نقل اللاعب',
+      message: `هل أنت متأكد من نقل ${trainee.name_ar}؟`,
+      confirmText: 'نقل',
+      cancelText: 'إلغاء',
+      variant: 'warning',
+    })
+    if (!confirmed) return
+
     setLoading(true)
     const res = await transferTrainee(trainee.id, classId)
     if (res.success) {
+      toast('تم نقل اللاعب بنجاح', 'success')
       router.push(`/${locale}/teams/${classId}`)
       router.refresh()
     } else {
-      setError(res.error || 'Transfer failed')
+      setError(res.error || 'فشل نقل اللاعب')
       setLoading(false)
     }
   }

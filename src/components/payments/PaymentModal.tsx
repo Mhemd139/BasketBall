@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check, X, User as UserIcon, Phone, Save } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { updateTraineePayment } from '@/app/actions'
+import { useToast } from '@/components/ui/Toast'
 import type { Database } from '@/lib/supabase/types'
 
 type Trainee = Database['public']['Tables']['trainees']['Row']
@@ -19,6 +20,7 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
     const [comment, setComment] = useState(trainee.payment_comment_en || '')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const { toast } = useToast()
     
     const name = trainee.name_ar
     const goal = 3000
@@ -28,10 +30,11 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
         setLoading(true)
         const res = await updateTraineePayment(trainee.id, amount, comment)
         if (res.success) {
+            toast('تم تحديث الدفع بنجاح', 'success')
             router.refresh()
             onClose()
         } else {
-            alert('حدث خطأ أثناء التحديث')
+            toast('حدث خطأ أثناء التحديث', 'error')
         }
         setLoading(false)
     }

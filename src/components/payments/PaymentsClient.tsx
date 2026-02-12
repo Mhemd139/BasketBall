@@ -8,7 +8,8 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card } from '@/components/ui/Card'
 import { DollarSign, Search, Filter, TrendingUp, Users, CheckCircle2, AlertCircle, Edit2, Save, X } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
-import { updateTraineePayment } from '@/app/actions' // Ensure this is exported
+import { updateTraineePayment } from '@/app/actions'
+import { useToast } from '@/components/ui/Toast'
 import type { Database } from '@/lib/supabase/types'
 
 type Trainee = Database['public']['Tables']['trainees']['Row'] & {
@@ -129,9 +130,10 @@ export default function PaymentsClient({ trainees, locale, dict }: PaymentsPageP
 function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
     const [isEditing, setIsEditing] = useState(false)
     const [amount, setAmount] = useState(trainee.amount_paid || 0)
-    const [comment, setComment] = useState(trainee.payment_comment_en || '') // Using EN as generic note
+    const [comment, setComment] = useState(trainee.payment_comment_en || '')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const { toast } = useToast()
 
     const goal = 3000
     const progress = Math.min((amount / goal) * 100, 100)
@@ -144,10 +146,11 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
         setLoading(true)
         const res = await updateTraineePayment(trainee.id, amount, comment)
         if (res.success) {
+            toast('تم تحديث الدفع بنجاح', 'success')
             setIsEditing(false)
             router.refresh()
         } else {
-            alert('خطأ في تحديث الدفع')
+            toast('خطأ في تحديث الدفع', 'error')
         }
         setLoading(false)
     }

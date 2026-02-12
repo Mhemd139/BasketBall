@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Users, User, MapPin, Save, Loader2, Languages, Trash2, AlertTriangle } from 'lucide-react'
 import { getEventRefData, createTeam, updateTeam, deleteTeam } from '@/app/actions'
+import { useToast } from '@/components/ui/Toast'
 
 interface CreateTeamModalProps {
     isOpen: boolean
@@ -19,6 +20,7 @@ interface CreateTeamModalProps {
 }
 
 export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }: CreateTeamModalProps) {
+    const { toast } = useToast()
     const [step, setStep] = useState(1)
     const [loading, setLoading] = useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -58,7 +60,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
 
     const handleSubmit = async () => {
         if (!formData.name_ar || !formData.name_he) {
-            alert(locale === 'he' ? 'נא למלא את כל השדות' : 'يرجى ملء جميع الأسماء')
+            toast(locale === 'he' ? 'נא למלא את כל השדות' : 'يرجى ملء جميع الأسماء', 'warning')
             return
         }
 
@@ -76,11 +78,12 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
             : await createTeam(payload)
 
         if (res.success) {
+            toast(isEdit ? (locale === 'he' ? 'הקבוצה עודכנה בהצלחה' : 'تم تحديث الفريق بنجاح') : (locale === 'he' ? 'הקבוצה נוצרה בהצלחה' : 'تم إنشاء الفريق بنجاح'), 'success')
             onClose()
             setStep(1)
             setFormData({ name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
         } else {
-            alert(res.error || (locale === 'he' ? 'הפעולה נכשלה' : 'فشلت العملية'))
+            toast(res.error || (locale === 'he' ? 'הפעולה נכשלה' : 'فشلت العملية'), 'error')
         }
         setLoading(false)
     }
@@ -90,9 +93,10 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
         setLoading(true)
         const res = await deleteTeam(initialData.id)
         if (res.success) {
+            toast(locale === 'he' ? 'הקבוצה נמחקה בהצלחה' : 'تم حذف الفريق بنجاح', 'success')
             onClose()
         } else {
-            alert(res.error || (locale === 'he' ? 'מחיקת הקבוצה נכשלה' : 'فشل حذف الفريق'))
+            toast(res.error || (locale === 'he' ? 'מחיקת הקבוצה נכשלה' : 'فشل حذف الفريق'), 'error')
         }
         setLoading(false)
     }

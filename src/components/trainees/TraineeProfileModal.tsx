@@ -9,6 +9,7 @@ import { User, Phone, Users, Calendar, X, CreditCard, Activity, Edit2, Save, Loa
 import type { Database } from '@/lib/supabase/types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
 
 type Trainee = Database['public']['Tables']['trainees']['Row']
 
@@ -23,6 +24,7 @@ interface TraineeProfileModalProps {
 
 export function TraineeProfileModal({ trainee, locale, teamName, trainerName, isAdmin, onClose }: TraineeProfileModalProps) {
     const router = useRouter()
+    const { toast } = useToast()
     const [showPayment, setShowPayment] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [stats, setStats] = useState({ total: 0, present: 0, late: 0, absent: 0 })
@@ -71,11 +73,11 @@ export function TraineeProfileModal({ trainee, locale, teamName, trainerName, is
             jersey_number: editForm.jersey_number ? parseInt(editForm.jersey_number.toString()) : null
         })
         if (res.success) {
+            toast('تم تحديث بيانات اللاعب بنجاح', 'success')
             setIsEditing(false)
             router.refresh()
-            // Optional: update local trainee state if parent doesn't refresh instantly
         } else {
-            alert(res.error || 'فشل تحديث بيانات اللاعب')
+            toast(res.error || 'فشل تحديث بيانات اللاعب', 'error')
         }
         setSaving(false)
     }

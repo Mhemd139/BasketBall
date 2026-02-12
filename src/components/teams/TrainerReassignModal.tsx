@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, User, Search, Loader2, Save, Check } from 'lucide-react'
 import { updateTeamTrainer } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/Toast'
 import { getLocalizedField } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
@@ -21,6 +22,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedId, setSelectedId] = useState<string | null>(currentTrainerId || null)
     const router = useRouter()
+    const { toast } = useToast()
 
     useEffect(() => {
         async function fetchTrainers() {
@@ -41,10 +43,11 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
         setSaving(true)
         const res = await updateTeamTrainer(classId, selectedId)
         if (res.success) {
+            toast('تم تعيين المدرب بنجاح', 'success')
             router.refresh()
             onClose()
         } else {
-            alert(res.error || 'فشل تحديث المدرب')
+            toast(res.error || 'فشل تحديث المدرب', 'error')
         }
         setSaving(false)
     }

@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, Phone, Trash2, Plus, Search, ShieldCheck, X, Loader2, Save } from 'lucide-react'
+import { User, Phone, Trash2, Plus, Search, ShieldCheck, X, Loader2, Save, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
+import { useToast } from '@/components/ui/Toast'
 import { deleteTrainer, upsertTrainer } from '@/app/actions'
 
 interface Trainer {
@@ -21,32 +22,36 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
+  const { toast } = useToast()
 
   // Add Trainer Form State
   const [newPhone, setNewPhone] = useState('')
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState<'trainer' | 'headcoach'>('trainer')
   const [error, setError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<Trainer | null>(null)
 
   const filteredTrainers = trainers.filter(t =>
     (t.name_ar?.toLowerCase() || t.name_en?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (t.phone || '').includes(searchQuery)
   )
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المدرب؟')) return
+  const handleDelete = async () => {
+    if (!deleteTarget) return
 
     setIsLoading(true)
     try {
-        const res = await deleteTrainer(id)
+        const res = await deleteTrainer(deleteTarget.id)
         if (res.success) {
-            setTrainers(trainers.filter(t => t.id !== id))
+            setTrainers(trainers.filter(t => t.id !== deleteTarget.id))
+            toast('تم حذف المدرب بنجاح', 'success')
             router.refresh()
         } else {
-            alert(res.error || 'فشل الحذف')
+            toast(res.error || 'فشل الحذف', 'error')
         }
     } finally {
         setIsLoading(false)
+        setDeleteTarget(null)
     }
   }
 
@@ -87,6 +92,7 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
             }
             setIsAddModalOpen(false)
             resetForm()
+            toast('تمت إضافة المدرب بنجاح', 'success')
             router.refresh()
         } else {
             setError(res.error || 'فشل في إضافة المدرب')
@@ -160,7 +166,7 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
                                     }
                                 </div>
                                 <button
-                                    onClick={() => handleDelete(trainer.id)}
+                                    onClick={() => setDeleteTarget(trainer)}
                                     disabled={isLoading}
                                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                                 >
@@ -196,6 +202,58 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
             ))}
         </AnimatePresence>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+            <>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setDeleteTarget(null)}
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+                />
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="fixed inset-0 m-auto w-full max-w-sm h-fit p-4 z-50"
+                >
+                    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 to-red-600" />
+                        <div className="p-8 text-center">
+                            <div className="mx-auto w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+                                <AlertTriangle className="w-7 h-7 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">حذف المدرب</h3>
+                            <p className="text-gray-500 text-sm mb-1">
+                                هل أنت متأكد من حذف
+                            </p>
+                            <p className="text-gray-900 font-bold text-lg mb-6">
+                                {deleteTarget.name_ar || deleteTarget.name_en || 'بدون اسم'}
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="flex-1 py-3 font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                                >
+                                    إلغاء
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={isLoading}
+                                    className="flex-1 py-3 font-bold text-white bg-gradient-to-r from-red-500 to-red-600 hover:shadow-lg hover:shadow-red-500/30 rounded-xl transition-all flex justify-center items-center gap-2"
+                                >
+                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Trash2 className="w-5 h-5" /> حذف</>}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </>
+        )}
+      </AnimatePresence>
 
       {/* Add Modal */}
       <AnimatePresence>

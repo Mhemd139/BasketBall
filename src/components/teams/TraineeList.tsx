@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteTrainee, toggleTraineePayment } from '@/app/actions'
 import { Card } from '@/components/ui/Card'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 import { User, Trash2, Shield, Phone } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { TraineeProfileModal } from '@/components/trainees/TraineeProfileModal'
@@ -36,18 +38,28 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName }
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null)
   const router = useRouter()
+  const { toast } = useToast()
+  const { confirm } = useConfirm()
 
   const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
      e.stopPropagation()
-     if (!confirm(`حذف ${name}؟`)) return
-     
+     const confirmed = await confirm({
+       title: 'حذف اللاعب',
+       message: `هل أنت متأكد من حذف ${name}؟`,
+       confirmText: 'حذف',
+       cancelText: 'إلغاء',
+       variant: 'danger',
+     })
+     if (!confirmed) return
+
      setLoadingId(id)
      const res = await deleteTrainee(id)
      setLoadingId(null)
      if (res.success) {
+        toast('تم حذف اللاعب بنجاح', 'success')
         router.refresh()
      } else {
-        alert('فشل الحذف')
+        toast('فشل الحذف', 'error')
      }
   }
 

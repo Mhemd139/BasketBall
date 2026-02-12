@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { locales, directions, type Locale } from '@/lib/i18n/config'
+import { ToastProvider } from '@/components/ui/Toast'
+import { ConfirmProvider } from '@/components/ui/ConfirmModal'
 import '../globals.css'
 
 const inter = Inter({
@@ -61,7 +63,11 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={direction} className={`${inter.variable} ${outfit.variable} scroll-smooth`}>
       <body className="min-h-screen bg-background font-sans antialiased selection:bg-gold-400 selection:text-navy-900">
-        {children}
+        <ToastProvider>
+          <ConfirmProvider>
+            {children}
+          </ConfirmProvider>
+        </ToastProvider>
       </body>
     </html>
   )

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/u
 import { Loader2, Building2, CheckCircle2, X } from 'lucide-react';
 import { updateHall } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/Toast';
 import { motion } from 'framer-motion';
 
 interface EditHallModalProps {
@@ -17,6 +18,7 @@ interface EditHallModalProps {
 export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalProps) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { toast } = useToast();
 
     const [nameAr, setNameAr] = useState(hall?.name_ar || '');
     const [nameHe, setNameHe] = useState(hall?.name_he || '');
@@ -26,13 +28,14 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
         try {
             const res = await updateHall(hall.id, nameAr, nameAr, nameHe);
             if (res.success) {
+                toast(locale === 'he' ? 'האולם עודכן בהצלחה' : 'تم تحديث القاعة بنجاح', 'success');
                 router.refresh();
                 onClose();
             } else {
-                alert(locale === 'he' ? 'עדכון האולם נכשל' : 'فشل تحديث القاعة');
+                toast(locale === 'he' ? 'עדכון האולם נכשל' : 'فشل تحديث القاعة', 'error');
             }
         } catch {
-            alert(locale === 'he' ? 'עדכון האולם נכשל' : 'فشل تحديث القاعة');
+            toast(locale === 'he' ? 'עדכון האולם נכשל' : 'فشل تحديث القاعة', 'error');
         } finally {
             setLoading(false);
         }

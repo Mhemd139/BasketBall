@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Loader2, Check, X, Clock, Search, User, UserPlus, Save, ArrowLeft, Hash } from 'lucide-react';
 import { getEventAttendance, updateAttendance, quickRegisterAndAssign, assignTraineeToTeam } from '@/app/actions';
 import { JerseyNumber } from '@/components/ui/JerseyNumber';
+import { useToast } from '@/components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AttendanceModalProps {
@@ -34,6 +35,7 @@ interface AttendanceRecord {
 }
 
 export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceModalProps) {
+    const { toast } = useToast();
     const [loading, setLoading] = useState(true);
     const [trainees, setTrainees] = useState<Trainee[]>([]);
     const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceStatus>>({});
@@ -125,7 +127,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
             setTrainees(prev => prev.map(t => t.id === traineeId ? { ...t, class_id: targetClassId } : t));
             handleStatusUpdate(traineeId, 'present');
         } else {
-            alert(res.error || 'Failed to assign player');
+            toast(res.error || 'فشل تعيين اللاعب', 'error');
         }
         setLoading(false);
     };
@@ -146,7 +148,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
             setRegForm({ name_en: '', name_ar: '', name_he: '', phone: '', jersey_number: '', gender: 'male' });
             setSearchQuery('');
         } else {
-            alert(res.error || 'Registration failed');
+            toast(res.error || 'فشل التسجيل', 'error');
         }
         setSaving(false);
     };
