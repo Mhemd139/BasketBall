@@ -1043,3 +1043,170 @@ export async function getTrainerProfileServer() {
         
     return trainer
 }
+
+// --- Import/Export Actions ---
+
+export async function getImportRefData() {
+  const session = await getSession()
+  if (!session || session.role !== 'headcoach') {
+    return { trainers: [], halls: [], classes: [] }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  const [trainersRes, hallsRes, classesRes] = await Promise.all([
+    (supabase as any).from('trainers').select('id, name_ar, name_he, name_en, phone').limit(200),
+    (supabase as any).from('halls').select('id, name_ar, name_he, name_en').limit(100),
+    (supabase as any).from('classes').select('id, name_ar, name_he, name_en').limit(200),
+  ])
+
+  return {
+    trainers: trainersRes.data || [],
+    halls: hallsRes.data || [],
+    classes: classesRes.data || [],
+  }
+}
+
+export async function createTrainersForImport(
+  trainers: { name: string; phone: string }[]
+): Promise<{ success: boolean; nameToId: Record<string, string>; errors: string[] }> {
+  const session = await getSession()
+  if (!session || session.role !== 'headcoach') {
+    return { success: false, nameToId: {}, errors: ['Unauthorized'] }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const nameToId: Record<string, string> = {}
+  const errors: string[] = []
+
+  for (const trainer of trainers) {
+    const cleanPhone = trainer.phone.replace(/\D/g, '')
+    const { data, error } = await (supabase as any).rpc('create_trainer', {
+      p_phone: cleanPhone.startsWith('0') ? cleanPhone : `0${cleanPhone}`,
+      p_name: trainer.name,
+    })
+
+    if (error) {
+      errors.push(`${trainer.name}: ${error.message}`)
+    } else {
+      const created = Array.isArray(data) ? data[0] : data
+      if (created?.id) {
+        nameToId[trainer.name] = created.id
+      }
+    }
+  }
+
+  return { success: errors.length === 0, nameToId, errors }
+}
+
+export async function bulkImportRecords(
+  table: 'classes' | 'trainers' | 'trainees' | 'halls',
+  records: Record<string, unknown>[]
+) {
+  const session = await getSession()
+  if (!session || session.role !== 'headcoach') {
+    return { success: false, error: 'Unauthorized', results: null }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const results = { inserted: 0, skipped: 0, errors: [] as { row: number; error: string }[] }
+
+  for (let i = 0; i < records.length; i++) {
+    try {
+      const record = records[i]
+      let rpcError: any = null
+
+      switch (table) {
+        case 'trainees': {
+          const { error } = await (supabase as any).rpc('insert_trainee', {
+            p_data: {
+              name_ar: record.name_ar || '',
+              name_he: record.name_he || '',
+              name_en: record.name_en || '',
+              phone: record.phone || null,
+              jersey_number: record.jersey_number || null,
+              class_id: record.class_id || null,
+              is_paid: record.is_paid || false,
+              gender: record.gender || 'male',
+              amount_paid: record.amount_paid || 0,
+            },
+          })
+          rpcError = error
+          break
+        }
+        case 'trainers': {
+          const { error } = await (supabase as any).rpc('create_trainer', {
+            p_phone: String(record.phone || '0500000000'),
+            p_name: String(record.name_ar || ''),
+          })
+          rpcError = error
+          break
+        }
+        case 'classes': {
+          const { error } = await (supabase as any).rpc('insert_class', {
+            p_data: {
+              name_ar: record.name_ar || '',
+              name_he: record.name_he || '',
+              name_en: record.name_en || '',
+              trainer_id: record.trainer_id || null,
+              hall_id: record.hall_id || null,
+              schedule_info: record.schedule_info || null,
+            },
+          })
+          rpcError = error
+          break
+        }
+        case 'halls': {
+          const { error } = await (supabase as any).rpc('insert_hall', {
+            p_data: {
+              name_ar: record.name_ar || '',
+              name_he: record.name_he || '',
+              name_en: record.name_en || '',
+            },
+          })
+          rpcError = error
+          break
+        }
+      }
+
+      if (rpcError) {
+        results.errors.push({ row: i, error: rpcError.message })
+      } else {
+        results.inserted++
+      }
+    } catch (e: any) {
+      results.errors.push({ row: i, error: e.message })
+    }
+  }
+
+  // Revalidate relevant paths
+  revalidatePath('/[locale]/teams', 'page')
+  revalidatePath('/[locale]/trainers', 'page')
+  revalidatePath('/[locale]/halls', 'page')
+  revalidatePath('/[locale]/head-coach', 'page')
+
+  return { success: true, results }
+}
+
+export async function exportTableData(
+  table: 'classes' | 'trainers' | 'trainees' | 'halls',
+  filters?: Record<string, string>
+) {
+  const session = await getSession()
+  if (!session || session.role !== 'headcoach') {
+    return { success: false, error: 'Unauthorized', data: null }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  let query = (supabase as any).from(table).select('*').limit(500)
+
+  if (filters) {
+    for (const [key, value] of Object.entries(filters)) {
+      query = query.eq(key, value)
+    }
+  }
+
+  const { data, error } = await query
+  if (error) return { success: false, error: error.message, data: null }
+  return { success: true, data }
+}

@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getSession, getTrainers } from '@/app/actions'
 import TrainerManager from '@/components/admin/TrainerManager'
-import { ShieldCheck, ArrowRight } from 'lucide-react'
+import { ShieldCheck, ArrowRight, FileSpreadsheet, Download } from 'lucide-react'
 import Link from 'next/link'
+import { ExportButton } from '@/components/import/ExportButton'
 
 export default async function HeadCoachPage({ params }: { params: { locale: string } }) {
   const session = await getSession()
@@ -58,6 +59,36 @@ export default async function HeadCoachPage({ params }: { params: { locale: stri
                     </Link>
                 </div>
             </header>
+
+            {/* Import / Export Section */}
+            <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <Link
+                    href={`/${locale}/head-coach/import`}
+                    className="flex items-center gap-3 sm:gap-4 bg-white/70 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-white/50 shadow-lg hover:shadow-xl hover:bg-white active:scale-[0.98] transition-all group"
+                >
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-amber-700 transition-transform group-hover:scale-110 shrink-0">
+                        <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-slate-900 text-base sm:text-lg">استيراد بيانات</h3>
+                        <p className="text-xs sm:text-sm text-slate-500">استيراد من ملف Excel أو CSV</p>
+                    </div>
+                </Link>
+
+                <div className="bg-white/70 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-white/50 shadow-lg">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-3">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center text-green-700 shrink-0">
+                            <Download className="w-6 h-6 sm:w-7 sm:h-7" />
+                        </div>
+                        <h3 className="font-bold text-slate-900 text-base sm:text-lg">تصدير بيانات</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <ExportButton table="trainees" filename="trainees-export" label="اللاعبين" />
+                        <ExportButton table="trainers" filename="trainers-export" label="المدربين" />
+                        <ExportButton table="classes" filename="teams-export" label="الفرق" />
+                    </div>
+                </div>
+            </section>
 
             {/* Main Content */}
             <main>

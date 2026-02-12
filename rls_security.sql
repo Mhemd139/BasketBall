@@ -190,15 +190,36 @@ AS $$
 DECLARE
   result jsonb;
 BEGIN
-  INSERT INTO classes (name_en, name_ar, name_he, trainer_id, hall_id)
+  INSERT INTO classes (name_en, name_ar, name_he, trainer_id, hall_id, schedule_info)
   VALUES (
     p_data->>'name_en',
     p_data->>'name_ar',
     p_data->>'name_he',
     CASE WHEN p_data->>'trainer_id' IS NOT NULL AND p_data->>'trainer_id' != '' THEN (p_data->>'trainer_id')::uuid ELSE NULL END,
-    CASE WHEN p_data->>'hall_id' IS NOT NULL AND p_data->>'hall_id' != '' THEN (p_data->>'hall_id')::uuid ELSE NULL END
+    CASE WHEN p_data->>'hall_id' IS NOT NULL AND p_data->>'hall_id' != '' THEN (p_data->>'hall_id')::uuid ELSE NULL END,
+    p_data->>'schedule_info'
   )
   RETURNING to_jsonb(classes.*) INTO result;
+  RETURN result;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION insert_hall(p_data jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  INSERT INTO halls (name_en, name_ar, name_he)
+  VALUES (
+    p_data->>'name_en',
+    p_data->>'name_ar',
+    p_data->>'name_he'
+  )
+  RETURNING to_jsonb(halls.*) INTO result;
   RETURN result;
 END;
 $$;
