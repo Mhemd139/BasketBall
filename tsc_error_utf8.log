@@ -1,6 +1,0 @@
-﻿src/components/trainees/TraineeProfileModal.tsx(4,22): error TS2307: Cannot find module '@/components/ui/Card' or its corresponding type declarations.
-src/components/trainees/TraineeProfileModal.tsx(5,30): error TS2307: Cannot find module '@/components/ui/JerseyNumber' or its corresponding type declarations.
-src/components/trainees/TraineeProfileModal.tsx(6,30): error TS2307: Cannot find module '@/components/payments/PaymentModal' or its corresponding type declarations.
-src/components/trainees/TraineeProfileModal.tsx(7,58): error TS2307: Cannot find module '@/app/actions' or its corresponding type declarations.
-src/components/trainees/TraineeProfileModal.tsx(9,31): error TS2307: Cannot find module '@/lib/supabase/types' or its corresponding type declarations.
-src/components/trainees/TraineeProfileModal.tsx(10,30): error TS2307: Cannot find module '@/lib/supabase/client' or its corresponding type declarations.
