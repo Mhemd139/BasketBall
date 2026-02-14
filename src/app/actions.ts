@@ -663,7 +663,7 @@ export async function getTeamAttendanceHistory(classId: string) {
 export async function getEventAttendance(eventId: string, classId?: string | null) {
   const supabase = await createServerSupabaseClient()
   
-  // 1. Get trainees
+  // 1. Get trainees query
   // If classId is provided, we fetch the roster + some others
   // If not, we fetch all (limited for performance)
   let query = (supabase as any).from('trainees').select('*')
@@ -673,25 +673,30 @@ export async function getEventAttendance(eventId: string, classId?: string | nul
     query = query.order('class_id', { ascending: false }) // This is a bit weak for priority, but we'll filter in UI anyway
   }
   
-  const { data: trainees, error: traineesError } = await query
+  const traineesPromise = query
     .order('name_ar', { ascending: true })
     .limit(classId ? 200 : 100) // Safety limit
 
-  if (traineesError) {
-    return { success: false, error: traineesError.message }
-  }
-
-  // 2. Get existing attendance for this event
-  const { data: attendance, error: attendanceError } = await (supabase as any)
+  // 2. Get existing attendance for this event query
+  const attendancePromise = (supabase as any)
     .from('attendance')
     .select('*')
     .eq('event_id', eventId)
 
-  if (attendanceError) {
-    return { success: false, error: attendanceError.message }
+  const [traineesRes, attendanceRes] = await Promise.all([
+    traineesPromise,
+    attendancePromise
+  ])
+
+  if (traineesRes.error) {
+    return { success: false, error: traineesRes.error.message }
   }
 
-  return { success: true, trainees, attendance }
+  if (attendanceRes.error) {
+    return { success: false, error: attendanceRes.error.message }
+  }
+
+  return { success: true, trainees: traineesRes.data, attendance: attendanceRes.data }
 }
 
 export async function updateAttendance(eventId: string, traineeId: string, status: AttendanceStatus) {
@@ -718,29 +723,31 @@ export async function updateAttendance(eventId: string, traineeId: string, statu
 export async function getEventRefData() {
     const supabase = await createServerSupabaseClient()
     
-    // Fetch Trainers
-    const { data: trainers, error: trainersError } = await (supabase as any)
-      .from('trainers')
-      .select('id, name_en, name_ar, name_he')
-      .order('name_ar')
+    const [trainersRes, classesRes, hallsRes] = await Promise.all([
+      (supabase as any)
+        .from('trainers')
+        .select('id, name_en, name_ar, name_he')
+        .order('name_ar'),
+      (supabase as any)
+        .from('classes')
+        .select('id, name_en, name_ar, name_he')
+        .order('name_ar'),
+      (supabase as any)
+        .from('halls')
+        .select('id, name_en, name_ar, name_he')
+        .order('name_ar')
+    ])
   
-    // Fetch Classes (Teams)
-    const { data: classes, error: classesError } = await (supabase as any)
-      .from('classes')
-      .select('id, name_en, name_ar, name_he')
-      .order('name_ar')
-
-    // Fetch Halls
-    const { data: halls, error: hallsError } = await (supabase as any)
-      .from('halls')
-      .select('id, name_en, name_ar, name_he')
-      .order('name_ar')
-  
-    if (trainersError || classesError || hallsError) {
+    if (trainersRes.error || classesRes.error || hallsRes.error) {
       return { success: false, error: 'Failed to fetch reference data' }
     }
   
-    return { success: true, trainers, classes, halls }
+    return {
+      success: true,
+      trainers: trainersRes.data,
+      classes: classesRes.data,
+      halls: hallsRes.data
+    }
 }
 
 export async function fetchHallEvents(hallId: string, startDate: string, endDate: string) {
@@ -813,22 +820,22 @@ export async function updateTrainee(traineeId: string, updateData: any) {
 export async function getTrainerProfile(trainerId: string) {
     const supabase = await createServerSupabaseClient()
     
-    const { data: trainer, error: trainerError } = await (supabase as any)
+    const [trainerRes, teamsRes] = await Promise.all([
+      (supabase as any)
         .from('trainers')
         .select('*')
         .eq('id', trainerId)
-        .single()
-
-    if (trainerError) return { success: false, error: trainerError.message }
-
-    const { data: teams, error: teamsError } = await (supabase as any)
+        .single(),
+      (supabase as any)
         .from('classes')
         .select('*, halls(name_en, name_ar, name_he)')
         .eq('trainer_id', trainerId)
+    ])
 
-    if (teamsError) return { success: false, error: teamsError.message }
+    if (trainerRes.error) return { success: false, error: trainerRes.error.message }
+    if (teamsRes.error) return { success: false, error: teamsRes.error.message }
 
-    return { success: true, trainer, teams }
+    return { success: true, trainer: trainerRes.data, teams: teamsRes.data }
 }
 
 export async function updateTeamTrainer(classId: string, trainerId: string) {
