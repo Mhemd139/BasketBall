@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { notFound } from 'next/navigation'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { locales, directions, type Locale } from '@/lib/i18n/config'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ConfirmProvider } from '@/components/ui/ConfirmModal'
@@ -66,6 +67,7 @@ export default async function LocaleLayout({
         <ToastProvider>
           <ConfirmProvider>
             {children}
+            <SpeedInsights />
           </ConfirmProvider>
         </ToastProvider>
       </body>
