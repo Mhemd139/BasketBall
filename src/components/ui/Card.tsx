@@ -9,19 +9,23 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, interactive = false, variant = 'default', color, children, ...props }, ref) => {
-    const baseClasses = ['card'];
+    const baseClasses = [
+      'relative overflow-hidden rounded-3xl transition-all duration-300',
+      'bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl' // Blue/Gold Pro Max Minimalist Base
+    ];
     
     if (variant === 'feature') {
-      baseClasses.push('feature-card');
+      baseClasses.push('bg-gradient-to-br from-royal to-navy-900 border-royal/50 shadow-float text-white');
     }
     
     if (interactive) {
-      baseClasses.push('card-interactive');
+      baseClasses.push('cursor-pointer hover:shadow-card hover:-translate-y-1 active:scale-[0.98]');
     }
     
-    if (color) {
-      baseClasses.push(color);
-    }
+    if (color === 'orange') baseClasses.push('ring-1 ring-neon/20 shadow-neon/5');
+    if (color === 'purple') baseClasses.push('ring-1 ring-electric/20 shadow-electric/5');
+    if (color === 'green') baseClasses.push('ring-1 ring-emerald-500/20 shadow-emerald-500/5');
+    if (color === 'blue') baseClasses.push('ring-1 ring-blue-500/20 shadow-blue-500/5');
     
     return (
       <div
@@ -54,7 +58,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn('text-lg font-semibold text-gray-900', className)}
+    className={cn('text-xl font-syncopate font-bold text-royal tracking-tight', className)}
     {...props}
   />
 ))
@@ -66,7 +70,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-gray-500', className)}
+    className={cn('text-sm font-outfit font-medium text-royal/60', className)}
     {...props}
   />
 ))

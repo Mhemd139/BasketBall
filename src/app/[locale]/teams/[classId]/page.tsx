@@ -13,6 +13,7 @@ import { getSession } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
 import { AttendanceHistory } from '@/components/teams/AttendanceHistory'
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Class = Database['public']['Tables']['classes']['Row']
 type Trainer = Database['public']['Tables']['trainers']['Row']
@@ -49,16 +50,18 @@ export default async function TeamDetailPage({
   const trainees = (roster || []) as Trainee[]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
       <Sidebar locale={locale} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px]">
-        <Header
-          locale={locale}
-          title={getLocalizedField(teamDetails, 'name', locale)}
-          showBack
-          backHref={`/${locale}/teams`}
-        />
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+          <Header
+            locale={locale}
+            title={getLocalizedField(teamDetails, 'name', locale)}
+            showBack
+            backHref={`/${locale}/teams`}
+          />
+        </div>
 
         <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto w-full">
@@ -84,9 +87,9 @@ export default async function TeamDetailPage({
               {/* Info Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {/* Trainer Card */}
-                <div className="bg-white p-4 rounded-xl border shadow-sm">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                    <div className="flex items-center gap-3 text-gray-500 text-sm font-bold">
                       <User className="w-4 h-4 text-purple-600" />
                       {'المدرب'}
                     </div>
@@ -97,13 +100,13 @@ export default async function TeamDetailPage({
                       isAdmin={!!session} 
                     />
                   </div>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-black text-navy-900">
                     {teamDetails.trainers 
                       ? getLocalizedField(teamDetails.trainers, 'name', locale)
                       : 'غير معين'}
                   </p>
                   {teamDetails.trainers?.phone && (
-                    <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
+                    <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-gray-400">
                       <Phone className="w-3 h-3" />
                       <span dir="ltr">{teamDetails.trainers.phone}</span>
                     </div>
@@ -111,12 +114,12 @@ export default async function TeamDetailPage({
                 </div>
 
                 {/* Hall Card */}
-                <div className="bg-white p-4 rounded-xl border shadow-sm">
-                  <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-medium">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-bold">
                     <MapPin className="w-4 h-4 text-orange-600" />
                     {'القاعة'}
                   </div>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-black text-navy-900">
                     {teamDetails.halls
                       ? getLocalizedField(teamDetails.halls, 'name', locale)
                       : 'غير محدد'}
@@ -124,12 +127,12 @@ export default async function TeamDetailPage({
                 </div>
 
                 {/* Schedule Card */}
-                <div className="bg-white p-4 rounded-xl border shadow-sm">
-                  <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-medium">
+                <div className="bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-bold">
                     <Calendar className="w-4 h-4 text-green-600" />
                     {'الموعد'}
                   </div>
-                  <p className="font-semibold text-gray-900 text-sm">
+                  <p className="font-black text-navy-900 text-sm">
                     {teamDetails.schedule_info || 'غير محدد'}
                   </p>
                 </div>
@@ -174,6 +177,6 @@ export default async function TeamDetailPage({
           </div>
         </main>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   )
 }

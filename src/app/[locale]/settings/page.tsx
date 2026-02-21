@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight, Globe, User } from 'lucide-react';
 import Link from 'next/link';
 import { getSession } from '@/app/actions';
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground';
+import { Card } from '@/components/ui/Card';
 
 interface SettingsPageProps {
   params: Promise<{ locale: string }>;
@@ -27,21 +29,21 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <AnimatedMeshBackground className="min-h-screen flex flex-col text-royal" suppressHydrationWarning>
       {/* Header */}
-      <div className="bg-white p-4 shadow-sm border-b border-gray-100 sticky top-0 z-10">
+      <div className="bg-white/70 backdrop-blur-xl p-4 shadow-sm border-b border-white/20 sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <Link href={`/${locale}/more`} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
-            <BackIcon className="w-5 h-5 text-gray-600" />
+          <Link href={`/${locale}/more`} className="p-2 -ml-2 rounded-full hover:bg-white/50 transition-colors">
+            <BackIcon className="w-5 h-5 text-navy-900" />
           </Link>
-          <h1 className="font-outfit font-bold text-lg text-navy-900">
+          <h1 className="font-outfit font-black text-xl tracking-wide text-navy-900 drop-shadow-sm">
              {locale === 'he' ? 'הגדרות' : 'الإعدادات'}
           </h1>
         </div>
       </div>
 
-      <div className="p-4 max-w-md mx-auto w-full">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+      <div className="p-4 max-w-md mx-auto w-full relative z-10 pt-10">
+        <Card className="overflow-hidden divide-y divide-white/20 !p-0">
           {settingsItems.map((item, i) => {
             const Icon = item.icon;
             return (
@@ -59,14 +61,14 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
                     <p className="text-xs text-gray-400">{item.description}</p>
                   </div>
                 </div>
-                <div className="text-gray-300">
+                <div className="text-navy-400 group-hover:text-gold-500 transition-colors">
                   {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                 </div>
               </Link>
             )
           })}
-        </div>
+        </Card>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   );
 }

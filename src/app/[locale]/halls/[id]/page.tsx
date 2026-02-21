@@ -14,6 +14,7 @@ import { Building2, Calendar } from 'lucide-react'
 import { HallSchedule } from '@/components/halls/HallSchedule'
 import { HallManagementActions } from '@/components/halls/HallManagementActions'
 import { getSession } from '@/app/actions' // Import getSession
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Hall = Database['public']['Tables']['halls']['Row']
 type Event = Database['public']['Tables']['events']['Row']
@@ -48,14 +49,16 @@ export default async function HallDetailPage({
   }
 
   const hallData = hall as Hall
-  const isEditable = session?.role === 'coach' || session?.role === 'admin' || session?.role === 'trainer' // Allow trainers to edit for now? Or strictly 'coach'? User said "Coach". Using trainer/admin for safety.
+  const isEditable = session?.role === 'headcoach' || session?.role === 'coach' || session?.role === 'admin' || session?.role === 'trainer'
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
       
-      <div className="flex-1 flex flex-col md:ml-[240px]">
-        <Header locale={locale} showBack backHref={`/${locale}/halls`} />
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+          <Header locale={locale} showBack backHref={`/${locale}/halls`} />
+        </div>
 
         <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto w-full">
@@ -101,8 +104,10 @@ export default async function HallDetailPage({
           </div>
         </main>
 
-        <BottomNav locale={locale} role={session?.role} />
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   )
 }

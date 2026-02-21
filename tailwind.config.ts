@@ -106,11 +106,16 @@ const config: Config = {
           light: '#60a5fa',
           dark: '#2563eb',
         },
+        royal: '#1E293B',
+        electric: '#3B82F6',
+        neon: '#F97316',
       },
       
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         outfit: ['var(--font-outfit)', 'sans-serif'],
+        syncopate: ['var(--font-syncopate)', 'sans-serif'],
+        space: ['var(--font-space-mono)', 'monospace'],
         arabic: ['Cairo', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
         hebrew: ['Rubik', 'Noto Sans Hebrew', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],

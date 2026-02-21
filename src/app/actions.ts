@@ -175,10 +175,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
           .verificationChecks.create({ to: cleanPhone, code: otp })
         if (check.status !== 'approved') return { success: false, error: 'Invalid Code' }
       } catch (e: any) { return { success: false, error: e.message } }
-  }
-  
-  // 2. Vonage Verify Check (Context is request_id)
-  else if (context && context.length > 10) {
+  } else if (context && context.length > 10) {
       const vonageKey = process.env.VONAGE_API_KEY
       const vonageSecret = process.env.VONAGE_API_SECRET
       if (vonageKey && vonageSecret) {

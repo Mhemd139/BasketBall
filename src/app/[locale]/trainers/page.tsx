@@ -7,8 +7,9 @@ import { getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { Card } from '@/components/ui/Card'
-import { User, Phone, Trophy, Users } from 'lucide-react'
-import Link from 'next/link'
+import { Trophy, Users } from 'lucide-react'
+import { TrainerCard } from '@/components/trainers/TrainerCard'
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Trainer = Database['public']['Tables']['trainers']['Row']
 
@@ -29,61 +30,44 @@ export default async function TrainersPage({
     .limit(50)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px]">
-        <Header
-          locale={locale}
-          title={'المدربين'}
-          showBack={false}
-        />
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+        <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
+          <Header
+            locale={locale}
+            title={'المدربين'}
+            showBack={false}
+          />
+        </div>
 
         <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             {(trainers || []).map((trainer: Trainer) => (
-              <Link key={trainer.id} href={`/${locale}/trainers/${trainer.id}`}>
-                <Card className="flex items-center gap-4 hover:border-indigo-500 transition-all border-2 border-transparent group interactive">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md text-white group-hover:scale-105 transition-transform">
-                      <User className="w-8 h-8" strokeWidth={1.5} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-lg text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                        {getLocalizedField(trainer, 'name', locale)}
-                      </h3>
-                      
-                      {trainer.phone && (
-                        <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-1">
-                          <Phone className="w-3.5 h-3.5" />
-                          <span dir="ltr">{trainer.phone}</span>
-                        </div>
-                      )}
-
-                      {trainer.availability && trainer.availability.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {trainer.availability.map(day => (
-                            <span key={day} className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                              {day.slice(0, 3)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                </Card>
-              </Link>
+              <TrainerCard key={trainer.id} trainer={trainer} locale={locale} />
             ))}
 
             {(!trainers || trainers.length === 0) && (
-              <div className="col-span-full text-center py-20 text-gray-500">
-                {'لا يوجد مدربين'}
+              <div className="col-span-full text-center py-12 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl animate-fade-in-up mt-8 shadow-xl">
+                <div className="bg-indigo-500/20 border border-indigo-500/30 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-8 h-8 text-indigo-400" />
+                </div>
+                <h3 className="text-lg font-black text-white mb-1 drop-shadow-md">
+                  {'لا يوجد مدربين'}
+                </h3>
+                <p className="text-sm font-bold text-indigo-100/70 mb-6 drop-shadow-sm">
+                  {'أضف مدربين جدد لإدارة الفرق والتدريبات'}
+                </p>
               </div>
             )}
           </div>
         </main>
 
-        <BottomNav locale={locale} role={session?.role} />
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   )
 }

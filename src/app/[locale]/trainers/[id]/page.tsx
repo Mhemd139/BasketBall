@@ -8,6 +8,7 @@ import { User, Phone, Trophy, MapPin, Calendar, Mail, Shield, CheckCircle2 } fro
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { TrainerProfileActions } from '@/components/trainers/TrainerProfileActions'
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 export default async function TrainerProfilePage({
     params
@@ -36,16 +37,18 @@ export default async function TrainerProfilePage({
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
             <Sidebar locale={locale} />
 
-            <div className="flex-1 flex flex-col md:ml-[240px]">
-                <Header 
-                    locale={locale} 
-                    title={getLocalizedField(trainer, 'name', locale)} 
-                    showBack 
-                    backHref={`/${locale}/trainers`} 
-                />
+            <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+                <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+                  <Header 
+                      locale={locale} 
+                      title={getLocalizedField(trainer, 'name', locale)} 
+                      showBack 
+                      backHref={`/${locale}/trainers`} 
+                  />
+                </div>
 
                 <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
                     <div className="max-w-4xl mx-auto space-y-8">
@@ -64,8 +67,8 @@ export default async function TrainerProfilePage({
 
                                 {/* Availability Section */}
                                 {trainer.availability && trainer.availability.length > 0 ? (
-                                    <div className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2">
-                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <div className="w-full bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm space-y-2">
+                                        <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
                                             {'أيام التدريب المتاحة'}
                                         </h3>
@@ -78,8 +81,8 @@ export default async function TrainerProfilePage({
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="w-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2 opacity-60">
-                                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <div className="w-full bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm space-y-2 opacity-60">
+                                        <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
                                             {'أيام التدريب المتاحة'}
                                         </h3>
@@ -104,20 +107,20 @@ export default async function TrainerProfilePage({
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-3 text-gray-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                        <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+                                    <div className="flex items-center gap-3 font-bold text-gray-600 bg-white/70 backdrop-blur-md p-3 rounded-xl border border-white/40 shadow-sm">
+                                        <div className="w-8 h-8 rounded-lg bg-green-50/50 flex items-center justify-center text-green-600 border border-green-100">
                                             <Phone className="w-4 h-4" />
                                         </div>
                                         <span dir="ltr">{trainer.phone || 'N/A'}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                    <div className="flex items-center gap-3 font-bold text-gray-600 bg-white/70 backdrop-blur-md p-3 rounded-xl border border-white/40 shadow-sm">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-50/50 flex items-center justify-center text-indigo-600 border border-indigo-100">
                                             <Trophy className="w-4 h-4" />
                                         </div>
                                         <span>{teams.length} {'فرق'}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-600 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${trainer.gender === 'female' ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'}`}>
+                                    <div className="flex items-center gap-3 font-bold text-gray-600 bg-white/70 backdrop-blur-md p-3 rounded-xl border border-white/40 shadow-sm">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${trainer.gender === 'female' ? 'bg-pink-50/50 text-pink-500 border-pink-100' : 'bg-blue-50/50 text-blue-500 border-blue-100'}`}>
                                             <User className="w-4 h-4" />
                                         </div>
                                         <span>
@@ -142,9 +145,9 @@ export default async function TrainerProfilePage({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {teams.map((team: any) => (
                                     <Link key={team.id} href={`/${locale}/teams/${team.id}`}>
-                                        <Card className="p-5 hover:border-indigo-500 transition-all border-2 border-transparent group">
+                                        <Card className="p-5 hover:border-indigo-500 transition-all border-2 border-white/40 bg-white/70 backdrop-blur-lg group">
                                             <div className="flex justify-between items-start mb-4">
-                                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-50 transition-colors">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-100/50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-50 transition-colors border border-indigo-100/50">
                                                     <Trophy className="w-6 h-6" />
                                                 </div>
                                                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -179,6 +182,6 @@ export default async function TrainerProfilePage({
                     </div>
                 </main>
             </div>
-        </div>
+        </AnimatedMeshBackground>
     )
 }

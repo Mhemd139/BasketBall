@@ -131,23 +131,23 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 // Language switcher logic removed
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-header transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20 gap-4">
+        <div className="flex items-center justify-between h-14 md:h-20 gap-4">
             
             {/* Left: Logo & Back */}
             <div className={`flex items-center gap-3 relative z-10 ${showBack ? 'pl-2' : ''}`}>
               {showBack && (
                 <button 
                   onClick={onBack || (() => backHref ? router.push(backHref) : router.back())}
-                  className="p-2 -ml-2 rounded-full hover:bg-navy-50 text-navy-600 transition-colors"
+                  className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white transition-colors"
                 >
                   <BackIcon className="w-6 h-6" />
                 </button>
               )}
               
               <Link href={`/${locale}`} className="flex items-center gap-3 group">
-                <div className="relative w-12 h-12 md:w-16 md:h-16 overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                <div className="relative w-10 h-10 md:w-16 md:h-16 overflow-hidden transition-transform duration-300 group-hover:scale-105">
                     <Image 
                         src="/images/logo.jpg" 
                         alt="Logo" 
@@ -157,10 +157,10 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                     />
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="font-outfit font-bold text-xl md:text-2xl leading-none text-navy-900 tracking-tight">
+                    <h1 className="font-outfit font-bold text-xl md:text-2xl leading-none text-white tracking-tight drop-shadow-md">
                         {title || 'باقة الغربية'}
                     </h1>
-                    <p className="text-[10px] md:text-xs text-gold-600 font-bold tracking-wider uppercase opacity-90">
+                    <p className="text-[10px] md:text-xs text-gold-400 font-bold tracking-wider uppercase opacity-90 drop-shadow-md">
                         {'النادي الرياضي'}
                     </p>
                 </div>
@@ -200,7 +200,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                                         result.type === 'trainee' ? 'bg-indigo-100 text-indigo-700' : 'bg-gold-100 text-gold-700'
                                     }`}>
-                                        {result.type === 'trainee' ? 'P' : 'C'}
+                                        {result.type === 'trainee' ? 'لا' : 'مد'}
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-bold text-navy-900 truncate">{result.name}</p>
@@ -220,7 +220,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                  <button 
                     onClick={() => setSearchOpen(!searchOpen)}
                     className={`p-2 rounded-full transition-colors ${
-                        searchOpen ? 'bg-navy-100 text-navy-700' : 'hover:bg-gray-100 text-gray-600'
+                        searchOpen ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80'
                     }`}
                  >
                     <Search className="w-5 h-5" />
@@ -260,7 +260,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                             result.type === 'trainee' ? 'bg-indigo-100 text-indigo-700' : 'bg-gold-100 text-gold-700'
                         }`}>
-                            {result.type === 'trainee' ? 'P' : 'C'}
+                            {result.type === 'trainee' ? 'لا' : 'مد'}
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-800">{result.name}</p>
