@@ -11,6 +11,7 @@ import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import { MapPin, Clock } from 'lucide-react'
 import { getSession } from '@/app/actions'
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Event = Database['public']['Tables']['events']['Row']
 type Hall = Database['public']['Tables']['halls']['Row']
@@ -81,16 +82,18 @@ export default async function AttendancePage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px]">
-        <Header
-          locale={locale}
-          title={getLocalizedField(eventWithHall, 'title', locale)}
-          showBack
-          backHref={`/${locale}/schedule`}
-        />
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+          <Header
+            locale={locale}
+            title={getLocalizedField(eventWithHall, 'title', locale)}
+            showBack
+            backHref={`/${locale}/schedule`}
+          />
+        </div>
 
         <main className="flex-1 pt-20 pb-32 md:pb-10 px-5">
           <div className="max-w-2xl mx-auto">
@@ -138,8 +141,8 @@ export default async function AttendancePage({
                   initialAttendance={(attendanceRecords || []) as { trainee_id: string; status: 'present' | 'absent' | 'late' }[]}
                 />
               ) : (
-                <div className="card text-center py-12">
-                  <p className="text-gray-500">
+                <div className="text-center py-12 bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl animate-fade-in-up shadow-sm">
+                  <p className="text-sm font-bold text-gray-500">
                     {'لا يوجد لاعبون مسجلون لهذا الحدث'}
                   </p>
                 </div>
@@ -148,8 +151,10 @@ export default async function AttendancePage({
           </div>
         </main>
 
-        <BottomNav locale={locale} role={session?.role} />
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   )
 }

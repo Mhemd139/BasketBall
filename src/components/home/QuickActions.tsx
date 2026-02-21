@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Users, UserPlus, MapPin } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
+import { Users, UserPlus } from 'lucide-react'
 import { CreateTeamModal } from '@/components/teams/CreateTeamModal'
 import { CreatePlayerModal } from '@/components/players/CreatePlayerModal'
-import Link from 'next/link'
 
 interface QuickActionsProps {
     locale: string
@@ -19,38 +17,26 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
     if (!canManage) return null
 
     return (
-        <section className="mt-8">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">
+        <section>
+            <h2 className="text-[10px] font-black text-indigo-200/50 uppercase tracking-widest mb-2 px-1">
                 {'إجراءات سريعة'}
             </h2>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
                 <button 
                     onClick={() => setIsTeamModalOpen(true)}
-                    className="group relative overflow-hidden"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-indigo-300 text-sm font-bold whitespace-nowrap hover:bg-white/10 hover:-translate-y-0.5 active:scale-95 transition-all flex-shrink-0"
                 >
-                    <Card interactive className="p-4 border-dashed border-2 border-indigo-100 bg-indigo-50/30 hover:bg-slate-50 hover:border-indigo-300 transition-all flex flex-col items-center justify-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
-                            <Users className="w-6 h-6" />
-                        </div>
-                        <span className="font-bold text-indigo-900 text-sm">
-                            {'إضافة فريق'}
-                        </span>
-                    </Card>
+                    <Users className="w-4 h-4" />
+                    {'إضافة فريق'}
                 </button>
 
                 <button 
                     onClick={() => setIsPlayerModalOpen(true)}
-                    className="group relative overflow-hidden"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-emerald-300 text-sm font-bold whitespace-nowrap hover:bg-white/10 hover:-translate-y-0.5 active:scale-95 transition-all flex-shrink-0"
                 >
-                    <Card interactive className="p-4 border-dashed border-2 border-emerald-100 bg-emerald-50/30 hover:bg-slate-50 hover:border-emerald-300 transition-all flex flex-col items-center justify-center gap-3 h-full">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
-                            <UserPlus className="w-6 h-6" />
-                        </div>
-                        <span className="font-bold text-emerald-900 text-sm">
-                            {'إضافة لاعب'}
-                        </span>
-                    </Card>
+                    <UserPlus className="w-4 h-4" />
+                    {'إضافة لاعب'}
                 </button>
             </div>
 

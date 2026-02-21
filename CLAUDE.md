@@ -10,6 +10,19 @@
 - Tailwind CSS 4
 - Lucide React icons
 
+## Mobile-First Design (MANDATORY)
+
+This app is **primarily used on iPhones/phones**. Every UI decision must be mobile-first:
+
+- **Design for 375px first**, then scale up for tablet/desktop
+- **Bottom nav is the primary navigation** on mobile — max 5 items, thumb-reachable
+- **Touch targets must be ≥ 48px** on all interactive elements
+- **Cards and list items must be compact** — show enough info inline, don't waste vertical space
+- **Page headers should be minimal** — no centered hero-style headings that push content below the fold
+- **Thumb zone priority**: primary actions must be in the bottom half of the screen
+- **Test on 375x812 viewport** before desktop
+- Desktop layout (sidebar, wider cards) is a **progressive enhancement**, not the base design
+
 ## Database
 
 - Project ID: `amzfssqkjefzzbilqmfe`
@@ -179,3 +192,29 @@ These are fixed. Use them, don't guess.
 # Turbopack (Windows)
 
 If you see "Persisting failed: Another write batch", the fix is `rm -rf .next` to clear the corrupted cache.
+
+---
+
+# Skills (MANDATORY)
+
+Before starting any task, check if a relevant skill exists in `.antigravity_tools/core/skills/`. Each skill folder has a `SKILL.md` with detailed instructions. **You MUST read the relevant `SKILL.md` before proceeding.**
+
+| Domain | Skill to read |
+|--------|---------------|
+| UI/UX redesign, design systems | `ui-ux-pro-max/SKILL.md` |
+| Frontend aesthetics, typography, motion | `frontend-design/SKILL.md` |
+| Mobile touch targets, thumb zones, iOS | `mobile-design/SKILL.md` |
+| Tailwind v4, CSS variables, dark mode | `tailwind-patterns/SKILL.md` |
+| React components, hooks, state | `frontend-patterns/SKILL.md` + `react-patterns/SKILL.md` |
+| Next.js App Router, RSC, caching | `nextjs-best-practices/SKILL.md` |
+| Supabase Auth integration | `nextjs-supabase-auth/SKILL.md` |
+| Database schema, migrations | `database-design/SKILL.md` + `postgres-best-practices/SKILL.md` |
+| TypeScript strict, generics | `typescript-expert/SKILL.md` |
+| Debugging methodology | `systematic-debugging/SKILL.md` |
+| Code quality, naming, structure | `clean-code/SKILL.md` |
+| Performance analysis | `performance-profiling/SKILL.md` |
+| Vercel deployment | `vercel-deployment/SKILL.md` |
+
+**Path:** `.antigravity_tools/core/skills/<skill-name>/SKILL.md`
+
+If your task spans multiple domains, read ALL relevant skills. Never skip this step.

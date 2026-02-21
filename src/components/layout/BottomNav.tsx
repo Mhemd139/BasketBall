@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Building2, Users, Settings, Calendar, ShieldCheck } from 'lucide-react';
+import { Home, Building2, Users, User, ShieldCheck } from 'lucide-react';
 
 interface NavItem {
   href: string;
@@ -13,11 +13,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '', icon: Home, label: 'الرئيسية' },
-  { href: '/schedule', icon: Calendar, label: 'الجدول' },
   { href: '/halls', icon: Building2, label: 'القاعات' },
   { href: '/teams', icon: Users, label: 'الفرق' },
-  { href: '/more', icon: Settings, label: 'المزيد' },
+  { href: '/more', icon: User, label: 'حسابي' },
 ];
+
+import { useState, useEffect } from 'react';
 
 interface BottomNavProps {
   locale: string;
@@ -26,50 +27,107 @@ interface BottomNavProps {
 
 export function BottomNav({ locale, role }: BottomNavProps) {
   const pathname = usePathname();
-  
-  const getLabel = (item: NavItem) => {
-    return item.label;
-  };
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Always show near top or bottom
+      if (currentScrollY < 50 || (window.innerHeight + currentScrollY) >= document.body.offsetHeight - 50) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const isActive = (href: string) => {
     const fullPath = `/${locale}${href}`;
     if (href === '') {
       return pathname === `/${locale}` || pathname === `/${locale}/`;
     }
+    // "حسابي" tab is active for /more, /profile, /settings, /payments, /trainers, /reports
+    if (href === '/more') {
+      return ['/more', '/profile', '/settings', '/payments', '/trainers', '/reports'].some(
+        p => pathname?.startsWith(`/${locale}${p}`)
+      );
+    }
     return pathname?.startsWith(fullPath);
   };
-  
+
   return (
-    <nav className="bottom-nav md:hidden" suppressHydrationWarning>
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 h-[72px] bg-[#0B132B]/80 backdrop-blur-3xl border-t border-white/10 shadow-2xl z-[100] pb-[env(safe-area-inset-bottom)] flex items-center justify-center px-2 md:hidden transition-transform duration-300 ease-in-out",
+      isVisible ? "translate-y-0" : "translate-y-[150%]"
+    )} suppressHydrationWarning>
       <div className="flex items-center justify-evenly w-full max-w-[400px]">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const fullHref = `/${locale}${item.href}`;
           const Icon = item.icon;
-          
+
           return (
             <Link
-              key={item.href}
+              key={item.href || 'home'}
               href={fullHref}
-              className={cn('nav-item min-h-[48px] active:scale-95 transition-transform duration-100', active && 'active')}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 min-h-[48px] min-w-[64px] active:scale-95 transition-all duration-150 relative text-gray-400',
+                active && 'text-white'
+              )}
             >
-              <div className="nav-icon">
-                <Icon className="w-5 h-5" strokeWidth={2.5} />
+              <div className={cn(
+                'transition-all duration-300',
+                active && 'scale-110 -translate-y-1'
+              )}>
+                <Icon className="w-6 h-6" strokeWidth={active ? 2.5 : 2} />
               </div>
-              <span className="nav-label">{getLabel(item)}</span>
+              <span className={cn(
+                'transition-all duration-300 text-[10px]',
+                active ? 'font-black opacity-100' : 'font-medium opacity-70'
+              )}>
+                {item.label}
+              </span>
+              {active && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gold-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+              )}
             </Link>
           );
         })}
         {role === 'headcoach' && (
-             <Link
-              href={`/${locale}/head-coach`}
-              className={cn('nav-item min-h-[48px] active:scale-95 transition-transform duration-100', isActive('/head-coach') && 'active')}
-            >
-              <div className="nav-icon text-amber-600">
-                <ShieldCheck className="w-5 h-5" strokeWidth={2.5} />
-              </div>
-              <span className="nav-label text-amber-600">الإدارة</span>
-            </Link>
+          <Link
+            href={`/${locale}/head-coach`}
+            className={cn(
+              'flex flex-col items-center justify-center gap-1 min-h-[48px] min-w-[64px] active:scale-95 transition-all duration-150 relative text-gray-400',
+              isActive('/head-coach') && 'text-gold-400'
+            )}
+          >
+            <div className={cn(
+              'transition-all duration-300',
+              isActive('/head-coach') && 'scale-110 -translate-y-1'
+            )}>
+              <ShieldCheck className="w-6 h-6" strokeWidth={isActive('/head-coach') ? 2.5 : 2} />
+            </div>
+            <span className={cn(
+              'transition-all duration-300 text-[10px]',
+              isActive('/head-coach') ? 'font-black opacity-100 text-gold-400' : 'font-medium opacity-70'
+            )}>
+              الإدارة
+            </span>
+            {isActive('/head-coach') && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gold-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+            )}
+          </Link>
         )}
       </div>
     </nav>

@@ -6,6 +6,7 @@ import { BarChart3, TrendingUp, Users, Calendar } from 'lucide-react'
 
 import { BottomNav } from '@/components/layout/BottomNav'
 import { getSession } from '@/app/actions'
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 export default async function ReportsPage({
   params,
@@ -16,63 +17,66 @@ export default async function ReportsPage({
   const session = await getSession()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex">
+    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
-      <div className="flex-1 flex flex-col md:ml-[240px]">
-        <Header
-          locale={locale}
-          title={'التقارير'}
-          showBack
-          backHref={`/${locale}/more`}
-        />
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+          <Header
+            locale={locale}
+            title={'التقارير'}
+            showBack
+            backHref={`/${locale}/more`}
+          />
+        </div>
 
         <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
            <div className="max-w-4xl mx-auto grid gap-6 w-full">
-             {/* Stats Overview */}
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-6">
+                <Card className="p-6 bg-white/70 backdrop-blur-md">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <div className="w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-blue-500 border border-blue-100">
                             <Users className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-500 font-medium">{'إجمالي اللاعبين'}</span>
+                        <span className="text-gray-500 font-bold text-sm">{'إجمالي اللاعبين'}</span>
                     </div>
-                    <p className="text-3xl font-bold">124</p>
+                    <p className="text-3xl font-black text-navy-900 drop-shadow-sm">124</p>
                 </Card>
-                <Card className="p-6">
+                <Card className="p-6 bg-white/70 backdrop-blur-md">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <div className="w-10 h-10 rounded-full bg-green-50/50 flex items-center justify-center text-green-500 border border-green-100">
                             <TrendingUp className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-500 font-medium">{'نسبة الحضور'}</span>
+                        <span className="text-gray-500 font-bold text-sm">{'نسبة الحضور'}</span>
                     </div>
-                    <p className="text-3xl font-bold">88%</p>
+                    <p className="text-3xl font-black text-navy-900 drop-shadow-sm">88%</p>
                 </Card>
-                <Card className="p-6">
+                <Card className="p-6 bg-white/70 backdrop-blur-md">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                        <div className="w-10 h-10 rounded-full bg-orange-50/50 flex items-center justify-center text-orange-500 border border-orange-100">
                             <Calendar className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-500 font-medium">{'التدريبات هذا الشهر'}</span>
+                        <span className="text-gray-500 font-bold text-sm">{'التدريبات هذا الشهر'}</span>
                     </div>
-                    <p className="text-3xl font-bold">12</p>
+                    <p className="text-3xl font-black text-navy-900 drop-shadow-sm">12</p>
                 </Card>
              </div>
 
              {/* Chart Placeholder */}
-             <Card className="p-8 flex flex-col items-center justify-center min-h-[300px] text-gray-400 text-center">
-                <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+             <Card className="p-8 flex flex-col items-center justify-center min-h-[300px] text-gray-500/50 text-center bg-white/40 backdrop-blur-sm border-white/20">
+                <BarChart3 className="w-16 h-16 mb-4 opacity-50 drop-shadow-sm" />
+                <h3 className="text-lg font-black text-navy-900 mb-2 opacity-70">
                     {'تحليل الأداء قريباً'}
                 </h3>
-                <p className="max-w-md">
+                <p className="max-w-md text-sm font-bold opacity-70">
                     {'سنقوم بإضافة رسوم بيانية تفصيلية هنا قريباً.'}
                 </p>
              </Card>
            </div>
         </main>
-        <BottomNav locale={locale} role={session?.role} />
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   )
 }

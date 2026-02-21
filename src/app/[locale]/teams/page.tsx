@@ -10,6 +10,7 @@ import { Users, User } from 'lucide-react'
 import { getSession } from '@/app/actions'
 import { TeamCard } from '@/components/teams/TeamCard'
 import { CreateTeamButton } from '@/components/teams/CreateTeamButton'
+import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 export default async function TeamsPage({
   params,
@@ -29,28 +30,17 @@ export default async function TeamsPage({
     .limit(50)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px]">
-        <Header locale={locale} />
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+        <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
+          <Header locale={locale} title={'الفرق'} />
+        </div>
 
         <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto w-full">
-            {/* Header */}
-            <section className="py-4 text-center md:text-start">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" strokeWidth={2.5} />
-                </div>
-                <h1 className="heading-lg">
-                  {'الفرق'}
-                </h1>
-              </div>
-              <p className="text-gray-500 mb-6">
-                {'إدارة فرق كرة السلة'}
-              </p>
-            </section>
+
 
             {/* Create Team Button */}
             <CreateTeamButton locale={locale} canCreate={canCreate} />
@@ -69,26 +59,29 @@ export default async function TeamsPage({
                   ))}
                 </div>
               ) : (
-                <Card className="animate-fade-in-up">
-                  <CardContent className="py-16 text-center">
-                    <div className="flex justify-center mb-4">
-                      <Users className="w-16 h-16 text-gray-300" strokeWidth={1.5} />
+                <div className="text-center py-12 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl animate-fade-in-up mt-8 shadow-xl">
+                    <div className="bg-purple-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-purple-500/30">
+                      <Users className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-lg font-black text-white mb-1 drop-shadow-md">
                       {'لا توجد فرق بعد'}
                     </h3>
-                    <p className="text-gray-500 text-sm">
-                      {'سيتم إضافة الفرق قريباً'}
+                    <p className="text-sm font-bold text-indigo-100/70 mb-6 drop-shadow-sm">
+                      {'ابدأ بإنشاء أول فريق لإدارة اللاعبين والتدريبات'}
                     </p>
-                  </CardContent>
-                </Card>
+                    <div className="max-w-[200px] mx-auto">
+                        <CreateTeamButton locale={locale} canCreate={canCreate} />
+                    </div>
+                </div>
               )}
             </section>
           </div>
         </main>
 
-        <BottomNav locale={locale} role={session?.role} />
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
-    </div>
+    </AnimatedMeshBackground>
   )
 }

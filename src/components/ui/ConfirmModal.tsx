@@ -65,22 +65,22 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-0 m-auto w-full max-w-sm h-fit p-4 z-[90]"
             >
-              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
+              <div className="bg-[#0B132B]/90 backdrop-blur-3xl rounded-3xl shadow-2xl overflow-hidden relative border border-white/10 ring-1 ring-white/5">
                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${
                   isDanger ? 'from-red-400 to-red-600' : 'from-amber-400 to-orange-600'
                 }`} />
                 <div className="p-8 text-center">
                   <div className={`mx-auto w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
-                    isDanger ? 'bg-red-50' : 'bg-amber-50'
+                    isDanger ? 'bg-red-500/20 shadow-inner border border-red-500/30' : 'bg-amber-500/20 shadow-inner border border-amber-500/30'
                   }`}>
-                    <AlertTriangle className={`w-7 h-7 ${isDanger ? 'text-red-500' : 'text-amber-500'}`} />
+                    <AlertTriangle className={`w-7 h-7 ${isDanger ? 'text-red-400 drop-shadow-sm' : 'text-amber-400 drop-shadow-sm'}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{options.title}</h3>
-                  <p className="text-gray-500 text-sm mb-6">{options.message}</p>
+                  <h3 className="text-xl font-bold text-white drop-shadow-md mb-2">{options.title}</h3>
+                  <p className="text-indigo-200/70 text-sm mb-6">{options.message}</p>
                   <div className="flex gap-3">
                     <button
                       onClick={handleCancel}
-                      className="flex-1 py-3 font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                      className="flex-1 py-3 font-bold text-white/70 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
                     >
                       {options.cancelText || 'إلغاء'}
                     </button>

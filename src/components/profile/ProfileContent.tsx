@@ -11,6 +11,7 @@ import { User, Calendar, Edit2, LogOut, Medal, Loader2, Phone, Settings } from '
 import type { Locale } from '@/lib/i18n/config'
 import Image from 'next/image'
 import { formatPhoneNumber } from '@/lib/utils'
+import { ProfileHeaderSVG } from '@/components/ui/svg/ProfileHeaderSVG'
 
 const DAY_LABELS = {
     sunday: { ar: 'الأحد' },
@@ -109,13 +110,10 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F4F8] font-outfit text-navy-900 pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 font-outfit text-royal pb-24 relative overflow-hidden">
       {/* Dynamic Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-           <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-gold-400/20 to-transparent rounded-full blur-3xl opacity-60" />
-           <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-navy-600/10 to-transparent rounded-full blur-3xl opacity-60" />
-           {/* Grid Pattern Overlay */}
-           <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-[0.03]" />
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <ProfileHeaderSVG className="absolute inset-0 w-full h-full opacity-60 mix-blend-multiply" />
       </div>
 
       <Sidebar locale={locale} role={role} />

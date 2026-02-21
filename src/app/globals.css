@@ -48,7 +48,7 @@ html {
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-outfit), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
@@ -158,22 +158,61 @@ body {
 ======================== */
 .card {
   background: white;
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 16px;
+  padding: 0.75rem; /* compact on mobile */
   border: 1px solid rgba(0,0,0,0.06);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-normal);
   position: relative;
+  overflow: hidden; /* for border accents */
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
 }
 
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px) scale(0.99); /* refined scale */
   box-shadow: var(--shadow-lg);
+}
+
+.card:active {
+  transform: scale(0.97); /* mobile tap feedback */
 }
 
 .card-interactive {
   cursor: pointer;
 }
+
+/* Card Depths */
+.card-flat {
+  box-shadow: none;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: var(--bg-secondary);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-md);
+}
+
+/* Entity Color Tokens & Borders */
+.bg-team-purple { background-color: #f3e8ff; color: #7e22ce; }
+.bg-hall-orange { background-color: #ffedd5; color: #c2410c; }
+.bg-trainer-blue { background-color: #dbeafe; color: #1d4ed8; }
+.bg-schedule-indigo { background-color: #e0e7ff; color: #4338ca; }
+
+/* RTL-aware accent borders */
+[dir="rtl"] .accent-team-purple { border-right: 4px solid #c084fc; }
+[dir="ltr"] .accent-team-purple { border-left: 4px solid #c084fc; }
+[dir="rtl"] .accent-hall-orange { border-right: 4px solid #fb923c; }
+[dir="ltr"] .accent-hall-orange { border-left: 4px solid #fb923c; }
+[dir="rtl"] .accent-trainer-blue { border-right: 4px solid #60a5fa; }
+[dir="ltr"] .accent-trainer-blue { border-left: 4px solid #60a5fa; }
+[dir="rtl"] .accent-schedule-indigo { border-right: 4px solid #818cf8; }
+[dir="ltr"] .accent-schedule-indigo { border-left: 4px solid #818cf8; }
 
 /* Feature Card - Big Icon Style */
 .feature-card {

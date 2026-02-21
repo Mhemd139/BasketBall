@@ -18,32 +18,32 @@ if ($connections) {
     Write-Host "`nPort $Port is IN USE:" -ForegroundColor Yellow
     Write-Host $connections
     
-    # Extract PIDs
-    $pids = $connections | ForEach-Object {
+    # Extract process IDs
+    $processIds = $connections | ForEach-Object {
         if ($_ -match '\s+(\d+)\s*$') {
-            $matches[1]
+            $Matches[1]
         }
     } | Select-Object -Unique
     
-    foreach ($pid in $pids) {
+    foreach ($processId in $processIds) {
         try {
-            $process = Get-Process -Id $pid -ErrorAction Stop
+            $process = Get-Process -Id $processId -ErrorAction Stop
             Write-Host "`nProcess Details:" -ForegroundColor Yellow
-            Write-Host "  PID: $pid"
+            Write-Host "  PID: $processId"
             Write-Host "  Name: $($process.ProcessName)"
             Write-Host "  Path: $($process.Path)"
             
             if ($Kill) {
-                Write-Host "`nKilling process $pid ($($process.ProcessName))..." -ForegroundColor Red
-                Stop-Process -Id $pid -Force
+                Write-Host "`nKilling process $processId ($($process.ProcessName))..." -ForegroundColor Red
+                Stop-Process -Id $processId -Force
                 Write-Host "Process killed successfully!" -ForegroundColor Green
             }
         } catch {
-            Write-Host "  PID: $pid (process details not available)" -ForegroundColor Gray
+            Write-Host "  PID: $processId (process details not available)" -ForegroundColor Gray
             
             if ($Kill) {
-                Write-Host "`nAttempting to kill process $pid..." -ForegroundColor Red
-                taskkill /F /PID $pid 2>$null
+                Write-Host "`nAttempting to kill process $processId..." -ForegroundColor Red
+                taskkill /F /PID $processId 2>$null
                 if ($LASTEXITCODE -eq 0) {
                     Write-Host "Process killed successfully!" -ForegroundColor Green
                 } else {
@@ -58,5 +58,5 @@ if ($connections) {
         Write-Host "  .\check-port.ps1 -Port $Port -Kill" -ForegroundColor White
     }
 } else {
-    Write-Host "`nPort $Port is AVAILABLE ✓" -ForegroundColor Green
+    Write-Host "`nPort $Port is AVAILABLE" -ForegroundColor Green
 }

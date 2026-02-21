@@ -119,22 +119,22 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
+                className="relative w-full max-w-lg bg-[#0B132B]/90 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10 ring-1 ring-white/5"
                 dir="rtl"
             >
                 {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 drop-shadow-sm">
                             <Users className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black text-slate-900">
+                            <h2 className="text-lg font-black text-white drop-shadow-md">
                                 {isEdit
                                     ? (locale === 'he' ? 'עריכת קבוצה' : 'تعديل الفريق')
                                     : (locale === 'he' ? 'יצירת קבוצה חדשה' : 'إنشاء فريق جديد')}
                             </h2>
-                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                            <p className="text-[10px] uppercase font-bold text-indigo-200/50 tracking-wider">
                                 {step === 1
                                     ? (locale === 'he' ? 'שלב 1: מידע בסיסי' : 'الخطوة 1: المعلومات الأساسية')
                                     : (locale === 'he' ? 'שלב 2: הקצאה' : 'الخطوة 2: التعيين')}
@@ -145,13 +145,13 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                         {isEdit && (
                             <button
                                 onClick={() => setShowDeleteConfirm(true)}
-                                className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-400"
+                                className="p-2 hover:bg-red-500/20 rounded-xl transition-colors text-red-400"
                                 title={locale === 'he' ? 'מחק קבוצה' : 'حذف الفريق'}
                             >
                                 <Trash2 className="w-5 h-5" />
                             </button>
                         )}
-                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400">
+                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/50 hover:text-white">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -208,26 +208,26 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                             >
                                 <div className="space-y-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-black text-slate-400 px-1 tracking-widest flex items-center gap-2">
-                                            <Languages className="w-3.5 h-3.5 text-emerald-500" /> {locale === 'he' ? 'שם בערבית' : 'الاسم بالعربية'}
+                                        <label className="text-[10px] uppercase font-black text-indigo-200/50 px-1 tracking-widest flex items-center gap-2">
+                                            <Languages className="w-3.5 h-3.5 text-emerald-400" /> {locale === 'he' ? 'שם בערבית' : 'الاسم بالعربية'}
                                         </label>
                                         <input
                                             value={formData.name_ar}
                                             onChange={(e) => setFormData(p => ({ ...p, name_ar: e.target.value }))}
                                             placeholder="مثال: تحت الـ 14 نخبة"
-                                            className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-transparent focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold text-slate-900 text-right"
+                                            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-emerald-500 outline-none transition-all font-bold text-white placeholder-indigo-200/30 text-right"
                                             dir="rtl"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-black text-slate-400 px-1 tracking-widest flex items-center gap-2">
-                                            <Languages className="w-3.5 h-3.5 text-orange-500" /> {locale === 'he' ? 'שם בעברית' : 'الاسم بالعبرية'}
+                                        <label className="text-[10px] uppercase font-black text-indigo-200/50 px-1 tracking-widest flex items-center gap-2">
+                                            <Languages className="w-3.5 h-3.5 text-orange-400" /> {locale === 'he' ? 'שם בעברית' : 'الاسم بالعبرية'}
                                         </label>
                                         <input
                                             value={formData.name_he}
                                             onChange={(e) => setFormData(p => ({ ...p, name_he: e.target.value }))}
                                             placeholder="לדוגמה: מתחת לגיל 14 עילית"
-                                            className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-transparent focus:bg-white focus:border-orange-500 outline-none transition-all font-bold text-slate-900 text-right"
+                                            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-orange-500 outline-none transition-all font-bold text-white placeholder-indigo-200/30 text-right"
                                             dir="rtl"
                                         />
                                     </div>
@@ -249,21 +249,21 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                             >
                                 <div className="space-y-5">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 px-1 flex items-center gap-2">
-                                            <User className="w-4 h-4 text-indigo-500" /> {locale === 'he' ? 'מאמן ראשי' : 'تعيين المدرب الرئيسي'}
+                                        <label className="text-sm font-bold text-indigo-100/70 px-1 flex items-center gap-2">
+                                            <User className="w-4 h-4 text-indigo-400 drop-shadow-sm" /> {locale === 'he' ? 'מאמן ראשי' : 'تعيين المدرب الرئيسي'}
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {refData.trainers.map(trainer => (
                                                 <button
                                                     key={trainer.id}
                                                     onClick={() => setFormData(p => ({ ...p, trainer_id: trainer.id }))}
-                                                    className={`p-4 rounded-2xl text-sm font-bold transition-all border-2 flex items-center gap-3 ${
+                                                    className={`p-4 rounded-2xl text-sm font-bold transition-all border flex items-center gap-3 ${
                                                         formData.trainer_id === trainer.id
-                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                                                        : 'border-slate-50 bg-white text-slate-500 hover:border-slate-200 shadow-sm'
+                                                        ? 'border-indigo-400 bg-indigo-500/30 text-white shadow-inner'
+                                                        : 'border-white/10 bg-white/5 text-indigo-100/70 hover:border-white/20 hover:bg-white/10'
                                                     }`}
                                                 >
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                                                         <User className="w-4 h-4" />
                                                     </div>
                                                     <span className="truncate">{getName(trainer)}</span>
@@ -273,21 +273,21 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 px-1 flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-emerald-500" /> {locale === 'he' ? 'אולם ראשי' : 'القاعة الرئيسية'}
+                                        <label className="text-sm font-bold text-indigo-100/70 px-1 flex items-center gap-2">
+                                            <MapPin className="w-4 h-4 text-emerald-400 drop-shadow-sm" /> {locale === 'he' ? 'אולם ראשי' : 'القاعة الرئيسية'}
                                         </label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {refData.halls.map(hall => (
                                                 <button
                                                     key={hall.id}
                                                     onClick={() => setFormData(p => ({ ...p, hall_id: hall.id }))}
-                                                    className={`p-4 rounded-2xl text-sm font-bold transition-all border-2 flex items-center gap-3 ${
+                                                    className={`p-4 rounded-2xl text-sm font-bold transition-all border flex items-center gap-3 ${
                                                         formData.hall_id === hall.id
-                                                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                                                        : 'border-slate-50 bg-white text-slate-500 hover:border-slate-200 shadow-sm'
+                                                        ? 'border-emerald-400 bg-emerald-500/30 text-white shadow-inner'
+                                                        : 'border-white/10 bg-white/5 text-indigo-100/70 hover:border-white/20 hover:bg-white/10'
                                                     }`}
                                                 >
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                                                         <MapPin className="w-4 h-4" />
                                                     </div>
                                                     <span className="truncate">{getName(hall)}</span>
