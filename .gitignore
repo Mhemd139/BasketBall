@@ -60,5 +60,15 @@ Thumbs.db
 nul
 /nul
 
+# Excel files
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+~$*
+* .xlsx
+
+
 # AI Agent Framework
 .antigravity_tools/
