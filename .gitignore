@@ -55,10 +55,19 @@ next-env.d.ts
 
 # OS
 Thumbs.db
-
-.vercel
 nul
 /nul
 
+# Excel files
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+~$*
+
 # AI Agent Framework
 .antigravity_tools/
+
+# Local scripts
+scripts/

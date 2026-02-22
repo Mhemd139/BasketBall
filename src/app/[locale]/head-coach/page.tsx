@@ -92,7 +92,7 @@ export default async function HeadCoachPage({ params }: { params: { locale: stri
 
             {/* Main Content */}
             <main>
-                <TrainerManager initialTrainers={trainers || []} />
+                <TrainerManager initialTrainers={trainers || []} locale={locale} />
             </main>
         </div>
     </div>
