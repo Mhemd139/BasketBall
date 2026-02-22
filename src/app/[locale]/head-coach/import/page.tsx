@@ -13,7 +13,7 @@ export default async function ImportPage({ params }: { params: { locale: string 
   const refData = await getImportRefData()
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden" dir="rtl">
       {/* Background decorations */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-400/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />

@@ -18,8 +18,6 @@ const navItems: NavItem[] = [
   { href: '/more', icon: User, label: 'حسابي' },
 ];
 
-import { useState, useEffect } from 'react';
-
 interface BottomNavProps {
   locale: string;
   role?: string;
@@ -27,30 +25,6 @@ interface BottomNavProps {
 
 export function BottomNav({ locale, role }: BottomNavProps) {
   const pathname = usePathname();
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Always show near top or bottom
-      if (currentScrollY < 50 || (window.innerHeight + currentScrollY) >= document.body.offsetHeight - 50) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
-        setIsVisible(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
-        setIsVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
 
   const isActive = (href: string) => {
     const fullPath = `/${locale}${href}`;
@@ -67,10 +41,7 @@ export function BottomNav({ locale, role }: BottomNavProps) {
   };
 
   return (
-    <nav className={cn(
-      "fixed bottom-0 left-0 right-0 h-[72px] bg-[#0B132B]/80 backdrop-blur-3xl border-t border-white/10 shadow-2xl z-[100] pb-[env(safe-area-inset-bottom)] flex items-center justify-center px-2 md:hidden transition-transform duration-300 ease-in-out",
-      isVisible ? "translate-y-0" : "translate-y-[150%]"
-    )} suppressHydrationWarning>
+    <nav className="fixed bottom-0 left-0 right-0 h-[72px] bg-[#0B132B]/80 backdrop-blur-3xl border-t border-white/10 shadow-2xl z-[100] pb-[env(safe-area-inset-bottom)] flex items-center justify-center px-2 md:hidden" suppressHydrationWarning>
       <div className="flex items-center justify-evenly w-full max-w-[400px]">
         {navItems.map((item) => {
           const active = isActive(item.href);

@@ -758,6 +758,126 @@ export async function fetchHallEvents(hallId: string, startDate: string, endDate
 
     return { success: true, events }
 }
+
+export async function fetchHallSchedules(hallId: string) {
+    const supabase = await createServerSupabaseClient()
+
+    const { data: schedules, error } = await (supabase as any)
+        .from('class_schedules')
+        .select('*, classes(id, name_he, name_ar, name_en, trainer_id, trainers(name_he, name_ar, name_en))')
+        .eq('hall_id', hallId)
+        .order('day_of_week', { ascending: true })
+        .order('start_time', { ascending: true })
+
+    if (error) {
+        return { success: false, error: error.message }
+    }
+
+    return { success: true, schedules }
+}
+
+export async function fetchTodaySchedules() {
+    const supabase = await createServerSupabaseClient()
+    const today = new Date()
+    const todayDow = today.getDay() // 0=Sunday, 6=Saturday
+    const todayDate = today.toISOString().split('T')[0]
+
+    const { data, error } = await (supabase as any).rpc('ensure_events_for_schedules', {
+        p_day_of_week: todayDow,
+        p_date: todayDate,
+    })
+
+    if (error) {
+        return { success: false, error: error.message, schedules: [] }
+    }
+
+    // Map RPC result to a uniform shape for the UI
+    const schedules = (data || []).map((r: any) => ({
+        event_id: r.r_event_id,
+        schedule_id: r.r_schedule_id,
+        class_id: r.r_class_id,
+        hall_id: r.r_hall_id,
+        trainer_id: r.r_trainer_id,
+        start_time: r.r_start_time,
+        end_time: r.r_end_time,
+        title_ar: r.r_title_ar,
+        title_he: r.r_title_he,
+        title_en: r.r_title_en,
+        hall_name_ar: r.r_hall_name_ar,
+        hall_name_he: r.r_hall_name_he,
+        hall_name_en: r.r_hall_name_en,
+        trainer_name_ar: r.r_trainer_name_ar,
+        trainer_name_he: r.r_trainer_name_he,
+        trainer_name_en: r.r_trainer_name_en,
+        category_name_ar: r.r_category_name_ar,
+        category_name_he: r.r_category_name_he,
+        category_name_en: r.r_category_name_en,
+        type: r.r_event_type,
+    }))
+
+    return { success: true, schedules }
+}
+
+export async function getOrCreateEventForSchedule(scheduleId: string, date: string) {
+    const session = await getSession()
+    if (!session) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const supabase = await createServerSupabaseClient()
+
+    // 1. Get the schedule with class and hall info
+    const { data: schedule, error: schedError } = await (supabase as any)
+        .from('class_schedules')
+        .select('*, classes(id, name_he, name_ar, name_en, trainer_id), halls(id, name_he, name_ar, name_en)')
+        .eq('id', scheduleId)
+        .single()
+
+    if (schedError || !schedule) {
+        return { success: false, error: 'Schedule not found' }
+    }
+
+    // 2. Check if event already exists for this schedule+date
+    const { data: existing } = await (supabase as any)
+        .from('events')
+        .select('id')
+        .eq('event_date', date)
+        .eq('hall_id', schedule.hall_id)
+        .eq('start_time', schedule.start_time)
+        .eq('trainer_id', schedule.classes?.trainer_id)
+        .limit(1)
+
+    if (existing && existing.length > 0) {
+        return { success: true, eventId: existing[0].id }
+    }
+
+    // 3. Create a new event from the schedule
+    const teamName = schedule.classes?.name_he || schedule.classes?.name_ar || 'تدريب'
+    const notesJson = JSON.stringify({ class_id: schedule.class_id, schedule_id: scheduleId })
+
+    const { data: newEvent, error: createError } = await (supabase as any).rpc('upsert_event', {
+        p_data: {
+            hall_id: schedule.hall_id,
+            trainer_id: schedule.classes?.trainer_id || session.id,
+            type: 'training',
+            title_he: teamName,
+            title_ar: teamName,
+            title_en: teamName,
+            event_date: date,
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+            notes_en: notesJson,
+        }
+    })
+
+    if (createError) {
+        return { success: false, error: createError.message }
+    }
+
+    revalidatePath('/[locale]/halls/[id]', 'page')
+    return { success: true, eventId: newEvent?.id }
+}
+
 export async function searchTrainees(query: string) {
     const supabase = await createServerSupabaseClient()
     
@@ -809,20 +929,15 @@ export async function updateTrainee(traineeId: string, updateData: any) {
 
 export async function getTrainerProfile(trainerId: string) {
     const supabase = await createServerSupabaseClient()
-    
-    const { data: trainer, error: trainerError } = await (supabase as any)
-        .from('trainers')
-        .select('*')
-        .eq('id', trainerId)
-        .single()
+
+    const [{ data: trainer, error: trainerError }, { data: teams, error: teamsError }] = await Promise.all([
+        (supabase as any).from('trainers').select('*').eq('id', trainerId).single(),
+        (supabase as any).from('classes')
+            .select('*, categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))')
+            .eq('trainer_id', trainerId),
+    ])
 
     if (trainerError) return { success: false, error: trainerError.message }
-
-    const { data: teams, error: teamsError } = await (supabase as any)
-        .from('classes')
-        .select('*, halls(name_en, name_ar, name_he)')
-        .eq('trainer_id', trainerId)
-
     if (teamsError) return { success: false, error: teamsError.message }
 
     return { success: true, trainer, teams }

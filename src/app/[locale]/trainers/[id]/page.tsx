@@ -1,10 +1,11 @@
 import { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { getTrainerProfile, getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
-import { User, Phone, Trophy, MapPin, Calendar, Mail, Shield, CheckCircle2 } from 'lucide-react'
+import { User, Phone, Trophy, MapPin, Calendar, Clock, Shield, CheckCircle2, Building2 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { TrainerProfileActions } from '@/components/trainers/TrainerProfileActions'
@@ -25,7 +26,6 @@ export default async function TrainerProfilePage({
 
     const { trainer, teams } = res
 
-    // Map days to localized labels for display
     const daysMap: Record<string, string> = {
         'Sunday': 'الأحد',
         'Monday': 'الإثنين',
@@ -34,6 +34,11 @@ export default async function TrainerProfilePage({
         'Thursday': 'الخميس',
         'Friday': 'الجمعة',
         'Saturday': 'السبت',
+    }
+
+    const dayNumMap: Record<number, string> = {
+        0: 'الأحد', 1: 'الإثنين', 2: 'الثلاثاء', 3: 'الأربعاء',
+        4: 'الخميس', 5: 'الجمعة', 6: 'السبت',
     }
 
     return (
@@ -143,34 +148,69 @@ export default async function TrainerProfilePage({
                             </h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {teams.map((team: any) => (
-                                    <Link key={team.id} href={`/${locale}/teams/${team.id}`}>
-                                        <Card className="p-5 hover:border-indigo-500 transition-all border-2 border-white/40 bg-white/70 backdrop-blur-lg group">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div className="w-10 h-10 rounded-xl bg-slate-100/50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-50 transition-colors border border-indigo-100/50">
-                                                    <Trophy className="w-6 h-6" />
+                                {teams.map((team: any) => {
+                                    const schedules = team.class_schedules || []
+                                    // Get unique hall names from schedules
+                                    const hallNames = [...new Set(
+                                        schedules
+                                            .filter((s: any) => s.halls)
+                                            .map((s: any) => getLocalizedField(s.halls, 'name', locale))
+                                    )] as string[]
+                                    const categoryName = team.categories ? getLocalizedField(team.categories, 'name', locale) : null
+
+                                    return (
+                                        <Link key={team.id} href={`/${locale}/teams/${team.id}`}>
+                                            <Card className="p-5 hover:border-indigo-500 transition-all border-2 border-white/40 bg-white/70 backdrop-blur-lg group">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-100/50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-50 transition-colors border border-indigo-100/50">
+                                                        <Trophy className="w-6 h-6" />
+                                                    </div>
+                                                    {categoryName && (
+                                                        <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                            {categoryName}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                    {team.id.split('-')[0]}
+                                                <h3 className="font-bold text-gray-900 text-lg mb-2">
+                                                    {categoryName
+                                                        ? `${getLocalizedField(team, 'name', locale)} - ${categoryName}`
+                                                        : getLocalizedField(team, 'name', locale)}
+                                                </h3>
+                                                <div className="space-y-2 text-sm text-gray-500">
+                                                    {/* Halls */}
+                                                    <div className="flex items-center gap-2">
+                                                        <Building2 className="w-4 h-4 shrink-0" />
+                                                        <span>{hallNames.length > 0 ? hallNames.join(' / ') : 'غير محدد'}</span>
+                                                    </div>
+                                                    {/* Schedule summary */}
+                                                    {schedules.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            {schedules
+                                                                .filter((s: any) => s.start_time !== '00:00:00')
+                                                                .sort((a: any, b: any) => a.day_of_week - b.day_of_week)
+                                                                .map((s: any) => (
+                                                                <div key={s.id} className="flex items-center gap-2 text-xs">
+                                                                    <Clock className="w-3 h-3 shrink-0 text-gray-400" />
+                                                                    <span className="font-medium text-gray-600">{dayNumMap[s.day_of_week]}</span>
+                                                                    <span dir="ltr">{s.start_time?.slice(0, 5)} - {s.end_time?.slice(0, 5)}</span>
+                                                                    {s.halls && (
+                                                                        <span className="text-gray-400">• {getLocalizedField(s.halls, 'name', locale)}</span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                                                            <Calendar className="w-3 h-3 shrink-0" />
+                                                            <span>{'جدول غير محدد'}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
-                                            <h3 className="font-bold text-gray-900 text-lg mb-2">
-                                                {getLocalizedField(team, 'name', locale)}
-                                            </h3>
-                                            <div className="space-y-2 text-sm text-gray-500">
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 shrink-0" />
-                                                    {team.halls ? getLocalizedField(team.halls, 'name', locale) : 'N/A'}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 shrink-0" />
-                                                    {team.schedule_info || 'N/A'}
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    </Link>
-                                ))}
-                                
+                                            </Card>
+                                        </Link>
+                                    )
+                                })}
+
                                 {teams.length === 0 && (
                                     <div className="col-span-full py-12 text-center text-gray-400 bg-white rounded-2xl border-2 border-dashed border-slate-100">
                                         {'لا توجد فرق مخصصة حالياً'}
@@ -181,6 +221,10 @@ export default async function TrainerProfilePage({
 
                     </div>
                 </main>
+
+                <div className="relative z-50">
+                    <BottomNav locale={locale} role={session?.role} />
+                </div>
             </div>
         </AnimatedMeshBackground>
     )

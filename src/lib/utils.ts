@@ -16,14 +16,9 @@ export function formatDate(date: string | Date, locale: string = 'ar'): string {
 }
 
 // Time formatting helper
-export function formatTime(time: string, locale: string = 'ar'): string {
-  const [hours, minutes] = time.split(':')
-  const date = new Date()
-  date.setHours(parseInt(hours), parseInt(minutes))
-  return new Intl.DateTimeFormat(locale, {
-    hour: 'numeric',
-    minute: 'numeric',
-  }).format(date)
+export function formatTime(time: string): string {
+  // Simple 24-hour format: "15:30:00" → "15:30"
+  return time.slice(0, 5)
 }
 
 // Get localized field helper
