@@ -7,6 +7,7 @@ export const TABLE_SCHEMAS: TableSchema[] = [
     icon: 'Users',
     fields: [
       { key: 'name_ar', label: 'اسم الفريق', type: 'text', required: true },
+      { key: '_category', label: 'الفئة (لدمج الاسم)', type: 'text', required: false },
       { key: 'name_he', label: 'اسم الفريق (عبري)', type: 'text', required: false },
       { key: 'name_en', label: 'اسم الفريق (إنجليزي)', type: 'text', required: false },
       { key: 'trainer_id', label: 'المدرب', type: 'fk', required: false, fkTable: 'trainers', fkDisplayField: 'name_ar' },
@@ -61,15 +62,16 @@ export function getTableSchema(table: ImportableTable): TableSchema | undefined 
 // Keys are DB field names, values are arrays of keywords in AR/HE/EN
 export const MAPPING_HINTS: Record<string, Record<string, string[]>> = {
   classes: {
+    _category: ['בנות ב"ס', 'קטסל ב', 'קטסל א', 'ילדות', 'נערות', 'בוגרות', 'בנים ב"ס', 'בנים ליגה', 'נוער', 'בוגרים', 'فئة', 'category'],
     name_ar: ['קבוצה', 'فريق', 'team', 'اسم الفريق', 'שם', 'group', 'class'],
     name_he: ['קבוצה', 'team', 'שם'],
     name_en: ['team', 'group', 'class', 'name'],
-    trainer_id: ['מאמן', 'مدرب', 'trainer', 'coach', 'مدرّب'],
+    trainer_id: ['מאמן', 'עוזר', 'مدرب', 'trainer', 'coach', 'مدرّب', 'assistant'],
     hall_id: ['אולם', 'قاعة', 'hall', 'venue', 'ملعب'],
     schedule_info: ['יומן', 'لوز', 'schedule', 'جدول', 'مواعيد', 'توقيت', 'أوقات'],
   },
   trainers: {
-    name_ar: ['שם', 'اسم', 'name', 'מאמן', 'مدرب', 'trainer'],
+    name_ar: ['שם', 'اسم', 'name', 'מאמן', 'עוזר', 'مدرب', 'trainer'],
     name_he: ['שם', 'name'],
     name_en: ['name', 'trainer'],
     phone: ['טלפון', 'هاتف', 'phone', 'رقم', 'tel', 'mobile', 'جوال'],

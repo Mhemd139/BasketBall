@@ -100,6 +100,22 @@ export function transformRow(
     }
   }
 
+  // Handle category merging for classes
+  if (targetTable === 'classes') {
+    const category = transformed['_category']
+    const nameAr = transformed['name_ar']
+    
+    // If we have a category and a name, combine them: "Category - Name"
+    // If only category exists (sometimes happens with bad mapping), use it as name
+    if (category && typeof category === 'string' && category.trim()) {
+      if (nameAr && typeof nameAr === 'string' && nameAr.trim()) {
+        transformed['name_ar'] = `${category.trim()} - ${nameAr.trim()}`
+      } else {
+        transformed['name_ar'] = category.trim()
+      }
+    }
+  }
+
   // Validate required fields
   for (const field of schema.fields) {
     if (field.required && !transformed[field.key]) {

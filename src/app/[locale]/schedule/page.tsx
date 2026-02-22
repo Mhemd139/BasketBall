@@ -91,11 +91,11 @@ export default async function SchedulePage({
                           <div className="flex items-center gap-4 relative z-10">
                             {/* Time Block */}
                             <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
-                              <div className="text-lg font-black text-white drop-shadow-md leading-none">
-                                {formatTime(event.start_time).split(':')[0]}
+                              <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">
+                                {formatTime(event.start_time)}
                               </div>
-                              <div className="text-[10px] text-indigo-200/60 uppercase font-black tracking-widest mt-1">
-                                {formatTime(event.start_time).includes('PM') ? 'PM' : 'AM'}
+                              <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">
+                                {formatTime(event.end_time)}
                               </div>
                             </div>
                             

@@ -13,7 +13,7 @@ import { notFound } from 'next/navigation'
 import { Building2, Calendar } from 'lucide-react'
 import { HallSchedule } from '@/components/halls/HallSchedule'
 import { HallManagementActions } from '@/components/halls/HallManagementActions'
-import { getSession } from '@/app/actions' // Import getSession
+import { getSession, fetchHallSchedules } from '@/app/actions'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Hall = Database['public']['Tables']['halls']['Row']
@@ -33,7 +33,7 @@ export default async function HallDetailPage({
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
   const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0]
 
-  const [{ data: hall, error: hallError }, { data: events }] = await Promise.all([
+  const [{ data: hall, error: hallError }, { data: events }, schedulesRes] = await Promise.all([
     supabase.from('halls').select('*').eq('id', id).single(),
     supabase.from('events')
       .select('*')
@@ -42,6 +42,7 @@ export default async function HallDetailPage({
       .lte('event_date', endOfMonth)
       .order('event_date', { ascending: true })
       .order('start_time', { ascending: true }),
+    fetchHallSchedules(id),
   ])
 
   if (hallError || !hall) {
@@ -94,11 +95,12 @@ export default async function HallDetailPage({
 
             {/* Hall Schedule Timeline */}
             <section>
-              <HallSchedule 
-                hallId={hallData.id} 
-                events={events as any} 
+              <HallSchedule
+                hallId={hallData.id}
+                events={events as any}
+                weeklySchedules={schedulesRes.success ? schedulesRes.schedules : []}
                 locale={locale}
-                isEditable={isEditable} 
+                isEditable={isEditable}
              />
             </section>
           </div>

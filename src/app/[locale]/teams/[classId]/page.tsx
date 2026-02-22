@@ -7,7 +7,7 @@ import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Users, User, MapPin, Calendar, Phone, Trophy, Plus } from 'lucide-react'
+import { User, Calendar, Phone, Trophy, Plus, Clock, Building2 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { getSession } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
@@ -17,12 +17,21 @@ import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Class = Database['public']['Tables']['classes']['Row']
 type Trainer = Database['public']['Tables']['trainers']['Row']
-type Hall = Database['public']['Tables']['halls']['Row']
 type Trainee = Database['public']['Tables']['trainees']['Row']
+
+interface ClassSchedule {
+  id: string
+  day_of_week: number
+  start_time: string
+  end_time: string
+  notes: string | null
+  halls: { id: string; name_he: string; name_ar: string; name_en: string } | null
+}
 
 interface ClassWithDetails extends Class {
   trainers: Trainer | null
-  halls: Hall | null
+  categories: { name_he: string; name_ar: string; name_en: string } | null
+  class_schedules: ClassSchedule[]
 }
 
 export default async function TeamDetailPage({
@@ -38,7 +47,7 @@ export default async function TeamDetailPage({
     { data: team, error: teamError },
     { data: roster }
   ] = await Promise.all([
-    (supabase as any).from('classes').select('*, trainers(*), halls(*)').eq('id', classId).single(),
+    (supabase as any).from('classes').select('*, trainers(*), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
     (supabase as any).from('trainees').select('*').eq('class_id', classId).order('jersey_number', { ascending: true }),
   ])
 
@@ -48,6 +57,15 @@ export default async function TeamDetailPage({
 
   const teamDetails = team as unknown as ClassWithDetails
   const trainees = (roster || []) as Trainee[]
+  const schedules = teamDetails.class_schedules || []
+  const hallNames = [...new Set(
+    schedules.filter(s => s.halls).map(s => getLocalizedField(s.halls!, 'name', locale))
+  )] as string[]
+
+  const dayNumMap: Record<number, string> = {
+    0: 'الأحد', 1: 'الإثنين', 2: 'الثلاثاء', 3: 'الأربعاء',
+    4: 'الخميس', 5: 'الجمعة', 6: 'السبت',
+  }
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
@@ -116,13 +134,11 @@ export default async function TeamDetailPage({
                 {/* Hall Card */}
                 <div className="bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm">
                   <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-bold">
-                    <MapPin className="w-4 h-4 text-orange-600" />
+                    <Building2 className="w-4 h-4 text-orange-600" />
                     {'القاعة'}
                   </div>
                   <p className="font-black text-navy-900">
-                    {teamDetails.halls
-                      ? getLocalizedField(teamDetails.halls, 'name', locale)
-                      : 'غير محدد'}
+                    {hallNames.length > 0 ? hallNames.join(' / ') : 'غير محدد'}
                   </p>
                 </div>
 
@@ -132,9 +148,25 @@ export default async function TeamDetailPage({
                     <Calendar className="w-4 h-4 text-green-600" />
                     {'الموعد'}
                   </div>
-                  <p className="font-black text-navy-900 text-sm">
-                    {teamDetails.schedule_info || 'غير محدد'}
-                  </p>
+                  {schedules.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {schedules
+                        .filter(s => s.start_time !== '00:00:00')
+                        .sort((a, b) => a.day_of_week - b.day_of_week)
+                        .map(s => (
+                          <div key={s.id} className="flex items-center gap-2 text-sm">
+                            <Clock className="w-3.5 h-3.5 shrink-0 text-green-500" />
+                            <span className="font-bold text-navy-900">{dayNumMap[s.day_of_week]}</span>
+                            <span dir="ltr" className="text-gray-600 font-medium">{s.start_time?.slice(0, 5)} - {s.end_time?.slice(0, 5)}</span>
+                            {s.halls && (
+                              <span className="text-gray-400 text-xs">• {getLocalizedField(s.halls, 'name', locale)}</span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="font-black text-navy-900 text-sm">{'غير محدد'}</p>
+                  )}
                 </div>
               </div>
             </section>
@@ -176,6 +208,10 @@ export default async function TeamDetailPage({
              </section>
           </div>
         </main>
+
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
     </AnimatedMeshBackground>
   )

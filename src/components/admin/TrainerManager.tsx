@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/Toast'
 import { deleteTrainer, upsertTrainer } from '@/app/actions'
+import Link from 'next/link'
 
 interface Trainer {
   id: string
@@ -16,7 +17,7 @@ interface Trainer {
   role?: string
 }
 
-export default function TrainerManager({ initialTrainers }: { initialTrainers: Trainer[] }) {
+export default function TrainerManager({ initialTrainers, locale = 'ar' }: { initialTrainers: Trainer[], locale?: string }) {
   const [trainers, setTrainers] = useState<Trainer[]>(initialTrainers)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -174,28 +175,30 @@ export default function TrainerManager({ initialTrainers }: { initialTrainers: T
                                 </button>
                             </div>
 
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                {trainer.name_ar || trainer.name_en || 'بدون اسم'}
-                            </h3>
+                            <Link href={`/${locale}/trainers/${trainer.id}`} className="block group/link">
+                                <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover/link:text-indigo-600 transition-colors">
+                                    {trainer.name_ar || trainer.name_en || 'بدون اسم'}
+                                </h3>
 
-                            <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-4" dir="ltr">
-                                <Phone className="w-4 h-4" />
-                                {trainer.phone?.startsWith('972') ? '0' + trainer.phone.slice(3) : trainer.phone}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                                    isHeadCoach(trainer)
-                                        ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                        : 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                }`}>
-                                    {isHeadCoach(trainer) ? (
-                                        <><ShieldCheck className="w-3 h-3" /> رئيس المدربين</>
-                                    ) : (
-                                        <><User className="w-3 h-3" /> مدرب</>
-                                    )}
+                                <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-4" dir="ltr">
+                                    <Phone className="w-4 h-4" />
+                                    {trainer.phone?.startsWith('972') ? '0' + trainer.phone.slice(3) : trainer.phone}
                                 </div>
-                            </div>
+
+                                <div className="flex items-center gap-2">
+                                    <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+                                        isHeadCoach(trainer)
+                                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                                            : 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                    }`}>
+                                        {isHeadCoach(trainer) ? (
+                                            <><ShieldCheck className="w-3 h-3" /> رئيس المدربين</>
+                                        ) : (
+                                            <><User className="w-3 h-3" /> مدرب</>
+                                        )}
+                                    </div>
+                                </div>
+                            </Link>
                         </div>
                     </Card>
                 </motion.div>

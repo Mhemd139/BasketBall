@@ -8,20 +8,22 @@ import Link from 'next/link'
 
 import { FileUploadStep } from './FileUploadStep'
 import { SheetSelectStep } from './SheetSelectStep'
-import { ColumnMappingStep } from './ColumnMappingStep'
-import { DataPreviewStep } from './DataPreviewStep'
-import { ResolveTrainersStep } from './ResolveTrainersStep'
-import type { UnresolvedTrainer } from './ResolveTrainersStep'
+import { SmartReviewStep } from './SmartReviewStep'
 import { ImportProgressStep } from './ImportProgressStep'
 
-import { transformAllRows, getImportableRecords } from '@/lib/excel/transformer'
+import { analyzeSheet } from '@/lib/excel/analyzer'
+import type { SmartAnalysisResult } from '@/lib/excel/analyzer'
+import { getImportableRecords } from '@/lib/excel/transformer'
 import { bulkImportRecords, createTrainersForImport } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { BATCH_SIZE } from '@/lib/excel/constants'
 
-import type { ParsedWorkbook, ParsedSheet, ColumnMapping, ImportableTable, ImportResult, PreviewRow, RefData } from '@/lib/excel/types'
+import type { ParsedWorkbook, ImportableTable, ImportResult, RefData } from '@/lib/excel/types'
 
-type WizardStep = 'upload' | 'sheet' | 'mapping' | 'preview' | 'resolve' | 'import'
+type WizardStep = 'upload' | 'sheet' | 'review' | 'import'
+
+/** Dependency order: halls & trainers first, then classes, then trainees */
+const IMPORT_ORDER: ImportableTable[] = ['halls', 'trainers', 'classes', 'trainees']
 
 interface ImportWizardProps {
   locale: string
@@ -36,217 +38,185 @@ export function ImportWizard({ locale, refData }: ImportWizardProps) {
   const [step, setStep] = useState<WizardStep>('upload')
   const [workbook, setWorkbook] = useState<ParsedWorkbook | null>(null)
   const [selectedSheetIndex, setSelectedSheetIndex] = useState(0)
-  const [targetTable, setTargetTable] = useState<ImportableTable | null>(null)
-  const [mappings, setMappings] = useState<ColumnMapping[]>([])
-  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([])
+  const [analysis, setAnalysis] = useState<SmartAnalysisResult | null>(null)
 
   // Import state
   const [isImporting, setIsImporting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
 
-  const selectedSheet: ParsedSheet | null = workbook?.sheets[selectedSheetIndex] ?? null
-
-  // Extract unresolved trainer names from preview rows
-  const unresolvedTrainers = useMemo((): UnresolvedTrainer[] => {
-    const nameCount = new Map<string, number>()
-    for (const row of previewRows) {
-      const unresolvedName = row.transformed._unresolved_trainer_id
-      if (unresolvedName && typeof unresolvedName === 'string') {
-        nameCount.set(unresolvedName, (nameCount.get(unresolvedName) || 0) + 1)
-      }
-    }
-    return Array.from(nameCount.entries()).map(([name, count]) => ({
-      name,
-      phone: '',
-      usedByRows: count,
-    }))
-  }, [previewRows])
-
-  // Step 1: File parsed
+  // Step 1: File parsed → auto-analyze
   const handleFileParsed = useCallback((wb: ParsedWorkbook) => {
     setWorkbook(wb)
     if (wb.sheets.length === 1) {
       setSelectedSheetIndex(0)
-      setStep('mapping')
+      // Auto-analyze immediately
+      const result = analyzeSheet(wb.sheets[0], refData)
+      setAnalysis(result)
+      setStep('review')
     } else {
       setStep('sheet')
     }
-  }, [])
+  }, [refData])
 
-  // Step 2: Sheet selected
+  // Step 2: Sheet selected → auto-analyze
   const handleSheetSelect = useCallback((index: number) => {
     setSelectedSheetIndex(index)
-    setStep('mapping')
-  }, [])
-
-  // Step 3: Mapping confirmed
-  const handleMappingConfirm = useCallback((table: ImportableTable, columnMappings: ColumnMapping[]) => {
-    setTargetTable(table)
-    setMappings(columnMappings)
-
-    const sheet = workbook?.sheets[selectedSheetIndex]
-    if (sheet) {
-      const rows = transformAllRows(sheet.rows, columnMappings, table, refData)
-      setPreviewRows(rows)
+    if (workbook) {
+      const result = analyzeSheet(workbook.sheets[index], refData)
+      setAnalysis(result)
     }
-    setStep('preview')
-  }, [workbook, selectedSheetIndex, refData])
+    setStep('review')
+  }, [workbook, refData])
 
-  // Step 4: Preview confirmed → check if we need to resolve trainers
-  const handlePreviewConfirm = useCallback(() => {
-    if (unresolvedTrainers.length > 0 && targetTable === 'classes') {
-      setStep('resolve')
-    } else {
-      startImport()
-    }
-  }, [unresolvedTrainers, targetTable])
+  // Step 3: Smart import → create everything in dependency order
+  const handleSmartImport = useCallback(async () => {
+    if (!analysis) return
 
-  // Step 4b: Trainers resolved → create them then import
-  const handleTrainersResolved = useCallback(async (resolvedTrainers: UnresolvedTrainer[]) => {
     setStep('import')
     setIsImporting(true)
     setProgress(0)
 
-    // Phase 1: Create new trainers
-    const toCreate = resolvedTrainers.filter((t) => t.phone.trim().length >= 9)
-    if (toCreate.length > 0) {
-      const res = await createTrainersForImport(
-        toCreate.map((t) => ({ name: t.name, phone: t.phone }))
-      )
+    const allErrors: ImportResult['errors'] = []
+    let totalInserted = 0
+    let totalRecords = 0
+
+    // Phase 1: Create new halls (if any)
+    const { newHalls, newTrainers, primaryTable, primaryAnalysis } = analysis
+
+    if (newHalls.length > 0) {
+      setProgress(5)
+      const hallRecords = newHalls.map((h) => ({
+        name_ar: h.name,
+        name_he: h.name,
+        name_en: h.name,
+      }))
+
+      for (let i = 0; i < hallRecords.length; i += BATCH_SIZE) {
+        const batch = hallRecords.slice(i, i + BATCH_SIZE)
+        const res = await bulkImportRecords('halls', batch)
+        if (res.results) {
+          totalInserted += res.results.inserted
+          allErrors.push(
+            ...res.results.errors.map((e) => ({
+              row: e.row + i,
+              status: 'error' as const,
+              error: `قاعة: ${e.error}`,
+            }))
+          )
+        }
+      }
+      totalRecords += hallRecords.length
+      toast(`تم إنشاء ${newHalls.length} قاعة`, 'success')
+    }
+
+    setProgress(20)
+
+    // Phase 2: Create new trainers (if any)
+    if (newTrainers.length > 0) {
+      const trainerPayloads = newTrainers.map((t, i) => ({
+        name: t.name,
+        // Use real phone from Excel, or generate unique placeholder
+        phone: t.phone || `050${String(9000 + i).padStart(7, '0')}`,
+      }))
+
+      const res = await createTrainersForImport(trainerPayloads)
 
       if (res.errors.length > 0) {
         toast(`أخطاء في إنشاء المدربين: ${res.errors.join(', ')}`, 'error')
-      }
-
-      // Phase 2: Patch preview rows with newly created trainer IDs
-      if (Object.keys(res.nameToId).length > 0) {
-        setPreviewRows((prev) =>
-          prev.map((row) => {
-            const unresolvedName = row.transformed._unresolved_trainer_id
-            if (unresolvedName && typeof unresolvedName === 'string' && res.nameToId[unresolvedName]) {
-              return {
-                ...row,
-                transformed: {
-                  ...row.transformed,
-                  trainer_id: res.nameToId[unresolvedName],
-                  _display_trainer_id: unresolvedName,
-                },
-                // Upgrade from warning to valid if no other issues
-                status: row.messages.length <= 1 ? 'valid' : row.status,
-                messages: row.messages.filter((m) => !m.includes(unresolvedName)),
-              }
-            }
-            return row
-          })
+        allErrors.push(
+          ...res.errors.map((e, i) => ({
+            row: i,
+            status: 'error' as const,
+            error: e,
+          }))
         )
       }
 
       const createdCount = Object.keys(res.nameToId).length
+      totalInserted += createdCount
+      totalRecords += trainerPayloads.length
+
       if (createdCount > 0) {
         toast(`تم إنشاء ${createdCount} مدرب جديد`, 'success')
+
+        // Patch preview rows with newly created trainer IDs
+        // so the primary table import can reference them
+        for (const row of primaryAnalysis.previewRows) {
+          const unresolvedName = row.transformed._unresolved_trainer_id
+          if (unresolvedName && typeof unresolvedName === 'string' && res.nameToId[unresolvedName]) {
+            row.transformed.trainer_id = res.nameToId[unresolvedName]
+            row.transformed._display_trainer_id = unresolvedName
+          }
+        }
       }
     }
 
-    setProgress(10) // 10% for trainer creation phase
+    setProgress(40)
 
-    // Phase 3: Now import the actual records (use latest previewRows via callback)
-    await doImport()
-  }, [toast])
+    // Phase 3: Import the primary table records
+    const records = getImportableRecords(primaryAnalysis.previewRows, true)
+    totalRecords += records.length
 
-  // The actual import logic, extracted so both paths can use it
-  const doImport = useCallback(async () => {
-    if (!targetTable) return
+    if (records.length > 0) {
+      for (let i = 0; i < records.length; i += BATCH_SIZE) {
+        const batch = records.slice(i, i + BATCH_SIZE)
+        const res = await bulkImportRecords(primaryTable, batch)
 
-    // Need to get latest previewRows inside the callback
-    // Use a ref-like approach by reading from state updater
-    let currentRows: PreviewRow[] = []
-    setPreviewRows((prev) => {
-      currentRows = prev
-      return prev
-    })
+        if (res.results) {
+          totalInserted += res.results.inserted
+          allErrors.push(
+            ...res.results.errors.map((e) => ({
+              row: e.row + i,
+              status: 'error' as const,
+              error: `${primaryAnalysis.label}: ${e.error}`,
+            }))
+          )
+        }
 
-    const records = getImportableRecords(currentRows, true)
-    const total = records.length
-
-    if (total === 0) {
-      toast('لا توجد سجلات صالحة للاستيراد', 'warning')
-      setIsImporting(false)
-      return
-    }
-
-    const allErrors: ImportResult['errors'] = []
-    let inserted = 0
-    const baseProgress = 10 // account for trainer creation phase
-
-    for (let i = 0; i < total; i += BATCH_SIZE) {
-      const batch = records.slice(i, i + BATCH_SIZE)
-      const res = await bulkImportRecords(targetTable, batch)
-
-      if (res.results) {
-        inserted += res.results.inserted
-        allErrors.push(...res.results.errors.map((e) => ({
-          row: e.row + i,
-          status: 'error' as const,
-          error: e.error,
-        })))
+        setProgress(40 + Math.min(((i + batch.length) / records.length) * 60, 60))
       }
-
-      setProgress(Math.min(baseProgress + ((i + batch.length) / total) * (100 - baseProgress), 100))
     }
+
+    setProgress(100)
 
     const result: ImportResult = {
-      inserted,
-      skipped: total - inserted - allErrors.length,
+      inserted: totalInserted,
+      skipped: totalRecords - totalInserted - allErrors.length,
       errors: allErrors,
-      total,
+      total: totalRecords,
     }
 
     setImportResult(result)
     setIsImporting(false)
-    setProgress(100)
 
     if (allErrors.length === 0) {
-      toast(`تم استيراد ${inserted} سجل بنجاح!`, 'success')
+      toast(`تم استيراد ${totalInserted} سجل بنجاح!`, 'success')
     } else {
-      toast(`تم استيراد ${inserted} سجل مع ${allErrors.length} أخطاء`, 'warning')
+      toast(`تم استيراد ${totalInserted} سجل مع ${allErrors.length} أخطاء`, 'warning')
     }
-  }, [targetTable, toast])
-
-  // Direct import (no trainer resolution needed)
-  const startImport = useCallback(async () => {
-    setStep('import')
-    setIsImporting(true)
-    setProgress(10)
-    await doImport()
-  }, [doImport])
+  }, [analysis, toast])
 
   // Reset wizard
   const handleReset = useCallback(() => {
     setStep('upload')
     setWorkbook(null)
     setSelectedSheetIndex(0)
-    setTargetTable(null)
-    setMappings([])
-    setPreviewRows([])
+    setAnalysis(null)
     setImportResult(null)
     setProgress(0)
   }, [])
 
-  // Step indicators — resolve step only shown when needed
+  // Step indicators
   const stepsList = useMemo(() => {
     const base: { key: WizardStep; label: string }[] = [
       { key: 'upload', label: 'رفع' },
       { key: 'sheet', label: 'ورقة' },
-      { key: 'mapping', label: 'تعيين' },
-      { key: 'preview', label: 'معاينة' },
+      { key: 'review', label: 'مراجعة' },
+      { key: 'import', label: 'استيراد' },
     ]
-    if (unresolvedTrainers.length > 0 && targetTable === 'classes') {
-      base.push({ key: 'resolve', label: 'مدربون' })
-    }
-    base.push({ key: 'import', label: 'استيراد' })
     return base
-  }, [unresolvedTrainers, targetTable])
+  }, [])
 
   const currentStepIndex = stepsList.findIndex((s) => s.key === step)
 
@@ -322,11 +292,10 @@ export function ImportWizard({ locale, refData }: ImportWizardProps) {
             />
           )}
 
-          {step === 'mapping' && selectedSheet && (
-            <ColumnMappingStep
-              sheet={selectedSheet}
-              refData={refData}
-              onConfirm={handleMappingConfirm}
+          {step === 'review' && analysis && (
+            <SmartReviewStep
+              analysis={analysis}
+              onConfirmImport={handleSmartImport}
               onBack={() => {
                 if (workbook && workbook.sheets.length > 1) {
                   setStep('sheet')
@@ -334,23 +303,6 @@ export function ImportWizard({ locale, refData }: ImportWizardProps) {
                   setStep('upload')
                 }
               }}
-            />
-          )}
-
-          {step === 'preview' && targetTable && (
-            <DataPreviewStep
-              previewRows={previewRows}
-              targetTable={targetTable}
-              onConfirmImport={handlePreviewConfirm}
-              onBack={() => setStep('mapping')}
-            />
-          )}
-
-          {step === 'resolve' && (
-            <ResolveTrainersStep
-              unresolvedTrainers={unresolvedTrainers}
-              onConfirm={handleTrainersResolved}
-              onBack={() => setStep('preview')}
             />
           )}
 

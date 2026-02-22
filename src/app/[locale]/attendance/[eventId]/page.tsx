@@ -30,7 +30,7 @@ export default async function AttendancePage({
   const supabase = await createServerSupabaseClient()
   const session = await getSession()
 
-  // Step 1: event + attendance in parallel
+  // Fetch event + attendance in parallel
   const [
     { data: event, error: eventError },
     { data: attendanceRecords }
@@ -45,38 +45,22 @@ export default async function AttendancePage({
 
   const eventWithHall = event as unknown as EventWithHall
 
-  // Step 2: Extract class_id from notes (prioritized) or fallback to trainer's first class
-  let targetClassId = null;
-  
-  // Try to parse from notes
+  // Get class_id from notes (set by schedule-created events) or fallback to trainer's class
+  let targetClassId: string | null = null
   if (event.notes_en) {
-      try {
-          const notes = JSON.parse(event.notes_en);
-          if (notes.class_id) targetClassId = notes.class_id;
-      } catch (e) {
-          console.error("Error parsing event notes:", e);
-      }
+    try { targetClassId = JSON.parse(event.notes_en).class_id || null } catch {}
   }
-
-  // Fallback: Try to find a class for this trainer if not found in notes
   if (!targetClassId && event.trainer_id) {
-       const { data: classData } = await (supabase as any)
-        .from('classes')
-        .select('id')
-        .eq('trainer_id', event.trainer_id)
-        .limit(1)
-        .single();
-        
-       if (classData) targetClassId = classData.id;
+    const { data: classData } = await (supabase as any)
+      .from('classes').select('id').eq('trainer_id', event.trainer_id).limit(1).single()
+    if (classData) targetClassId = classData.id
   }
 
-  // Step 3: Fetch trainees
+  // Fetch trainees for this class
   let trainees: Trainee[] = []
   if (targetClassId) {
     const { data } = await (supabase as any)
-      .from('trainees')
-      .select('*')
-      .eq('class_id', targetClassId)
+      .from('trainees').select('*').eq('class_id', targetClassId)
       .order('jersey_number', { ascending: true })
     trainees = data || []
   }
@@ -91,7 +75,7 @@ export default async function AttendancePage({
             locale={locale}
             title={getLocalizedField(eventWithHall, 'title', locale)}
             showBack
-            backHref={`/${locale}/schedule`}
+            backHref={`/${locale}`}
           />
         </div>
 

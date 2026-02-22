@@ -4,10 +4,9 @@ import type { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Card } from '@/components/ui/Card'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getSession } from '@/app/actions'
+import { getSession, fetchTodaySchedules } from '@/app/actions'
 import { QuickActions } from '@/components/home/QuickActions'
 import { getLocalizedField, formatTime } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
@@ -45,15 +44,25 @@ export default async function HomePage({
     { data: events },
     { count: hallsCount },
     { count: teamsCount },
-    { count: traineesCount }
+    { count: traineesCount },
+    schedulesRes
   ] = await Promise.all([
     supabase.from('events').select('*, halls(*)').eq('event_date', today).order('start_time', { ascending: true }),
     supabase.from('halls').select('*', { count: 'exact', head: true }),
     supabase.from('classes').select('*', { count: 'exact', head: true }),
     supabase.from('trainees').select('*', { count: 'exact', head: true }),
+    fetchTodaySchedules(),
   ])
 
-  const todayEvents = (events || []) as unknown as EventWithHall[]
+  // One-time events (games, manually created) — filter out auto-created from schedules
+  const manualEvents = ((events || []) as unknown as EventWithHall[]).filter(ev => {
+    if (!ev.notes_en) return true
+    try { return !JSON.parse(ev.notes_en).schedule_id } catch { return true }
+  })
+
+  // Recurring schedules (already have event_id from the batch RPC)
+  const scheduleEvents = schedulesRes.success ? schedulesRes.schedules : []
+  const hasContent = manualEvents.length > 0 || scheduleEvents.length > 0
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
@@ -112,6 +121,11 @@ export default async function HomePage({
                 <h2 className="text-base font-black text-white drop-shadow-md flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-indigo-400" />
                   {'جدول اليوم'}
+                  {hasContent && (
+                    <span className="text-xs font-bold text-indigo-300/60 bg-white/10 px-2 py-0.5 rounded-full">
+                      {manualEvents.length + scheduleEvents.length}
+                    </span>
+                  )}
                 </h2>
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 shadow-sm text-center">
                   <span className="font-syncopate text-xs text-white tracking-widest uppercase font-bold drop-shadow">
@@ -120,46 +134,77 @@ export default async function HomePage({
                 </div>
               </div>
 
-              {todayEvents.length > 0 ? (
+              {hasContent ? (
                 <div className="space-y-3">
-                  {todayEvents.map((event, index) => (
+                  {/* One-time events (games, etc) */}
+                  {manualEvents.map((event, index) => (
                     <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
-                      <Card interactive className={`animate-fade-in-up stagger-${index + 1} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
+                      <Card interactive className={`animate-fade-in-up stagger-${Math.min(index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        
                         <div className="flex items-center gap-4 relative z-10">
-                          {/* Time Block */}
                           <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
-                            <div className="text-lg font-black text-white drop-shadow-md leading-none">
-                              {formatTime(event.start_time).split(':')[0]}
-                            </div>
-                            <div className="text-[10px] text-indigo-200/60 uppercase font-black tracking-widest mt-1">
-                              {formatTime(event.start_time).includes('PM') ? 'PM' : 'AM'}
-                            </div>
+                            <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(event.start_time)}</div>
+                            <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(event.end_time)}</div>
                           </div>
-                          
-                          {/* Type Indicator Bar */}
                           <div className={`w-1 h-12 rounded-full shrink-0 ${event.type === 'game' ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.4)]' : 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]'}`} />
-                          
-                          {/* Event Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-md border border-orange-500/20' : 'text-green-300 bg-green-500/15 px-2 py-0.5 rounded-md border border-green-500/20'}`}>
-                                {event.type === 'game' 
-                                  ? 'مباراة'
-                                  : 'تدريب'
-                                }
+                                {event.type === 'game' ? 'مباراة' : 'تدريب'}
                               </span>
                             </div>
-                            <h3 className="font-bold text-white text-sm truncate leading-tight mb-1 drop-shadow-md">
-                              {getLocalizedField(event, 'title', locale)}
-                            </h3>
+                            <h3 className="font-bold text-white text-sm truncate leading-tight mb-1 drop-shadow-md">{getLocalizedField(event, 'title', locale)}</h3>
                             {event.halls && (
                               <p className="text-xs text-indigo-200/60 flex items-center gap-1 truncate font-medium">
                                 <Building2 className="w-3 h-3 shrink-0" />
                                 <span className="truncate">{getLocalizedField(event.halls, 'name', locale)}</span>
                               </p>
                             )}
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
+
+                  {/* Recurring schedule events — all have event_id, instant navigation */}
+                  {scheduleEvents.map((s: any, index: number) => (
+                    <Link key={s.event_id || s.schedule_id} href={`/${locale}/attendance/${s.event_id}`}>
+                      <Card interactive className={`animate-fade-in-up stagger-${Math.min(manualEvents.length + index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex items-center gap-4 relative z-10">
+                          <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
+                            <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(s.start_time)}</div>
+                            <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(s.end_time)}</div>
+                          </div>
+                          <div className="w-1 h-12 rounded-full shrink-0 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] uppercase tracking-wider font-bold text-green-300 bg-green-500/15 px-2 py-0.5 rounded-md border border-green-500/20">
+                                {'تدريب'}
+                              </span>
+                              {s[`category_name_${locale}`] && (
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/20 truncate">
+                                  {s[`category_name_${locale}`]}
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="font-bold text-white text-sm truncate leading-tight mb-1 drop-shadow-md">
+                              {s[`title_${locale}`] || s.title_ar}
+                            </h3>
+                            <div className="flex items-center gap-3 text-xs text-indigo-200/60 font-medium">
+                              {s[`hall_name_${locale}`] && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <Building2 className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">{s[`hall_name_${locale}`]}</span>
+                                </span>
+                              )}
+                              {s[`trainer_name_${locale}`] && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <User className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">{s[`trainer_name_${locale}`]}</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Card>
@@ -175,7 +220,7 @@ export default async function HomePage({
                     <p className="text-sm font-black text-white drop-shadow-md">{'لا توجد فعاليات اليوم'}</p>
                     <p className="text-xs text-indigo-200/70 font-bold">{'تحقق من جدول الأسبوع القادم'}</p>
                   </div>
-                  <Link 
+                  <Link
                     href={`/${locale}/schedule`}
                     className="px-4 py-2 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20 border border-white/10 transition-colors whitespace-nowrap backdrop-blur-md"
                   >
