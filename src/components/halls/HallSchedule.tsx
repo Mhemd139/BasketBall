@@ -191,6 +191,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                 <div className="flex items-center justify-between mb-2 px-1">
                      <button
                         onClick={() => setSelectedDate(addDays(selectedDate, -30))}
+                        aria-label="Previous month"
                         className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/70"
                      >
                         <ChevronLeft className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
@@ -200,6 +201,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                      </span>
                      <button
                         onClick={() => setSelectedDate(addDays(selectedDate, 30))}
+                        aria-label="Next month"
                         className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/70"
                      >
                         <ChevronRight className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />

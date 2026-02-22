@@ -169,6 +169,7 @@ export default function TrainerManager({ initialTrainers, locale = 'ar' }: { ini
                                 <button
                                     onClick={() => setDeleteTarget(trainer)}
                                     disabled={isLoading}
+                                    aria-label="Delete trainer"
                                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                                 >
                                     <Trash2 className="w-5 h-5" />
@@ -281,7 +282,7 @@ export default function TrainerManager({ initialTrainers, locale = 'ar' }: { ini
                         <div className="p-8">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900">إضافة مدرب جديد</h2>
-                                <button onClick={() => { setIsAddModalOpen(false); resetForm() }} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                <button onClick={() => { setIsAddModalOpen(false); resetForm() }} aria-label="Close" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                     <X className="w-6 h-6 text-gray-400" />
                                 </button>
                             </div>
