@@ -22,8 +22,6 @@ import type { ParsedWorkbook, ImportableTable, ImportResult, RefData } from '@/l
 
 type WizardStep = 'upload' | 'sheet' | 'review' | 'import'
 
-/** Dependency order: halls & trainers first, then classes, then trainees */
-const IMPORT_ORDER: ImportableTable[] = ['halls', 'trainers', 'classes', 'trainees']
 
 interface ImportWizardProps {
   locale: string

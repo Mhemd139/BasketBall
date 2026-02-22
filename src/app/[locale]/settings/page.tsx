@@ -29,7 +29,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   }
 
   return (
-    <AnimatedMeshBackground className="min-h-screen flex flex-col text-royal" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex flex-col text-white" suppressHydrationWarning>
       {/* Header */}
       <div className="bg-white/70 backdrop-blur-xl p-4 shadow-sm border-b border-white/20 sticky top-0 z-40">
         <div className="flex items-center gap-3">

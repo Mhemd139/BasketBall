@@ -7,10 +7,11 @@ import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { User, Calendar, Phone, Trophy, Plus, Clock, Building2 } from 'lucide-react'
+import { User, Calendar, Phone, Trophy, Plus, Building2 } from 'lucide-react'
 import { getSession } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
+import { ScheduleEditor } from '@/components/teams/ScheduleEditor'
 import { AttendanceHistory } from '@/components/teams/AttendanceHistory'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
@@ -44,10 +45,12 @@ export default async function TeamDetailPage({
 
   const [
     { data: team, error: teamError },
-    { data: roster }
+    { data: roster },
+    { data: allHalls }
   ] = await Promise.all([
     supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, trainers(id, name_ar, name_he, name_en, phone), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
-    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender').eq('class_id', classId).order('jersey_number', { ascending: true }).limit(200),
+    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).limit(200),
+    supabase.from('halls').select('id, name_ar, name_he, name_en').order('name_ar').limit(50),
   ])
 
   if (teamError || !team) {
@@ -60,17 +63,13 @@ export default async function TeamDetailPage({
   const hallNames = [...new Set(
     schedules.filter(s => s.halls).map(s => getLocalizedField(s.halls!, 'name', locale))
   )] as string[]
-
-  const dayNumMap: Record<number, string> = {
-    0: 'الأحد', 1: 'الإثنين', 2: 'الثلاثاء', 3: 'الأربعاء',
-    4: 'الخميس', 5: 'الجمعة', 6: 'السبت',
-  }
+  const halls = (allHalls || []) as { id: string; name_ar: string; name_he: string; name_en: string }[]
 
   return (
-    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
           <Header
             locale={locale}
@@ -145,27 +144,9 @@ export default async function TeamDetailPage({
                 <div className="bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm">
                   <div className="flex items-center gap-3 mb-2 text-gray-500 text-sm font-bold">
                     <Calendar className="w-4 h-4 text-green-600" />
-                    {'الموعد'}
+                    {'الجدول والقاعة'}
                   </div>
-                  {schedules.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {schedules
-                        .filter(s => s.start_time !== '00:00:00')
-                        .sort((a, b) => a.day_of_week - b.day_of_week)
-                        .map(s => (
-                          <div key={s.id} className="flex items-center gap-2 text-sm">
-                            <Clock className="w-3.5 h-3.5 shrink-0 text-green-500" />
-                            <span className="font-bold text-navy-900">{dayNumMap[s.day_of_week]}</span>
-                            <span dir="ltr" className="text-gray-600 font-medium">{s.start_time?.slice(0, 5)} - {s.end_time?.slice(0, 5)}</span>
-                            {s.halls && (
-                              <span className="text-gray-400 text-xs">• {getLocalizedField(s.halls, 'name', locale)}</span>
-                            )}
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="font-black text-navy-900 text-sm">{'غير محدد'}</p>
-                  )}
+                  <ScheduleEditor schedules={schedules} halls={halls} locale={locale} />
                 </div>
               </div>
             </section>

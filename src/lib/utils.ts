@@ -5,6 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Returns today's date string (YYYY-MM-DD) in Israel timezone.
+// Prevents UTC vs local mismatch on Vercel (UTC) vs dev (local TZ).
+export function getTodayISO(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })
+}
+
+// Returns a Date object representing "now" in Israel timezone context.
+export function getNowInIsrael(): Date {
+  const str = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' })
+  return new Date(str)
+}
+
 // Date formatting helper
 export function formatDate(date: string | Date, locale: string = 'ar'): string {
   const d = typeof date === 'string' ? new Date(date) : date
@@ -16,7 +28,8 @@ export function formatDate(date: string | Date, locale: string = 'ar'): string {
 }
 
 // Time formatting helper
-export function formatTime(time: string): string {
+export function formatTime(time: string | null | undefined): string {
+  if (!time) return ''
   // Simple 24-hour format: "15:30:00" → "15:30"
   return time.slice(0, 5)
 }

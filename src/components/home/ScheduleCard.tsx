@@ -43,6 +43,8 @@ export function ScheduleCard({ schedule, locale, date, index }: ScheduleCardProp
             } else {
                 toast('فشل في تحميل الحدث', 'error')
             }
+        } catch {
+            toast('فشل في تحميل الحدث', 'error')
         } finally {
             setLoading(false)
         }

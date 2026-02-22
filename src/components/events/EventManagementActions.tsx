@@ -25,7 +25,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
             toast('تم تحديث الحدث بنجاح', 'success')
             router.refresh()
         } else {
-            toast('فشل تحديث الحدث', 'error')
+            toast(res.error || 'فشل تحديث الحدث', 'error')
         }
     }
 

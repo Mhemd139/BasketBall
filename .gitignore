@@ -68,6 +68,10 @@ nul
 
 # AI Agent Framework
 .antigravity_tools/
+.agent/
+.agents/
+_agent/
+_agents/
 
 # Local scripts
 scripts/

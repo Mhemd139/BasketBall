@@ -138,8 +138,9 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
             {/* Left: Logo & Back */}
             <div className={`flex items-center gap-3 relative z-10 ${showBack ? 'pl-2' : ''}`}>
               {showBack && (
-                <button 
+                <button
                   onClick={onBack || (() => backHref ? router.push(backHref) : router.back())}
+                  aria-label="Go back"
                   className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white transition-colors"
                 >
                   <BackIcon className="w-6 h-6" />
@@ -217,8 +218,9 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 
             {/* Mobile Actions */}
             <div className="flex md:hidden items-center gap-2">
-                 <button 
+                 <button
                     onClick={() => setSearchOpen(!searchOpen)}
+                    aria-label="Toggle search"
                     className={`p-2 rounded-full transition-colors ${
                         searchOpen ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80'
                     }`}

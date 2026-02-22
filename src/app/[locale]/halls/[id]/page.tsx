@@ -6,7 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getLocalizedField, formatDate, formatTime } from '@/lib/utils'
+import { getLocalizedField, formatDate, formatTime, getNowInIsrael } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -29,14 +29,14 @@ export default async function HallDetailPage({
   const supabase = await createServerSupabaseClient()
   const session = await getSession() // Fetch Session
 
-  const today = new Date()
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
-  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0]
+  const today = getNowInIsrael()
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })
 
   const [{ data: hall, error: hallError }, { data: events }, schedulesRes] = await Promise.all([
     supabase.from('halls').select('*').eq('id', id).single(),
     supabase.from('events')
-      .select('*')
+      .select('*, trainers(name_he, name_ar, name_en)')
       .eq('hall_id', id)
       .gte('event_date', startOfMonth)
       .lte('event_date', endOfMonth)
@@ -53,10 +53,10 @@ export default async function HallDetailPage({
   const isEditable = session?.role === 'headcoach' || session?.role === 'coach' || session?.role === 'admin' || session?.role === 'trainer'
 
   return (
-    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
       
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
           <Header locale={locale} showBack backHref={`/${locale}/halls`} />
         </div>
@@ -97,8 +97,8 @@ export default async function HallDetailPage({
             <section>
               <HallSchedule
                 hallId={hallData.id}
-                events={events as any}
-                weeklySchedules={schedulesRes.success ? schedulesRes.schedules : []}
+                events={events as Event[]}
+                weeklySchedules={schedulesRes.schedules ?? []}
                 locale={locale}
                 isEditable={isEditable}
              />

@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { sign, verify } from '@/lib/session'
+import { getTodayISO, getNowInIsrael } from '@/lib/utils'
 
 type AttendanceStatus = 'present' | 'absent' | 'late'
 
@@ -47,40 +48,40 @@ const crypto = require('crypto')
 // --- Event Actions ---
 
 export async function upsertEvent(eventData: any) {
-  const session = await getSession()
-  if (!session) {
-      return { success: false, error: 'Unauthorized' }
+  try {
+    const session = await getSession()
+
+    const supabase = await createServerSupabaseClient()
+
+    // Basic validation
+    if (!eventData.hall_id || !eventData.start_time || !eventData.end_time || !eventData.event_date) {
+        return { success: false, error: 'Missing required fields' }
+    }
+
+    // Prevent creating events in the past
+    const todayStr = getTodayISO()
+    if (eventData.event_date < todayStr && !eventData.id) {
+        return { success: false, error: 'Cannot add events to past dates' }
+    }
+
+    // trainer_id: prefer explicit value from event data, fallback to logged-in trainer
+    // (session.id is always a trainer UUID in our auth system)
+    const payload = {
+        ...eventData,
+        trainer_id: eventData.trainer_id || session?.id || null
+    }
+
+    const { data, error } = await (supabase as any).rpc('upsert_event', { p_data: payload })
+
+    if (error) {
+        return { success: false, error: error.message || 'فشل حفظ الحدث' }
+    }
+
+    revalidatePath('/[locale]/halls/[id]', 'page')
+    return { success: true, event: data }
+  } catch (e: any) {
+    return { success: false, error: 'فشل حفظ الحدث' }
   }
-
-  const supabase = await createServerSupabaseClient()
-  
-  // Basic validation (can be expanded)
-  if (!eventData.hall_id || !eventData.start_time || !eventData.end_time || !eventData.event_date) {
-      return { success: false, error: 'Missing required fields' }
-  }
-
-  // Prevent creating events in the past
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const eventDate = new Date(eventData.event_date)
-  if (eventDate < today && !eventData.id) {
-      return { success: false, error: 'Cannot add events to past dates' }
-  }
-
-  // Inject trainer_id if creating or updating
-  const payload = {
-      ...eventData,
-      trainer_id: eventData.trainer_id || session.id
-  }
-
-  const { data, error } = await (supabase as any).rpc('upsert_event', { p_data: payload })
-
-  if (error) {
-      return { success: false, error: error.message }
-  }
-
-  revalidatePath('/[locale]/halls/[id]', 'page')
-  return { success: true, event: data }
 }
 
 export async function sendOTP(phone: string) {
@@ -597,8 +598,8 @@ export async function getTeamAttendanceHistory(classId: string) {
     if (!team) return { success: false, error: 'Team not found' }
 
     // 2. Get Date Range (Last 30 Days)
-    const endDate = new Date()
-    const startDate = new Date()
+    const endDate = getNowInIsrael()
+    const startDate = getNowInIsrael()
     startDate.setDate(startDate.getDate() - 30)
 
     // 3. Get Trainees for this Class FIRST
@@ -659,20 +660,17 @@ export async function getTeamAttendanceHistory(classId: string) {
 
 export async function getEventAttendance(eventId: string, classId?: string | null) {
   const supabase = await createServerSupabaseClient()
-  
-  // 1. Get trainees
-  // If classId is provided, we fetch the roster + some others
-  // If not, we fetch all (limited for performance)
-  let query = (supabase as any).from('trainees').select('*')
-  
+
+  // 1. Get trainees — only the class roster when classId is provided
+  let query = (supabase as any).from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender')
+
   if (classId) {
-    // Prioritize roster, then others
-    query = query.order('class_id', { ascending: false }) // This is a bit weak for priority, but we'll filter in UI anyway
+    query = query.eq('class_id', classId)
   }
-  
+
   const { data: trainees, error: traineesError } = await query
     .order('name_ar', { ascending: true })
-    .limit(classId ? 200 : 100) // Safety limit
+    .limit(200)
 
   if (traineesError) {
     return { success: false, error: traineesError.message }
@@ -681,7 +679,7 @@ export async function getEventAttendance(eventId: string, classId?: string | nul
   // 2. Get existing attendance for this event
   const { data: attendance, error: attendanceError } = await (supabase as any)
     .from('attendance')
-    .select('*')
+    .select('id, trainee_id, event_id, status, marked_by, created_at')
     .eq('event_id', eventId)
 
   if (attendanceError) {
@@ -745,7 +743,7 @@ export async function fetchHallEvents(hallId: string, startDate: string, endDate
     
     const { data: events, error } = await (supabase as any)
         .from('events')
-        .select('*')
+        .select('*, trainers(name_he, name_ar, name_en)')
         .eq('hall_id', hallId)
         .gte('event_date', startDate)
         .lte('event_date', endDate)
@@ -778,9 +776,9 @@ export async function fetchHallSchedules(hallId: string) {
 
 export async function fetchTodaySchedules() {
     const supabase = await createServerSupabaseClient()
-    const today = new Date()
+    const today = getNowInIsrael()
     const todayDow = today.getDay() // 0=Sunday, 6=Saturday
-    const todayDate = today.toISOString().split('T')[0]
+    const todayDate = getTodayISO()
 
     const { data, error } = await (supabase as any).rpc('ensure_events_for_schedules', {
         p_day_of_week: todayDow,
@@ -837,14 +835,12 @@ export async function getOrCreateEventForSchedule(scheduleId: string, date: stri
         return { success: false, error: 'Schedule not found' }
     }
 
-    // 2. Check if event already exists for this schedule+date
+    // 2. Check if event already exists for this schedule+date (matches unique index)
     const { data: existing } = await (supabase as any)
         .from('events')
         .select('id')
+        .eq('schedule_id', scheduleId)
         .eq('event_date', date)
-        .eq('hall_id', schedule.hall_id)
-        .eq('start_time', schedule.start_time)
-        .eq('trainer_id', schedule.classes?.trainer_id)
         .limit(1)
 
     if (existing && existing.length > 0) {
@@ -853,12 +849,11 @@ export async function getOrCreateEventForSchedule(scheduleId: string, date: stri
 
     // 3. Create a new event from the schedule
     const teamName = schedule.classes?.name_he || schedule.classes?.name_ar || 'تدريب'
-    const notesJson = JSON.stringify({ class_id: schedule.class_id, schedule_id: scheduleId })
 
     const { data: newEvent, error: createError } = await (supabase as any).rpc('upsert_event', {
         p_data: {
             hall_id: schedule.hall_id,
-            trainer_id: schedule.classes?.trainer_id || session.id,
+            trainer_id: schedule.classes?.trainer_id,
             type: 'training',
             title_he: teamName,
             title_ar: teamName,
@@ -866,7 +861,8 @@ export async function getOrCreateEventForSchedule(scheduleId: string, date: stri
             event_date: date,
             start_time: schedule.start_time,
             end_time: schedule.end_time,
-            notes_en: notesJson,
+            schedule_id: scheduleId,
+            class_id: schedule.class_id,
         }
     })
 
@@ -1080,6 +1076,28 @@ export async function deleteEvent(id: string) {
     return { success: true }
 }
 
+export async function updateEventTime(eventId: string, startTime: string, endTime: string) {
+    try {
+        const supabase = await createServerSupabaseClient()
+        const { error, data } = await (supabase as any).rpc('update_event_time', {
+            p_event_id: eventId,
+            p_start_time: startTime,
+            p_end_time: endTime,
+        })
+
+        if (error) {
+            return { success: false, error: error.message || 'فشل تحديث الوقت' }
+        }
+
+        revalidatePath('/[locale]/attendance/[eventId]', 'page')
+        revalidatePath('/[locale]/schedule', 'page')
+        revalidatePath('/[locale]/halls/[id]', 'page')
+        return { success: true }
+    } catch (e: any) {
+        return { success: false, error: 'فشل تحديث الوقت' }
+    }
+}
+
 export async function updateHall(id: string, name_en: string, name_ar: string, name_he: string) {
     const session = await getSession()
     if (!session) {
@@ -1101,6 +1119,29 @@ export async function updateHall(id: string, name_en: string, name_ar: string, n
     revalidatePath('/[locale]/halls/[id]', 'page')
     revalidatePath('/[locale]/halls', 'page')
     return { success: true, hall: data }
+}
+
+export async function updateClassSchedule(scheduleId: string, hallId: string, startTime: string, endTime: string) {
+    try {
+        const supabase = await createServerSupabaseClient()
+        const { error, data } = await (supabase as any).rpc('update_class_schedule', {
+            p_schedule_id: scheduleId,
+            p_hall_id: hallId,
+            p_start_time: startTime,
+            p_end_time: endTime,
+        })
+
+        if (error) {
+            return { success: false, error: error.message || 'فشل تحديث الجدول' }
+        }
+
+        revalidatePath('/[locale]/teams/[classId]', 'page')
+        revalidatePath('/[locale]/schedule', 'page')
+        revalidatePath('/[locale]/halls/[id]', 'page')
+        return { success: true }
+    } catch (e: any) {
+        return { success: false, error: 'فشل تحديث الجدول' }
+    }
 }
 
 export async function updateTrainerDetails(id: string, data: any) {

@@ -88,18 +88,6 @@ export function transformRow(
     }
   }
 
-  // Multi-lang auto-fill: if only one name field is set, copy to others
-  const nameFields = ['name_ar', 'name_he', 'name_en']
-  const setNameFields = nameFields.filter((f) => transformed[f])
-  if (setNameFields.length === 1) {
-    const nameValue = transformed[setNameFields[0]]
-    for (const f of nameFields) {
-      if (!transformed[f]) {
-        transformed[f] = nameValue
-      }
-    }
-  }
-
   // Handle category merging for classes
   if (targetTable === 'classes') {
     const category = transformed['_category']
@@ -112,6 +100,18 @@ export function transformRow(
         transformed['name_ar'] = `${category.trim()} - ${nameAr.trim()}`
       } else {
         transformed['name_ar'] = category.trim()
+      }
+    }
+  }
+
+  // Multi-lang auto-fill: if only one name field is set, copy to others
+  const nameFields = ['name_ar', 'name_he', 'name_en']
+  const setNameFields = nameFields.filter((f) => transformed[f])
+  if (setNameFields.length === 1) {
+    const nameValue = transformed[setNameFields[0]]
+    for (const f of nameFields) {
+      if (!transformed[f]) {
+        transformed[f] = nameValue
       }
     }
   }

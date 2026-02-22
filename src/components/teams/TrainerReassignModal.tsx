@@ -58,7 +58,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
     })
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                     <div>
@@ -69,7 +69,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                             {'اختر مدرباً لهذا الفريق'}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors text-slate-400">
+                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white rounded-full transition-colors text-slate-400">
                         <X className="w-5 h-5" />
                     </button>
                 </div>

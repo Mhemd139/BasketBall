@@ -200,31 +200,23 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
         })}
       </div>
 
-      {/* Summary Bar */}
-      <div className="sticky bottom-28 md:bottom-6 z-[110] transition-all duration-300 ease-in-out space-y-3">
-        
-        {/* Submit Button */}
-        <div className="flex justify-end">
-            <button 
-                onClick={() => {
-                   setShowSuccess(true);
-                   setTimeout(() => {
-                        router.back(); 
-                   }, 1500);
-                }}
-                className="btn btn-primary shadow-xl shadow-indigo-200 animate-in slide-in-from-bottom-4"
-            >
-                <CheckCheck className="w-5 h-5" />
-                {'إنهاء وحفظ'}
-            </button>
-        </div>
+      {/* Summary Bar + Submit — in-flow, sticky to bottom of viewport */}
+      <div className="sticky bottom-[72px] md:bottom-0 z-30 mt-4 px-1">
+        <div className="flex items-center justify-between bg-white/95 backdrop-blur-lg rounded-2xl p-3 border shadow-lg gap-3">
+          <button
+            onClick={() => {
+              setShowSuccess(true);
+              setTimeout(() => {
+                router.back();
+              }, 1500);
+            }}
+            className="btn btn-primary shadow-lg shadow-indigo-200 text-sm py-2.5 px-4 flex-shrink-0"
+          >
+            <CheckCheck className="w-4 h-4" />
+            {'إنهاء وحفظ'}
+          </button>
 
-        <div className="flex items-center justify-between bg-white/95 backdrop-blur-lg rounded-2xl p-4 border shadow-lg">
-          <div className="flex items-center gap-1.5 text-sm">
-            <Users className="w-4 h-4 text-gray-400" />
-            <span className="font-medium text-gray-600">{trainees.length}</span>
-          </div>
-          <div className="flex items-center gap-4 text-sm font-semibold">
+          <div className="flex items-center gap-3 text-sm font-semibold">
             <span className="flex items-center gap-1 text-green-600">
               <Check className="w-4 h-4" strokeWidth={3} />
               {counts.present}
@@ -236,6 +228,10 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
             <span className="flex items-center gap-1 text-amber-600">
               <Clock className="w-4 h-4" strokeWidth={2.5} />
               {counts.late}
+            </span>
+            <span className="flex items-center gap-1.5 text-gray-400">
+              <Users className="w-4 h-4" />
+              <span className="font-medium text-gray-600">{trainees.length}</span>
             </span>
           </div>
         </div>

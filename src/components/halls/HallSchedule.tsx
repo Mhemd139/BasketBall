@@ -5,7 +5,8 @@ import { InteractiveEventModal } from './InteractiveEventModal';
 import { AttendanceModal } from './AttendanceModal';
 import {
     format, addDays, startOfDay, isSameDay, parseISO,
-    startOfWeek, startOfMonth, endOfWeek, endOfMonth, eachDayOfInterval, isBefore
+    startOfWeek, startOfMonth, endOfWeek, endOfMonth, eachDayOfInterval, isBefore,
+    addMonths, subMonths
 } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 import { Calendar, Clock, ChevronLeft, ChevronRight, Users } from 'lucide-react';
@@ -23,6 +24,9 @@ interface Event {
     event_date: string;
     type: 'game' | 'training';
     description?: string;
+    schedule_id?: string | null;
+    class_id?: string | null;
+    trainers?: { name_he: string; name_ar: string; name_en: string } | null;
 }
 
 interface WeeklySchedule {
@@ -30,7 +34,7 @@ interface WeeklySchedule {
     day_of_week: number;
     start_time: string;
     end_time: string;
-    notes: string;
+    notes: string | null;
     classes: {
         id: string;
         name_he: string;
@@ -92,18 +96,31 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
         return eachDayOfInterval({ start, end });
     }, [selectedDate]);
 
+    // Manual/one-off events only (no schedule-derived — those show as green cards)
     const dailyEvents = useMemo(() => {
-        return events.filter(e => isSameDay(parseISO(e.event_date), selectedDate))
-                     .sort((a, b) => a.start_time.localeCompare(b.start_time));
+        return events
+            .filter(e => isSameDay(parseISO(e.event_date), selectedDate))
+            .filter(e => !e.schedule_id)
+            .sort((a, b) => a.start_time.localeCompare(b.start_time));
     }, [events, selectedDate]);
 
-    // Filter weekly schedules for the selected day of week
+    // Schedules enriched with event overrides (time edits, event id for attendance)
     const dailySchedules = useMemo(() => {
-        const dayOfWeek = selectedDate.getDay(); // 0=Sunday matches our DB
+        const dayOfWeek = selectedDate.getDay();
+        const dayEvents = events.filter(e => isSameDay(parseISO(e.event_date), selectedDate));
         return weeklySchedules
             .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00')
+            .map(s => {
+                const event = dayEvents.find(e => e.schedule_id === s.id);
+                return {
+                    ...s,
+                    event,
+                    start_time: event?.start_time || s.start_time,
+                    end_time: event?.end_time || s.end_time,
+                };
+            })
             .sort((a, b) => a.start_time.localeCompare(b.start_time));
-    }, [weeklySchedules, selectedDate]);
+    }, [weeklySchedules, selectedDate, events]);
 
     // Check if a day has events or schedules
     const hasContent = (date: Date) => {
@@ -149,6 +166,11 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
 
     const handleEventClick = (event: Event) => {
         if (!isEditable) return;
+        // Schedule-derived events → navigate to attendance page directly
+        if (event.schedule_id) {
+            router.push(`/${locale}/attendance/${event.id}`);
+            return;
+        }
         const eventDate = parseISO(event.event_date);
         const today = startOfDay(new Date());
         const isPastOrToday = isBefore(eventDate, addDays(today, 1));
@@ -160,10 +182,16 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
         }
     };
 
-    const handleScheduleClick = async (schedule: WeeklySchedule) => {
+    const handleScheduleClick = async (schedule: WeeklySchedule & { event?: Event }) => {
         const today = startOfDay(new Date());
-        const isFuture = isBefore(addDays(today, 1), startOfDay(selectedDate));
-        if (isFuture) return; // Don't create events for future dates
+        const isFuture = isBefore(today, startOfDay(selectedDate));
+        if (isFuture) return;
+
+        // If event already exists, navigate directly — no DB call
+        if (schedule.event) {
+            router.push(`/${locale}/attendance/${schedule.event.id}`);
+            return;
+        }
 
         setLoadingScheduleId(schedule.id);
         try {
@@ -174,6 +202,8 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
             } else {
                 toast('فشل في تحميل الحدث', 'error');
             }
+        } catch {
+            toast('فشل في تحميل الحدث', 'error');
         } finally {
             setLoadingScheduleId(null);
         }
@@ -194,7 +224,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
 
                 <div className="flex items-center justify-between mb-2 px-1">
                      <button
-                        onClick={() => setSelectedDate(addDays(selectedDate, -30))}
+                        onClick={() => setSelectedDate(subMonths(selectedDate, 1))}
                         aria-label="Previous month"
                         className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/70"
                      >
@@ -204,7 +234,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                         {format(selectedDate, 'MMMM yyyy', { locale: dateLocale })}
                      </span>
                      <button
-                        onClick={() => setSelectedDate(addDays(selectedDate, 30))}
+                        onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
                         aria-label="Next month"
                         className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/70"
                      >
@@ -288,7 +318,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                 const teamName = schedule.classes?.name_he || '';
                                 const trainerName = schedule.classes?.trainers?.name_he || '';
                                 const isLoading = loadingScheduleId === schedule.id;
-                                const isPastOrToday = !isBefore(addDays(startOfDay(new Date()), 1), startOfDay(selectedDate));
+                                const isPastOrToday = !isBefore(startOfDay(new Date()), startOfDay(selectedDate));
 
                                 return (
                                     <div key={schedule.id} className="relative flex items-start gap-3">
@@ -299,7 +329,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                         </div>
 
                                         <div
-                                            className={`flex-1 rounded-2xl p-3 border-l-4 shadow-sm transition-all bg-green-500/10 border-green-400 ${isCurrent ? 'ring-2 ring-green-400 ring-offset-0' : ''} ${isPastOrToday ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''} ${isLoading ? 'opacity-70' : ''}`}
+                                            className={`relative flex-1 rounded-2xl p-3 border-l-4 shadow-sm transition-all bg-green-500/10 border-green-400 ${isCurrent ? 'ring-2 ring-green-400 ring-offset-0' : ''} ${isPastOrToday ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''} ${isLoading ? 'opacity-70' : ''}`}
                                             onClick={() => isPastOrToday && handleScheduleClick(schedule)}
                                         >
                                             {isLoading && (
@@ -370,9 +400,17 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-white/50">
-                                                <Clock className="w-3 h-3" />
-                                                <span>{formatTimeStr(event.start_time)} - {formatTimeStr(event.end_time)}</span>
+                                            <div className="flex items-center gap-3 text-xs text-white/50">
+                                                {event.trainers && (
+                                                    <span className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        {event.trainers.name_he || event.trainers.name_ar}
+                                                    </span>
+                                                )}
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {formatTimeStr(event.start_time)} - {formatTimeStr(event.end_time)}
+                                                </span>
                                             </div>
                                         </div>
 

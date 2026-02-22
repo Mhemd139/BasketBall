@@ -71,8 +71,9 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                 
                 {/* Header Background */}
                 <div className={`h-32 ${isFemale ? 'bg-gradient-to-br from-[#0B132B] to-pink-900/40 border-b border-white/10' : 'bg-gradient-to-br from-[#0B132B] to-blue-900/40 border-b border-white/10'} relative`}>
-                    <button 
+                    <button
                         onClick={onClose}
+                        aria-label="Close"
                         className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white rounded-full transition-colors backdrop-blur-sm"
                     >
                         <X className="w-5 h-5" />

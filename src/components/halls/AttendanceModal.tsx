@@ -215,31 +215,34 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                 </div>
                 
                 <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg shrink-0">
-                    <button 
+                    <button
                         onClick={() => handleStatusUpdate(trainee.id, 'present')}
+                        aria-label="Mark present"
                         className={`w-8 h-8 flex items-center justify-center rounded-md transition-all ${
-                            status === 'present' 
-                            ? 'bg-green-500 text-white shadow-sm scale-110' 
+                            status === 'present'
+                            ? 'bg-green-500 text-white shadow-sm scale-110'
                             : 'text-gray-400 hover:bg-white hover:text-green-600'
                         }`}
                     >
                         <Check className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                         onClick={() => handleStatusUpdate(trainee.id, 'late')}
+                        aria-label="Mark late"
                         className={`w-8 h-8 flex items-center justify-center rounded-md transition-all ${
-                            status === 'late' 
-                            ? 'bg-yellow-500 text-white shadow-sm scale-110' 
+                            status === 'late'
+                            ? 'bg-yellow-500 text-white shadow-sm scale-110'
                             : 'text-gray-400 hover:bg-white hover:text-yellow-600'
                         }`}
                     >
                         <Clock className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                         onClick={() => handleStatusUpdate(trainee.id, 'absent')}
+                        aria-label="Mark absent"
                         className={`w-8 h-8 flex items-center justify-center rounded-md transition-all ${
-                            status === 'absent' 
-                            ? 'bg-red-500 text-white shadow-sm scale-110' 
+                            status === 'absent'
+                            ? 'bg-red-500 text-white shadow-sm scale-110'
                             : 'text-gray-400 hover:bg-white hover:text-red-600'
                         }`}
                     >
@@ -252,7 +255,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px] h-[85vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-white/20">
+            <DialogContent className="sm:max-w-[600px] max-h-full flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-white/20">
                 
                 <DialogHeader className="p-6 pb-2 border-b border-gray-100 flex-shrink-0">
                     <DialogTitle className="flex justify-between items-start">
@@ -354,7 +357,7 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
                                 className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto"
                             >
                                 <div className="flex items-center gap-3 mb-2">
-                                    <button onClick={() => setIsRegistering(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                                    <button onClick={() => setIsRegistering(false)} aria-label="Go back" className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
                                         <ArrowLeft className="w-5 h-5" />
                                     </button>
                                     <h3 className="text-lg font-bold text-navy-900">{'تسجيل لاعب جديد'}</h3>

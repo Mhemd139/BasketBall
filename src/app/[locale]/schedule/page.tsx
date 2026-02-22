@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSession } from '@/app/actions'
-import { getLocalizedField, formatTime, formatDate } from '@/lib/utils'
+import { getLocalizedField, formatTime, formatDate, getTodayISO, getNowInIsrael } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { Calendar as CalendarIcon, MapPin, ChevronRight, Plus } from 'lucide-react'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
@@ -30,8 +30,9 @@ export default async function SchedulePage({
   const session = await getSession()
   const canManage = !!session
 
-  const today = new Date().toISOString().split('T')[0]
-  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const today = getTodayISO()
+  const now = getNowInIsrael()
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })
 
   // Fetch upcoming events for the next 7 days
   const { data: events } = await supabase
@@ -59,7 +60,7 @@ export default async function SchedulePage({
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={(await getSession())?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
         <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header
             locale={locale}

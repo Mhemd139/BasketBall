@@ -32,6 +32,8 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     // Training Specific
     const [selectedTrainer, setSelectedTrainer] = useState<string>(initialEvent?.trainer_id || '');
     const [selectedClass, setSelectedClass] = useState<string>(() => {
+        // Prefer proper class_id column, fallback to legacy notes_en JSON
+        if (initialEvent?.class_id) return initialEvent.class_id;
         if (initialEvent?.notes_en) {
             try { return JSON.parse(initialEvent.notes_en).class_id || ''; } catch { return ''; }
         }
@@ -113,8 +115,20 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     const handleSave = async () => {
         setLoading(true);
         try {
-            const title = generateTitle();
+            const generated = generateTitle();
+            // Keep original title when editing if no class was selected (avoids 'تدريب جديد' overwrite)
+            const title = (initialEvent && generated === 'تدريب جديد')
+                ? (initialEvent.title_ar || initialEvent.title_he || generated)
+                : generated;
+
+            // Preserve existing notes fields (like schedule_id) when editing
+            let existingNotes: Record<string, any> = {};
+            if (initialEvent?.notes_en) {
+                try { existingNotes = JSON.parse(initialEvent.notes_en); } catch {}
+            }
+
             const notes = {
+                ...existingNotes,
                 class_id: type === 'training' ? selectedClass : homeTeam,
                 gameType,
                 homeBtn: homeTeam,
@@ -130,12 +144,13 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                 start_time: startTime,
                 end_time: endTime,
                 event_date: initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-                trainer_id: selectedTrainer || null,
+                hall_id: initialEvent?.hall_id || null,
+                trainer_id: initialEvent?.trainer_id || selectedTrainer || null,
                 notes_en: JSON.stringify(notes),
             });
             onClose();
         } catch (error) {
-            console.error(error);
+            // error handled by parent
         } finally {
             setLoading(false);
         }
@@ -208,7 +223,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                 <h2 className="text-3xl font-syncopate font-bold tracking-tight">
                                     {step === 'delete-confirm' ? 'حذف' : initialEvent ? 'تعديل' : 'إضافة'}
                                 </h2>
-                                <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95">
+                                <button onClick={onClose} aria-label="Close" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-95">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
@@ -328,19 +343,21 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                     <motion.div key="time" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-8 pb-10">
                                         <div className="bg-white p-6 rounded-3xl shadow-soft isolate">
                                             <h3 className="text-sm font-bold text-royal/50 uppercase tracking-wider mb-4">وقت البدء</h3>
-                                            <input 
-                                                type="time" 
+                                            <input
+                                                type="time"
                                                 value={startTime}
                                                 onChange={(e) => setStartTime(e.target.value)}
+                                                aria-label="Start time"
                                                 className="w-full bg-transparent border-none text-5xl sm:text-7xl font-space font-black text-royal outline-none focus:ring-0 p-0 text-center"
                                             />
                                         </div>
                                         <div className="bg-white p-6 rounded-3xl shadow-soft isolate">
                                             <h3 className="text-sm font-bold text-royal/50 uppercase tracking-wider mb-4">وقت الانتهاء</h3>
-                                            <input 
-                                                type="time" 
+                                            <input
+                                                type="time"
                                                 value={endTime}
                                                 onChange={(e) => setEndTime(e.target.value)}
+                                                aria-label="End time"
                                                 className="w-full bg-transparent border-none text-5xl sm:text-7xl font-space font-black text-royal outline-none focus:ring-0 p-0 text-center"
                                             />
                                         </div>

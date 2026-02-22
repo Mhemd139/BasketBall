@@ -181,10 +181,12 @@ export default function TrainerManager({ initialTrainers, locale = 'ar' }: { ini
                                     {trainer.name_ar || trainer.name_en || 'بدون اسم'}
                                 </h3>
 
-                                <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-4" dir="ltr">
-                                    <Phone className="w-4 h-4" />
-                                    {trainer.phone?.startsWith('972') ? '0' + trainer.phone.slice(3) : trainer.phone}
-                                </div>
+                                {trainer.phone && (
+                                    <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-4" dir="ltr">
+                                        <Phone className="w-4 h-4" />
+                                        {trainer.phone.startsWith('972') ? '0' + trainer.phone.slice(3) : trainer.phone}
+                                    </div>
+                                )}
 
                                 <div className="flex items-center gap-2">
                                     <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
