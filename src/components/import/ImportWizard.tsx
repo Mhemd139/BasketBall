@@ -141,14 +141,21 @@ export function ImportWizard({ locale, refData }: ImportWizardProps) {
         toast(`تم إنشاء ${createdCount} مدرب جديد`, 'success')
 
         // Patch preview rows with newly created trainer IDs
-        // so the primary table import can reference them
-        for (const row of primaryAnalysis.previewRows) {
+        // Clone to avoid direct mutation of React state
+        primaryAnalysis.previewRows = primaryAnalysis.previewRows.map(row => {
           const unresolvedName = row.transformed._unresolved_trainer_id
           if (unresolvedName && typeof unresolvedName === 'string' && res.nameToId[unresolvedName]) {
-            row.transformed.trainer_id = res.nameToId[unresolvedName]
-            row.transformed._display_trainer_id = unresolvedName
+            return {
+              ...row,
+              transformed: {
+                ...row.transformed,
+                trainer_id: res.nameToId[unresolvedName],
+                _display_trainer_id: unresolvedName,
+              },
+            }
           }
-        }
+          return row
+        })
       }
     }
 

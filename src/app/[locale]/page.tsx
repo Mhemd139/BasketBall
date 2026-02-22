@@ -1,5 +1,4 @@
 // 🏀 Basketball Manager - Last build trigger: 2026-02-08T22:07:00
-import { getDictionary } from '@/lib/i18n/get-dictionary'
 import type { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -21,6 +20,26 @@ interface EventWithHall extends Event {
   halls: Hall | null
 }
 
+interface ScheduleEvent {
+  event_id: string
+  schedule_id: string
+  start_time: string
+  end_time: string
+  title_ar: string
+  title_he: string
+  title_en: string
+  hall_name_ar: string | null
+  hall_name_he: string | null
+  hall_name_en: string | null
+  trainer_name_ar: string | null
+  trainer_name_he: string | null
+  trainer_name_en: string | null
+  category_name_ar: string | null
+  category_name_he: string | null
+  category_name_en: string | null
+  type: string
+}
+
 import { notFound } from 'next/navigation'
 import { isValidLocale } from '@/lib/i18n/config'
 
@@ -33,7 +52,6 @@ export default async function HomePage({
   if (!isValidLocale(locale)) {
     notFound()
   }
-  const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
   const session = await getSession()
   const canManage = !!session // Ensure logged-in trainers can see quick action shortcuts
@@ -167,7 +185,7 @@ export default async function HomePage({
                   ))}
 
                   {/* Recurring schedule events — all have event_id, instant navigation */}
-                  {scheduleEvents.map((s: any, index: number) => (
+                  {scheduleEvents.map((s: ScheduleEvent, index: number) => (
                     <Link key={s.event_id || s.schedule_id} href={`/${locale}/attendance/${s.event_id}`}>
                       <Card interactive className={`animate-fade-in-up stagger-${Math.min(manualEvents.length + index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

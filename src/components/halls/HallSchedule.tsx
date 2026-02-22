@@ -11,6 +11,7 @@ import { arSA } from 'date-fns/locale';
 import { Calendar, Clock, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { upsertEvent, fetchHallEvents, getOrCreateEventForSchedule } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/Toast';
 
 interface Event {
     id: string;
@@ -54,6 +55,7 @@ interface HallScheduleProps {
 
 export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, locale, isEditable = false }: HallScheduleProps) {
     const router = useRouter();
+    const { toast } = useToast();
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [view] = useState<'week' | 'month'>('month');
     const [now, setNow] = useState<Date | null>(null);
@@ -169,6 +171,8 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
             const res = await getOrCreateEventForSchedule(schedule.id, dateStr);
             if (res.success && res.eventId) {
                 router.push(`/${locale}/attendance/${res.eventId}`);
+            } else {
+                toast('فشل في تحميل الحدث', 'error');
             }
         } finally {
             setLoadingScheduleId(null);

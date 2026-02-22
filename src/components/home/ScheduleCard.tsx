@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getOrCreateEventForSchedule } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
+import { useToast } from '@/components/ui/Toast'
 import { Building2, User, Clock } from 'lucide-react'
 
 interface ScheduleCardProps {
@@ -29,6 +30,7 @@ interface ScheduleCardProps {
 
 export function ScheduleCard({ schedule, locale, date, index }: ScheduleCardProps) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(false)
 
     const handleClick = async () => {
@@ -38,6 +40,8 @@ export function ScheduleCard({ schedule, locale, date, index }: ScheduleCardProp
             const res = await getOrCreateEventForSchedule(schedule.id, date)
             if (res.success && res.eventId) {
                 router.push(`/${locale}/attendance/${res.eventId}`)
+            } else {
+                toast('فشل في تحميل الحدث', 'error')
             }
         } finally {
             setLoading(false)

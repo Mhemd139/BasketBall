@@ -34,7 +34,7 @@ export default async function SchedulePage({
   const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   // Fetch upcoming events for the next 7 days
-  const { data: events } = await (supabase as any)
+  const { data: events } = await supabase
     .from('events')
     .select('*, halls(*)')
     .gte('event_date', today)

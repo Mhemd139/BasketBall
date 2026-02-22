@@ -8,7 +8,6 @@ import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { User, Calendar, Phone, Trophy, Plus, Clock, Building2 } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
 import { getSession } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
@@ -47,8 +46,8 @@ export default async function TeamDetailPage({
     { data: team, error: teamError },
     { data: roster }
   ] = await Promise.all([
-    (supabase as any).from('classes').select('*, trainers(*), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
-    (supabase as any).from('trainees').select('*').eq('class_id', classId).order('jersey_number', { ascending: true }),
+    supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, trainers(id, name_ar, name_he, name_en, phone), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
+    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender').eq('class_id', classId).order('jersey_number', { ascending: true }).limit(200),
   ])
 
   if (teamError || !team) {

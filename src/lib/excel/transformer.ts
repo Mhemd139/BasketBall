@@ -155,7 +155,7 @@ export function getImportableRecords(
       // Remove internal _unresolved_ fields
       const clean: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(row.transformed)) {
-        if (!key.startsWith('_unresolved_') && !key.startsWith('_display_')) {
+        if (!key.startsWith('_unresolved_') && !key.startsWith('_display_') && !key.startsWith('_')) {
           clean[key] = value
         }
       }
