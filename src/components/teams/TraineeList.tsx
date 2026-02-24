@@ -17,13 +17,13 @@ interface Trainee {
   name_he: string
   phone?: string | null
   jersey_number?: number | null
-  is_paid?: boolean
+  is_paid?: boolean | null
   // Add other fields needed for profile if any, or mapped roughly
-  amount_paid?: number
+  amount_paid?: number | null
   payment_comment_en?: string | null
   payment_comment_ar?: string | null
   payment_comment_he?: string | null
-  gender?: 'male' | 'female'
+  gender?: string | null
 }
 
 interface TraineeListProps {
