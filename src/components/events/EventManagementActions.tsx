@@ -6,9 +6,12 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { upsertEvent, deleteEvent } from '@/app/actions'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
+import type { Database } from '@/lib/supabase/types'
+
+type EventRow = Database['public']['Tables']['events']['Row']
 
 interface EventManagementActionsProps {
-    event: any
+    event: EventRow
     locale: string
 }
 
@@ -25,7 +28,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
             toast('تم تحديث الحدث بنجاح', 'success')
             router.refresh()
         } else {
-            toast('فشل تحديث الحدث', 'error')
+            toast(res.error || 'فشل تحديث الحدث', 'error')
         }
     }
 
@@ -74,7 +77,7 @@ export function EventManagementActions({ event, locale }: EventManagementActions
                 initialEvent={event}
                 initialDate={new Date(event.event_date)}
                 locale={locale}
-                initialStep={initialStep as any}
+                initialStep={initialStep}
             />
         </>
     )

@@ -11,7 +11,6 @@ import { User, Calendar, Edit2, LogOut, Medal, Loader2, Phone, Settings } from '
 import type { Locale } from '@/lib/i18n/config'
 import Image from 'next/image'
 import { formatPhoneNumber } from '@/lib/utils'
-import { ProfileHeaderSVG } from '@/components/ui/svg/ProfileHeaderSVG'
 
 const DAY_LABELS = {
     sunday: { ar: 'الأحد' },
@@ -111,10 +110,8 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 font-outfit text-royal pb-24 relative overflow-hidden">
-      {/* Dynamic Background Elements */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-          <ProfileHeaderSVG className="absolute inset-0 w-full h-full opacity-60 mix-blend-multiply" />
-      </div>
+      {/* Static Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-mesh-dark opacity-60 mix-blend-multiply" />
 
       <Sidebar locale={locale} role={role} />
       <div className="flex-1 flex flex-col md:ml-[240px] relative z-10">

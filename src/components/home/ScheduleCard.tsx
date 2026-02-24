@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getOrCreateEventForSchedule } from '@/app/actions'
-import { getLocalizedField } from '@/lib/utils'
+import { getLocalizedField, cn } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/Toast'
-import { Building2, User, Clock } from 'lucide-react'
+import { Building2, User } from 'lucide-react'
 
 interface ScheduleCardProps {
     schedule: {
@@ -43,6 +43,8 @@ export function ScheduleCard({ schedule, locale, date, index }: ScheduleCardProp
             } else {
                 toast('فشل في تحميل الحدث', 'error')
             }
+        } catch {
+            toast('فشل في تحميل الحدث', 'error')
         } finally {
             setLoading(false)
         }
@@ -57,7 +59,7 @@ export function ScheduleCard({ schedule, locale, date, index }: ScheduleCardProp
 
     return (
         <button onClick={handleClick} disabled={loading} className="w-full text-start">
-            <Card interactive className={`animate-fade-in-up stagger-${Math.min(index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all ${loading ? 'opacity-70' : ''}`}>
+            <Card interactive className={cn(`animate-fade-in-up stagger-${Math.min(index + 1, 5)}`, 'overflow-hidden relative group hover:-translate-y-1 transition-all', loading && 'opacity-70')}>
                 {loading && (
                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 backdrop-blur-[2px] rounded-3xl">
                         <div className="w-8 h-8 rounded-full border-3 border-white/30 border-t-white animate-spin" />
@@ -65,7 +67,7 @@ export function ScheduleCard({ schedule, locale, date, index }: ScheduleCardProp
                 )}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                <div className="flex items-center gap-4 relative z-10">
+                <div className="flex items-center gap-4 relative z-10 p-3">
                     {/* Time Block */}
                     <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                         <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">

@@ -62,49 +62,52 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
-      const supabase = createClient();
+      try {
+        const supabase = createClient();
 
-    const [traineeRes, trainerRes] = await Promise.all([
-      (supabase as any)
-        .from('trainees')
-        .select('id, name_en, name_ar, name_he, class_id, phone')
-        .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
-        .limit(5),
-      (supabase as any)
-        .from('trainers')
-        .select('id, name_en, name_ar, name_he, phone')
-        .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
-        .limit(5),
-    ]);
+        const [traineeRes, trainerRes] = await Promise.all([
+          (supabase as any)
+            .from('trainees')
+            .select('id, name_en, name_ar, name_he, class_id, phone')
+            .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
+            .limit(5),
+          (supabase as any)
+            .from('trainers')
+            .select('id, name_en, name_ar, name_he, phone')
+            .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
+            .limit(5),
+        ]);
 
-    const mapped: SearchResult[] = [];
+        const mapped: SearchResult[] = [];
 
-    if (traineeRes.data) {
-      for (const t of traineeRes.data) {
-        mapped.push({
-          id: t.id,
-          name: t[nameField] || t.name_he,
-          type: 'trainee',
-          subtitle: t.phone || undefined,
-          href: `/${locale}/teams/${t.class_id}`,
-        });
+        if (traineeRes.data) {
+          for (const t of traineeRes.data) {
+            mapped.push({
+              id: t.id,
+              name: t[nameField] || t.name_he,
+              type: 'trainee',
+              subtitle: t.phone || undefined,
+              href: `/${locale}/teams/${t.class_id}`,
+            });
+          }
+        }
+
+        if (trainerRes.data) {
+          for (const t of trainerRes.data) {
+            mapped.push({
+              id: t.id,
+              name: t[nameField] || t.name_he,
+              type: 'trainer',
+              subtitle: t.phone || undefined,
+              href: `/${locale}/trainers`,
+            });
+          }
+        }
+
+        setResults(mapped);
+      } finally {
+        setLoading(false);
       }
-    }
-
-    if (trainerRes.data) {
-      for (const t of trainerRes.data) {
-        mapped.push({
-          id: t.id,
-          name: t[nameField] || t.name_he,
-          type: 'trainer',
-          subtitle: t.phone || undefined,
-          href: `/${locale}/trainers`,
-        });
-      }
-    }
-
-    setResults(mapped);
-    setLoading(false);
     }, 300);
   }, [locale, nameField]);
 
@@ -138,8 +141,9 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
             {/* Left: Logo & Back */}
             <div className={`flex items-center gap-3 relative z-10 ${showBack ? 'pl-2' : ''}`}>
               {showBack && (
-                <button 
+                <button
                   onClick={onBack || (() => backHref ? router.push(backHref) : router.back())}
+                  aria-label="Go back"
                   className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white transition-colors"
                 >
                   <BackIcon className="w-6 h-6" />
@@ -217,8 +221,9 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 
             {/* Mobile Actions */}
             <div className="flex md:hidden items-center gap-2">
-                 <button 
+                 <button
                     onClick={() => setSearchOpen(!searchOpen)}
+                    aria-label="Toggle search"
                     className={`p-2 rounded-full transition-colors ${
                         searchOpen ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-white/80'
                     }`}

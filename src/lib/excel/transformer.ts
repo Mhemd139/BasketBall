@@ -24,9 +24,6 @@ export function transformRow(
     return { index, data: row, transformed: {}, status: 'error', messages: ['Unknown table'] }
   }
 
-  // Track which name fields were explicitly mapped
-  const mappedNameFields = new Set<string>()
-
   for (const mapping of mappings) {
     if (!mapping.dbField) continue // skipped column
 
@@ -80,22 +77,7 @@ export function transformRow(
       }
       default: {
         transformed[mapping.dbField] = strValue
-        if (mapping.dbField.startsWith('name_')) {
-          mappedNameFields.add(mapping.dbField)
-        }
         break
-      }
-    }
-  }
-
-  // Multi-lang auto-fill: if only one name field is set, copy to others
-  const nameFields = ['name_ar', 'name_he', 'name_en']
-  const setNameFields = nameFields.filter((f) => transformed[f])
-  if (setNameFields.length === 1) {
-    const nameValue = transformed[setNameFields[0]]
-    for (const f of nameFields) {
-      if (!transformed[f]) {
-        transformed[f] = nameValue
       }
     }
   }
@@ -112,6 +94,18 @@ export function transformRow(
         transformed['name_ar'] = `${category.trim()} - ${nameAr.trim()}`
       } else {
         transformed['name_ar'] = category.trim()
+      }
+    }
+  }
+
+  // Multi-lang auto-fill: if only one name field is set, copy to others
+  const nameFields = ['name_ar', 'name_he', 'name_en']
+  const setNameFields = nameFields.filter((f) => transformed[f])
+  if (setNameFields.length === 1) {
+    const nameValue = transformed[setNameFields[0]]
+    for (const f of nameFields) {
+      if (!transformed[f]) {
+        transformed[f] = nameValue
       }
     }
   }

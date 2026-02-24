@@ -119,7 +119,9 @@ export default async function MorePage({
           </div>
         </main>
 
-        <BottomNav locale={locale} role={session?.role} />
+        <div className="relative z-50">
+          <BottomNav locale={locale} role={session?.role} />
+        </div>
       </div>
     </AnimatedMeshBackground>
   )

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSession, fetchTodaySchedules } from '@/app/actions'
 import { QuickActions } from '@/components/home/QuickActions'
-import { getLocalizedField, formatTime } from '@/lib/utils'
+import { getLocalizedField, formatTime, getTodayISO } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
 import { Building2, Users, User, Calendar, Inbox } from 'lucide-react'
@@ -56,7 +56,7 @@ export default async function HomePage({
   const session = await getSession()
   const canManage = !!session // Ensure logged-in trainers can see quick action shortcuts
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayISO()
 
   const [
     { data: events },
@@ -74,6 +74,7 @@ export default async function HomePage({
 
   // One-time events (games, manually created) — filter out auto-created from schedules
   const manualEvents = ((events || []) as unknown as EventWithHall[]).filter(ev => {
+    if (ev.schedule_id) return false // Has proper schedule_id column
     if (!ev.notes_en) return true
     try { return !JSON.parse(ev.notes_en).schedule_id } catch { return true }
   })
@@ -86,8 +87,8 @@ export default async function HomePage({
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
       
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
-        <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+        <div className="bg-[#050B14]/80 backdrop-blur-3xl border-b border-white/5 sticky top-0 z-40">
           <Header locale={locale} />
         </div>
 
@@ -98,9 +99,9 @@ export default async function HomePage({
               <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 py-4 -my-4 -mx-3 px-3 md:mx-0 md:px-0 md:grid md:grid-cols-3 scrollbar-hide">
                 
                 {/* Halls Card */}
-                <Link href={`/${locale}/halls`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[28px] shadow-xl group overflow-hidden">
+                <Link href={`/${locale}/halls`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-orange-500/20 group-hover:-translate-y-1 transition-transform bg-orange-500/10 text-orange-400">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-orange-500/10 group-hover:-translate-y-1 transition-transform bg-orange-500/10 text-orange-400">
                     <Building2 className="w-6 h-6" strokeWidth={2} />
                   </div>
                   <div className="text-3xl font-black text-white drop-shadow-md mb-1">{hallsCount || 0}</div>
@@ -108,9 +109,9 @@ export default async function HomePage({
                 </Link>
 
                 {/* Teams Card */}
-                <Link href={`/${locale}/teams`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[28px] shadow-xl group overflow-hidden">
+                <Link href={`/${locale}/teams`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-indigo-500/20 group-hover:-translate-y-1 transition-transform bg-indigo-500/10 text-indigo-400">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-indigo-500/10 group-hover:-translate-y-1 transition-transform bg-indigo-500/10 text-indigo-400">
                     <Users className="w-6 h-6" strokeWidth={2} />
                   </div>
                   <div className="text-3xl font-black text-white drop-shadow-md mb-1">{teamsCount || 0}</div>
@@ -118,9 +119,9 @@ export default async function HomePage({
                 </Link>
 
                 {/* Trainees Card */}
-                <Link href={`/${locale}/teams`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[28px] shadow-xl group overflow-hidden">
+                <Link href={`/${locale}/teams`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-emerald-500/20 group-hover:-translate-y-1 transition-transform bg-emerald-500/10 text-emerald-400">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-emerald-500/10 group-hover:-translate-y-1 transition-transform bg-emerald-500/10 text-emerald-400">
                     <User className="w-6 h-6" strokeWidth={2} />
                   </div>
                   <div className="text-3xl font-black text-white drop-shadow-md mb-1">{traineesCount || 0}</div>
@@ -145,21 +146,21 @@ export default async function HomePage({
                     </span>
                   )}
                 </h2>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 shadow-sm text-center">
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 shadow-sm text-center">
                   <span className="font-syncopate text-xs text-white tracking-widest uppercase font-bold drop-shadow">
-                    {new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short' })}
+                    {new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', timeZone: 'Asia/Jerusalem' })}
                   </span>
                 </div>
               </div>
 
               {hasContent ? (
-                <div className="space-y-3">
+                <div className="space-y-5">
                   {/* One-time events (games, etc) */}
                   {manualEvents.map((event, index) => (
                     <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
                       <Card interactive className={`animate-fade-in-up stagger-${Math.min(index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex items-center gap-4 relative z-10 p-3">
                           <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                             <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(event.start_time)}</div>
                             <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(event.end_time)}</div>
@@ -189,7 +190,7 @@ export default async function HomePage({
                     <Link key={s.event_id || s.schedule_id} href={`/${locale}/attendance/${s.event_id}`}>
                       <Card interactive className={`animate-fade-in-up stagger-${Math.min(manualEvents.length + index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex items-center gap-4 relative z-10 p-3">
                           <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                             <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(s.start_time)}</div>
                             <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(s.end_time)}</div>
@@ -230,7 +231,7 @@ export default async function HomePage({
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center gap-3 py-4 px-3 animate-fade-in-up bg-white/10 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-xl">
+                <div className="flex items-center gap-3 py-4 px-3 animate-fade-in-up bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-xl">
                   <div className="bg-indigo-500/20 border border-indigo-500/30 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Inbox className="w-5 h-5 text-indigo-400" />
                   </div>

@@ -6,12 +6,13 @@ import { Badge } from '@/components/ui/Badge'
 import { AttendanceSheet } from '@/components/attendance/AttendanceSheet'
 import { EventManagementActions } from '@/components/events/EventManagementActions'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getLocalizedField, formatTime, formatDate } from '@/lib/utils'
+import { getLocalizedField, formatDate } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
-import { MapPin, Clock } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { getSession } from '@/app/actions'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
+import { EventTimeEditor } from '@/components/events/EventTimeEditor'
 
 type Event = Database['public']['Tables']['events']['Row']
 type Hall = Database['public']['Tables']['halls']['Row']
@@ -45,14 +46,14 @@ export default async function AttendancePage({
 
   const eventWithHall = event as unknown as EventWithHall
 
-  // Get class_id from notes (set by schedule-created events) or fallback to trainer's class
-  let targetClassId: string | null = null
-  if (event.notes_en) {
-    try { targetClassId = JSON.parse(event.notes_en).class_id || null } catch {}
-  }
+  // Get class_id directly from event column, fallback to trainer's class
+  let targetClassId: string | null = event.class_id || null
   if (!targetClassId && event.trainer_id) {
-    const { data: classData } = await (supabase as any)
+    const { data: classData, error: classError } = await (supabase as any)
       .from('classes').select('id').eq('trainer_id', event.trainer_id).limit(1).single()
+    if (classError) {
+      console.error(`Failed to find class for trainer ${event.trainer_id} (event ${event.id}):`, classError.message)
+    }
     if (classData) targetClassId = classData.id
   }
 
@@ -66,20 +67,19 @@ export default async function AttendancePage({
   }
 
   return (
-    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
           <Header
             locale={locale}
             title={getLocalizedField(eventWithHall, 'title', locale)}
             showBack
-            backHref={`/${locale}`}
           />
         </div>
 
-        <main className="flex-1 pt-20 pb-32 md:pb-10 px-5">
+        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
           <div className="max-w-2xl mx-auto">
             {/* Event Info */}
             <section className="py-4">
@@ -109,10 +109,11 @@ export default async function AttendancePage({
                     {getLocalizedField(eventWithHall.halls, 'name', locale)}
                   </span>
                 )}
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
-                  {formatTime(event.start_time)} - {formatTime(event.end_time)}
-                </span>
+                <EventTimeEditor
+                  eventId={eventId}
+                  startTime={event.start_time}
+                  endTime={event.end_time}
+                />
               </div>
             </section>
 

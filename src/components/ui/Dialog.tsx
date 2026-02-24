@@ -1,10 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assuming cn exists, if not I'll just use template literals
-
-// Simple Dialog implementation to match Shadcn/UI API used in CoachEventModal
+import { cn } from '@/lib/utils';
 
 interface DialogProps {
     open?: boolean;
@@ -13,20 +12,33 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
-    if (!open) return null;
+    const [mounted, setMounted] = React.useState(false);
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    React.useEffect(() => {
+        if (mounted && open) {
+            document.body.style.overflow = 'hidden';
+        }
+        return () => { if (mounted) document.body.style.overflow = ''; };
+    }, [open, mounted]);
+
+    if (!mounted || !open) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6">
             {/* Backdrop */}
-            <div 
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            <div
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                 onClick={() => onOpenChange?.(false)}
             />
-            {/* Content Container (to trap clicks? no, just positioning) */}
-            <div className="relative z-50 w-full max-w-lg mx-auto p-4">
+            <div className="relative z-50 w-full max-w-lg max-h-full flex flex-col">
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

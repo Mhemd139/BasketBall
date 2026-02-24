@@ -35,9 +35,9 @@ export default async function PaymentsPage({
   const safeClasses = (classes || []) as any[]
 
   return (
-    <AnimatedMeshBackground className="min-h-screen flex text-royal" suppressHydrationWarning>
+    <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
           <Header 
               locale={locale} 

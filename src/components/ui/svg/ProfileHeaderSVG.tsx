@@ -100,7 +100,7 @@ export function ProfileHeaderSVG({ className = '' }: { className?: string }) {
       </g>
 
       {/* Nano Mesh Overlay for Premium Grain */}
-      <rect width="100%" height="100%" fill="url(#nanoMesh)" style={{ mixBlendMode: 'overlay' }} />
+      <rect width="100%" height="100%" fill="url(#nanoMesh)" className="mix-blend-overlay" />
 
       {/* Foreground Abstract Geometric Block */}
       <motion.path

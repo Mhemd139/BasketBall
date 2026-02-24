@@ -11,7 +11,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, interactive = false, variant = 'default', color, children, ...props }, ref) => {
     const baseClasses = [
       'relative overflow-hidden rounded-3xl transition-all duration-300',
-      'bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl' // Blue/Gold Pro Max Minimalist Base
+      'bg-[#1C2541]/40 backdrop-blur-2xl border border-white/5 shadow-xl' // Blue/Gold Pro Max Minimalist Base
     ];
     
     if (variant === 'feature') {

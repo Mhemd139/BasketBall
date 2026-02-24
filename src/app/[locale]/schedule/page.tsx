@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSession } from '@/app/actions'
-import { getLocalizedField, formatTime, formatDate } from '@/lib/utils'
+import { getLocalizedField, formatTime, formatDate, getTodayISO, getNowInIsrael } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { Calendar as CalendarIcon, MapPin, ChevronRight, Plus } from 'lucide-react'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
@@ -30,8 +30,10 @@ export default async function SchedulePage({
   const session = await getSession()
   const canManage = !!session
 
-  const today = new Date().toISOString().split('T')[0]
-  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const today = getTodayISO()
+  const now = getNowInIsrael()
+  const nextWeekDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
+  const nextWeek = `${nextWeekDate.getFullYear()}-${String(nextWeekDate.getMonth() + 1).padStart(2, '0')}-${String(nextWeekDate.getDate()).padStart(2, '0')}`
 
   // Fetch upcoming events for the next 7 days
   const { data: events } = await supabase
@@ -59,7 +61,7 @@ export default async function SchedulePage({
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={(await getSession())?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
         <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header
             locale={locale}
@@ -83,12 +85,12 @@ export default async function SchedulePage({
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-5">
                     {groupedEvents[date].map((event, index) => (
                       <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
                         <Card interactive className="animate-fade-in-up w-full overflow-hidden relative group hover:-translate-y-1 transition-all">
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="flex items-center gap-4 relative z-10">
+                          <div className="flex items-center gap-4 relative z-10 p-3">
                             {/* Time Block */}
                             <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                               <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">

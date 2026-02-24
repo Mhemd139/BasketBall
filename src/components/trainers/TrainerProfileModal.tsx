@@ -15,6 +15,15 @@ interface Trainer {
     role: 'admin' | 'sub_trainer';
 }
 
+interface Team {
+    id: string;
+    name_ar: string;
+    name_he: string;
+    name_en: string;
+    schedule_info: string | null;
+    hall_id: string | null;
+}
+
 interface TrainerProfileModalProps {
     trainerId: string;
     locale: string;
@@ -23,7 +32,7 @@ interface TrainerProfileModalProps {
 
 export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfileModalProps) {
     const [trainer, setTrainer] = useState<Trainer | null>(null);
-    const [teams, setTeams] = useState<any[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
 
     const isRTL = true;
@@ -31,26 +40,28 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
     useEffect(() => {
         const fetchTrainer = async () => {
             const supabase = createClient();
-            
-            // Fetch Trainer Details
-            const { data: trainerData } = await (supabase as any)
-                .from('trainers')
-                .select('*')
-                .eq('id', trainerId)
-                .single();
-            
-            if (trainerData) {
+
+            try {
+                // Fetch Trainer Details
+                const { data: trainerData, error: trainerError } = await (supabase as any)
+                    .from('trainers')
+                    .select('id, name_ar, name_he, name_en, phone, gender, availability, role')
+                    .eq('id', trainerId)
+                    .single();
+
+                if (trainerError || !trainerData) return;
                 setTrainer(trainerData);
-                
+
                 // Fetch Teams Managed
-                const { data: teamsData } = await supabase
+                const { data: teamsData, error: teamsError } = await (supabase as any)
                     .from('classes')
                     .select('id, name_ar, name_he, name_en, schedule_info, hall_id')
                     .eq('trainer_id', trainerId);
-                
-                if (teamsData) setTeams(teamsData);
+
+                if (!teamsError && teamsData) setTeams(teamsData);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchTrainer();
     }, [trainerId]);
@@ -71,8 +82,9 @@ export function TrainerProfileModal({ trainerId, locale, onClose }: TrainerProfi
                 
                 {/* Header Background */}
                 <div className={`h-32 ${isFemale ? 'bg-gradient-to-br from-[#0B132B] to-pink-900/40 border-b border-white/10' : 'bg-gradient-to-br from-[#0B132B] to-blue-900/40 border-b border-white/10'} relative`}>
-                    <button 
+                    <button
                         onClick={onClose}
+                        aria-label="Close"
                         className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white rounded-full transition-colors backdrop-blur-sm"
                     >
                         <X className="w-5 h-5" />
