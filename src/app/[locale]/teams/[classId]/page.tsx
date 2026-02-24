@@ -45,8 +45,8 @@ export default async function TeamDetailPage({
 
   const [
     { data: team, error: teamError },
-    { data: roster },
-    { data: allHalls }
+    { data: roster, error: rosterError },
+    { data: allHalls, error: hallsError }
   ] = await Promise.all([
     supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, trainers(id, name_ar, name_he, name_en, phone), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
     supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).limit(200),
@@ -56,6 +56,8 @@ export default async function TeamDetailPage({
   if (teamError || !team) {
     notFound()
   }
+  if (rosterError) console.error(`Failed to fetch roster for class ${classId}:`, rosterError.message)
+  if (hallsError) console.error('Failed to fetch halls:', hallsError.message)
 
   const teamDetails = team as unknown as ClassWithDetails
   const trainees = (roster || []) as Trainee[]

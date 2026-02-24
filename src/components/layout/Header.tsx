@@ -62,49 +62,52 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
-      const supabase = createClient();
+      try {
+        const supabase = createClient();
 
-    const [traineeRes, trainerRes] = await Promise.all([
-      (supabase as any)
-        .from('trainees')
-        .select('id, name_en, name_ar, name_he, class_id, phone')
-        .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
-        .limit(5),
-      (supabase as any)
-        .from('trainers')
-        .select('id, name_en, name_ar, name_he, phone')
-        .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
-        .limit(5),
-    ]);
+        const [traineeRes, trainerRes] = await Promise.all([
+          (supabase as any)
+            .from('trainees')
+            .select('id, name_en, name_ar, name_he, class_id, phone')
+            .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
+            .limit(5),
+          (supabase as any)
+            .from('trainers')
+            .select('id, name_en, name_ar, name_he, phone')
+            .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
+            .limit(5),
+        ]);
 
-    const mapped: SearchResult[] = [];
+        const mapped: SearchResult[] = [];
 
-    if (traineeRes.data) {
-      for (const t of traineeRes.data) {
-        mapped.push({
-          id: t.id,
-          name: t[nameField] || t.name_he,
-          type: 'trainee',
-          subtitle: t.phone || undefined,
-          href: `/${locale}/teams/${t.class_id}`,
-        });
+        if (traineeRes.data) {
+          for (const t of traineeRes.data) {
+            mapped.push({
+              id: t.id,
+              name: t[nameField] || t.name_he,
+              type: 'trainee',
+              subtitle: t.phone || undefined,
+              href: `/${locale}/teams/${t.class_id}`,
+            });
+          }
+        }
+
+        if (trainerRes.data) {
+          for (const t of trainerRes.data) {
+            mapped.push({
+              id: t.id,
+              name: t[nameField] || t.name_he,
+              type: 'trainer',
+              subtitle: t.phone || undefined,
+              href: `/${locale}/trainers`,
+            });
+          }
+        }
+
+        setResults(mapped);
+      } finally {
+        setLoading(false);
       }
-    }
-
-    if (trainerRes.data) {
-      for (const t of trainerRes.data) {
-        mapped.push({
-          id: t.id,
-          name: t[nameField] || t.name_he,
-          type: 'trainer',
-          subtitle: t.phone || undefined,
-          href: `/${locale}/trainers`,
-        });
-      }
-    }
-
-    setResults(mapped);
-    setLoading(false);
     }, 300);
   }, [locale, nameField]);
 

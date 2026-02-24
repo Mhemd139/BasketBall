@@ -24,9 +24,6 @@ export function transformRow(
     return { index, data: row, transformed: {}, status: 'error', messages: ['Unknown table'] }
   }
 
-  // Track which name fields were explicitly mapped
-  const mappedNameFields = new Set<string>()
-
   for (const mapping of mappings) {
     if (!mapping.dbField) continue // skipped column
 
@@ -80,9 +77,6 @@ export function transformRow(
       }
       default: {
         transformed[mapping.dbField] = strValue
-        if (mapping.dbField.startsWith('name_')) {
-          mappedNameFields.add(mapping.dbField)
-        }
         break
       }
     }

@@ -25,7 +25,6 @@ export function ScheduleActions({ locale }: ScheduleActionsProps) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={async (data) => {
-          console.log('Saved event:', data)
           setIsModalOpen(false)
         }}
         locale={locale}

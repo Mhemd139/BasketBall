@@ -49,8 +49,11 @@ export default async function AttendancePage({
   // Get class_id directly from event column, fallback to trainer's class
   let targetClassId: string | null = event.class_id || null
   if (!targetClassId && event.trainer_id) {
-    const { data: classData } = await (supabase as any)
+    const { data: classData, error: classError } = await (supabase as any)
       .from('classes').select('id').eq('trainer_id', event.trainer_id).limit(1).single()
+    if (classError) {
+      console.error(`Failed to find class for trainer ${event.trainer_id} (event ${event.id}):`, classError.message)
+    }
     if (classData) targetClassId = classData.id
   }
 

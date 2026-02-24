@@ -17,7 +17,6 @@ import { getSession, fetchHallSchedules } from '@/app/actions'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 type Hall = Database['public']['Tables']['halls']['Row']
-type Event = Database['public']['Tables']['events']['Row']
 
 export default async function HallDetailPage({
   params,
@@ -35,8 +34,8 @@ export default async function HallDetailPage({
 
   const [{ data: hall, error: hallError }, { data: events }, schedulesRes] = await Promise.all([
     supabase.from('halls').select('*').eq('id', id).single(),
-    supabase.from('events')
-      .select('*, trainers(name_he, name_ar, name_en)')
+    (supabase as any).from('events')
+      .select('id, title_he, title_ar, title_en, start_time, end_time, event_date, type, schedule_id, class_id, trainer_id, hall_id, notes_en, trainers(name_he, name_ar, name_en)')
       .eq('hall_id', id)
       .gte('event_date', startOfMonth)
       .lte('event_date', endOfMonth)
@@ -97,7 +96,7 @@ export default async function HallDetailPage({
             <section>
               <HallSchedule
                 hallId={hallData.id}
-                events={events as Event[]}
+                events={(events || []) as any}
                 weeklySchedules={schedulesRes.schedules ?? []}
                 locale={locale}
                 isEditable={isEditable}

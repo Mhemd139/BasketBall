@@ -743,7 +743,7 @@ export async function fetchHallEvents(hallId: string, startDate: string, endDate
     
     const { data: events, error } = await (supabase as any)
         .from('events')
-        .select('*, trainers(name_he, name_ar, name_en)')
+        .select('id, title_he, title_ar, title_en, start_time, end_time, event_date, type, description, schedule_id, class_id, trainer_id, hall_id, notes_en, trainers(name_he, name_ar, name_en)')
         .eq('hall_id', hallId)
         .gte('event_date', startDate)
         .lte('event_date', endDate)
@@ -1073,6 +1073,7 @@ export async function deleteEvent(id: string) {
 
     revalidatePath('/[locale]/schedule', 'page')
     revalidatePath('/[locale]/halls/[id]', 'page')
+    revalidatePath('/[locale]', 'page')
     return { success: true }
 }
 
@@ -1092,6 +1093,9 @@ export async function updateEventTime(eventId: string, startTime: string, endTim
         revalidatePath('/[locale]/attendance/[eventId]', 'page')
         revalidatePath('/[locale]/schedule', 'page')
         revalidatePath('/[locale]/halls/[id]', 'page')
+        // Also revalidate the layout to bust client Router Cache for all hall pages
+        revalidatePath('/[locale]/halls', 'layout')
+        revalidatePath('/[locale]', 'page')
         return { success: true }
     } catch (e: any) {
         return { success: false, error: 'فشل تحديث الوقت' }

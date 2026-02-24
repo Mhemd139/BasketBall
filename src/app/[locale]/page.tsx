@@ -74,6 +74,7 @@ export default async function HomePage({
 
   // One-time events (games, manually created) — filter out auto-created from schedules
   const manualEvents = ((events || []) as unknown as EventWithHall[]).filter(ev => {
+    if (ev.schedule_id) return false // Has proper schedule_id column
     if (!ev.notes_en) return true
     try { return !JSON.parse(ev.notes_en).schedule_id } catch { return true }
   })
@@ -153,13 +154,13 @@ export default async function HomePage({
               </div>
 
               {hasContent ? (
-                <div className="space-y-3">
+                <div className="space-y-5">
                   {/* One-time events (games, etc) */}
                   {manualEvents.map((event, index) => (
                     <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
                       <Card interactive className={`animate-fade-in-up stagger-${Math.min(index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex items-center gap-4 relative z-10 p-3">
                           <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                             <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(event.start_time)}</div>
                             <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(event.end_time)}</div>
@@ -189,7 +190,7 @@ export default async function HomePage({
                     <Link key={s.event_id || s.schedule_id} href={`/${locale}/attendance/${s.event_id}`}>
                       <Card interactive className={`animate-fade-in-up stagger-${Math.min(manualEvents.length + index + 1, 5)} overflow-hidden relative group hover:-translate-y-1 transition-all`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex items-center gap-4 relative z-10 p-3">
                           <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                             <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(s.start_time)}</div>
                             <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(s.end_time)}</div>

@@ -32,7 +32,8 @@ export default async function SchedulePage({
 
   const today = getTodayISO()
   const now = getNowInIsrael()
-  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })
+  const nextWeekDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
+  const nextWeek = `${nextWeekDate.getFullYear()}-${String(nextWeekDate.getMonth() + 1).padStart(2, '0')}-${String(nextWeekDate.getDate()).padStart(2, '0')}`
 
   // Fetch upcoming events for the next 7 days
   const { data: events } = await supabase
@@ -84,12 +85,12 @@ export default async function SchedulePage({
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-5">
                     {groupedEvents[date].map((event, index) => (
                       <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>
                         <Card interactive className="animate-fade-in-up w-full overflow-hidden relative group hover:-translate-y-1 transition-all">
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="flex items-center gap-4 relative z-10">
+                          <div className="flex items-center gap-4 relative z-10 p-3">
                             {/* Time Block */}
                             <div className="text-center min-w-[3.5rem] shrink-0 bg-white/10 p-2.5 rounded-xl border border-white/5">
                               <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">

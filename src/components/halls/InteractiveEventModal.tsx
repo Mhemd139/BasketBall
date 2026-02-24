@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getEventRefData } from '@/app/actions';
 import { GameSVG } from '../ui/svg/GameSVG';
@@ -41,21 +42,9 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     });
 
     // Game Specific
-    const [gameType, setGameType] = useState<'internal' | 'external'>(() => {
-        if (initialEvent?.notes_en) {
-            try { return JSON.parse(initialEvent.notes_en).gameType || 'internal'; } catch { return 'internal'; }
-        }
-        return 'internal';
-    });
     const [homeTeam, setHomeTeam] = useState<string>(() => {
         if (initialEvent?.notes_en) {
             try { return JSON.parse(initialEvent.notes_en).homeBtn || ''; } catch { return ''; }
-        }
-        return '';
-    });
-    const [awayTeamId, setAwayTeamId] = useState<string>(() => {
-        if (initialEvent?.notes_en) {
-            try { return JSON.parse(initialEvent.notes_en).awayBtn || ''; } catch { return ''; }
         }
         return '';
     });
@@ -105,10 +94,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
             return cls ? `تدريب - ${cls.name_ar}` : 'تدريب جديد';
         } else {
             const home = refData.classes.find(c => c.id === homeTeam);
-            const away = gameType === 'internal' 
-                ? refData.classes.find(c => c.id === awayTeamId)?.name_ar 
-                : awayTeamName;
-            return `${home ? home.name_ar : 'مضيف'} vs ${away || 'ضيف'}`;
+            return `${home ? home.name_ar : 'مضيف'} vs ${awayTeamName || 'ضيف'}`;
         }
     };
 
@@ -130,9 +116,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
             const notes = {
                 ...existingNotes,
                 class_id: type === 'training' ? selectedClass : homeTeam,
-                gameType,
                 homeBtn: homeTeam,
-                awayBtn: awayTeamId,
                 awayName: awayTeamName
             };
 
@@ -145,7 +129,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                 end_time: endTime,
                 event_date: initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
                 hall_id: initialEvent?.hall_id || null,
-                trainer_id: initialEvent?.trainer_id || selectedTrainer || null,
+                trainer_id: selectedTrainer || initialEvent?.trainer_id || null,
                 notes_en: JSON.stringify(notes),
             });
             onClose();
@@ -192,7 +176,9 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         exit: { opacity: 0, x: -50, transition: { duration: 0.2 } }
     };
 
-    return (
+    if (typeof window === 'undefined') return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[200] flex flex-col justify-end sm:justify-center sm:items-center sm:p-6" dir={locale === 'he' ? 'rtl' : 'rtl'}>
@@ -211,7 +197,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                         animate={{ y: 0 }}
                         exit={{ y: '100%', transition: { type: 'spring', bounce: 0, duration: 0.4 } }}
                         transition={{ type: 'spring', bounce: 0.1, duration: 0.5 }}
-                        className="relative w-full max-w-lg bg-gray-50 rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden flex flex-col max-h-[92dvh] sm:h-[700px] shadow-float mt-auto"
+                        className="relative w-full max-w-lg bg-gray-50 rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:h-[700px] shadow-float mt-auto"
                     >
                         {/* Header Area */}
                         <div className="bg-royal p-8 text-white relative flex-shrink-0">
@@ -253,13 +239,13 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                             <AnimatePresence mode="wait">
                                 {/* STEP 1: TYPE SELECTION */}
                                 {step === 'type' && (
-                                    <motion.div key="type" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 h-full">
+                                    <motion.div key="type" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6">
                                         <h3 className="text-xl font-bold text-royal mb-2">{locale === 'he' ? 'בחר סוג פעילות' : 'اختر نوع الفعالية'}</h3>
                                         
                                         <motion.button 
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => setType('training')}
-                                            className={`relative w-full h-48 rounded-[2rem] overflow-hidden p-6 flex flex-col justify-end transition-shadow ${type === 'training' ? 'ring-4 ring-electric shadow-lg shadow-electric/20' : 'shadow-soft hover:shadow-card'}`}
+                                            className={`relative w-full h-32 rounded-[2rem] overflow-hidden p-5 flex flex-col justify-end transition-shadow ${type === 'training' ? 'ring-4 ring-electric shadow-lg shadow-electric/20' : 'shadow-soft hover:shadow-card'}`}
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-white to-blue-50/50" />
                                             <TrainingSVG className="absolute inset-0 w-full h-full opacity-40 pointer-events-none" />
@@ -272,7 +258,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                         <motion.button 
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => setType('game')}
-                                            className={`relative w-full h-48 rounded-[2rem] overflow-hidden p-6 flex flex-col justify-end transition-shadow ${type === 'game' ? 'ring-4 ring-neon shadow-lg shadow-neon/20' : 'shadow-soft hover:shadow-card'}`}
+                                            className={`relative w-full h-32 rounded-[2rem] overflow-hidden p-5 flex flex-col justify-end transition-shadow ${type === 'game' ? 'ring-4 ring-neon shadow-lg shadow-neon/20' : 'shadow-soft hover:shadow-card'}`}
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-white to-orange-50/50" />
                                             <GameSVG className="absolute inset-0 w-full h-full opacity-50 pointer-events-none scale-150 -translate-y-10" />
@@ -306,32 +292,23 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             </>
                                         ) : (
                                             <>
-                                                <div className="flex bg-white p-1 rounded-2xl shadow-soft">
-                                                    <button onClick={() => setGameType('internal')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${gameType === 'internal' ? 'bg-royal text-white shadow-md' : 'text-royal/50 hover:bg-gray-50'}`}>داخلي</button>
-                                                    <button onClick={() => setGameType('external')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${gameType === 'external' ? 'bg-royal text-white shadow-md' : 'text-royal/50 hover:bg-gray-50'}`}>خارجي</button>
-                                                </div>
-
                                                 <div>
                                                     <h3 className="text-lg font-bold text-royal mb-4">الفريق المضيف</h3>
                                                     <BlockSelector items={refData.classes} selectedId={homeTeam} onSelect={setHomeTeam} />
                                                 </div>
-                                                
+
                                                 <div className="flex justify-center -my-2">
                                                     <div className="bg-neon/10 text-neon font-syncopate font-black text-2xl px-6 py-2 rounded-full border border-neon/20">VS</div>
                                                 </div>
 
                                                 <div>
                                                     <h3 className="text-lg font-bold text-royal mb-4">الفريق الضيف</h3>
-                                                    {gameType === 'internal' ? (
-                                                        <BlockSelector items={refData.classes.filter(c => c.id !== homeTeam)} selectedId={awayTeamId} onSelect={setAwayTeamId} />
-                                                    ) : (
-                                                        <input 
-                                                            value={awayTeamName}
-                                                            onChange={(e) => setAwayTeamName(e.target.value)}
-                                                            placeholder="أدخل اسم الفريق الخارجي"
-                                                            className="w-full bg-white border-none shadow-soft rounded-2xl p-5 font-outfit text-lg outline-none focus:ring-2 focus:ring-neon transition-all"
-                                                        />
-                                                    )}
+                                                    <input
+                                                        value={awayTeamName}
+                                                        onChange={(e) => setAwayTeamName(e.target.value)}
+                                                        placeholder="أدخل اسم الفريق"
+                                                        className="w-full bg-white border-none shadow-soft rounded-2xl p-5 font-outfit text-lg outline-none focus:ring-2 focus:ring-neon transition-all"
+                                                    />
                                                 </div>
                                             </>
                                         )}
@@ -453,6 +430,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                     </motion.div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }

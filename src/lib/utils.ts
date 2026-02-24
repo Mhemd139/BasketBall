@@ -11,10 +11,18 @@ export function getTodayISO(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' })
 }
 
-// Returns a Date object representing "now" in Israel timezone context.
+// Returns a Date whose getters (getFullYear, getMonth, getDate, getDay, getHours etc.)
+// return Israel-timezone values. Uses formatToParts for cross-engine reliability.
+// NOTE: Do NOT use .getTime() or .toISOString() — the internal timestamp is shifted.
 export function getNowInIsrael(): Date {
-  const str = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' })
-  return new Date(str)
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jerusalem',
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+    hour12: false,
+  }).formatToParts(new Date())
+  const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0')
+  return new Date(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'))
 }
 
 // Date formatting helper

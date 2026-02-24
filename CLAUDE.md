@@ -2,6 +2,11 @@
 
 > These rules apply to ALL code generated in this project. Follow them strictly.
 
+## NEVER Build
+
+- **NEVER** run `next build` or any build command to check for errors. The user will test manually.
+- Do NOT use build commands for verification. Just make the code changes.
+
 ## Stack
 
 - Next.js 16 (App Router, Turbopack dev)

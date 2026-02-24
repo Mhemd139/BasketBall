@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { InteractiveEventModal } from './InteractiveEventModal';
 import { AttendanceModal } from './AttendanceModal';
 import {
@@ -72,17 +72,40 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
     const dateLocale = arSA;
     const isRTL = true;
 
-    useEffect(() => {
-        const fetchEvents = async () => {
-            const start = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
-            const end = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
-            const res = await fetchHallEvents(hallId, start, end);
-            if (res.success && res.events) {
-                setEvents(res.events as Event[]);
-            }
-        };
-        fetchEvents();
+    const refetchEvents = useCallback(async () => {
+        const start = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
+        const end = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
+        const res = await fetchHallEvents(hallId, start, end);
+        if (res.success && res.events) {
+            setEvents(res.events as Event[]);
+        }
     }, [selectedDate, hallId]);
+
+    // Refetch on mount and when date/hall changes
+    const mountRef = useRef(0);
+    useEffect(() => {
+        // Always refetch — covers both initial mount and dependency changes
+        refetchEvents();
+        mountRef.current++;
+    }, [refetchEvents]);
+
+    // Re-fetch when returning to this page (tab switch, app switch, browser back/forward)
+    useEffect(() => {
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') refetchEvents();
+        };
+        const onPageShow = (e: PageTransitionEvent) => {
+            if (e.persisted) refetchEvents();
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('pageshow', onPageShow);
+        window.addEventListener('focus', refetchEvents);
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            window.removeEventListener('pageshow', onPageShow);
+            window.removeEventListener('focus', refetchEvents);
+        };
+    }, [refetchEvents]);
 
     useEffect(() => {
         setNow(new Date());
@@ -96,31 +119,48 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
         return eachDayOfInterval({ start, end });
     }, [selectedDate]);
 
-    // Manual/one-off events only (no schedule-derived — those show as green cards)
-    const dailyEvents = useMemo(() => {
+    // All events for the selected date
+    const allDayEvents = useMemo(() => {
         return events
             .filter(e => isSameDay(parseISO(e.event_date), selectedDate))
-            .filter(e => !e.schedule_id)
             .sort((a, b) => a.start_time.localeCompare(b.start_time));
     }, [events, selectedDate]);
 
-    // Schedules enriched with event overrides (time edits, event id for attendance)
+    // Manual/one-off events (no schedule — games, etc.)
+    const dailyEvents = useMemo(() => {
+        return allDayEvents.filter(e => !e.schedule_id && !e.class_id);
+    }, [allDayEvents]);
+
+    // Schedule-based: events that exist in DB + template schedules with no event yet
     const dailySchedules = useMemo(() => {
         const dayOfWeek = selectedDate.getDay();
-        const dayEvents = events.filter(e => isSameDay(parseISO(e.event_date), selectedDate));
-        return weeklySchedules
-            .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00')
-            .map(s => {
-                const event = dayEvents.find(e => e.schedule_id === s.id);
+
+        // Events that belong to a schedule — always use their own times
+        const scheduledEvents = allDayEvents
+            .filter(e => e.schedule_id || e.class_id)
+            .map(e => {
+                const schedule = weeklySchedules.find(s => s.id === e.schedule_id)
+                    ?? weeklySchedules.find(s => s.classes?.id === e.class_id && s.day_of_week === dayOfWeek);
                 return {
-                    ...s,
-                    event,
-                    start_time: event?.start_time || s.start_time,
-                    end_time: event?.end_time || s.end_time,
+                    id: e.schedule_id ?? schedule?.id ?? e.id,
+                    day_of_week: dayOfWeek,
+                    start_time: e.start_time,
+                    end_time: e.end_time,
+                    notes: schedule?.notes ?? null,
+                    classes: schedule?.classes ?? null,
+                    event: e,
                 };
-            })
+            });
+
+        // Template schedules that have no event yet (future dates)
+        const coveredScheduleIds = new Set(scheduledEvents.map(x => x.id));
+        const templates = weeklySchedules
+            .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00' && !coveredScheduleIds.has(s.id))
+            .map(s => ({ ...s, event: undefined as Event | undefined }));
+
+        return [...scheduledEvents, ...templates]
             .sort((a, b) => a.start_time.localeCompare(b.start_time));
-    }, [weeklySchedules, selectedDate, events]);
+    }, [weeklySchedules, selectedDate, allDayEvents]);
 
     // Check if a day has events or schedules
     const hasContent = (date: Date) => {
@@ -182,7 +222,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
         }
     };
 
-    const handleScheduleClick = async (schedule: WeeklySchedule & { event?: Event }) => {
+    const handleScheduleClick = async (schedule: { id: string; event?: Event; classes?: WeeklySchedule['classes'] | null }) => {
         const today = startOfDay(new Date());
         const isFuture = isBefore(today, startOfDay(selectedDate));
         if (isFuture) return;
@@ -323,9 +363,9 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                 return (
                                     <div key={schedule.id} className="relative flex items-start gap-3">
                                         <div className={`w-14 shrink-0 flex flex-col items-center text-[10px] font-bold text-indigo-200/60 z-10 bg-transparent py-1 ${isRTL ? 'pl-1' : 'pr-1'}`}>
-                                            <span className="text-white/80">{formatTimeStr(schedule.start_time)}</span>
+                                            <span className="text-white/80">{formatTimeStr(schedule.event?.start_time ?? schedule.start_time)}</span>
                                             <div className={`h-8 w-0.5 my-0.5 ${isCurrent ? 'bg-green-400' : 'bg-white/15'}`}></div>
-                                            <span className="text-white/40 font-normal">{formatTimeStr(schedule.end_time)}</span>
+                                            <span className="text-white/40 font-normal">{formatTimeStr(schedule.event?.end_time ?? schedule.end_time)}</span>
                                         </div>
 
                                         <div
@@ -354,7 +394,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
-                                                    {formatTimeStr(schedule.start_time)} - {formatTimeStr(schedule.end_time)}
+                                                    {formatTimeStr(schedule.event?.start_time ?? schedule.start_time)} - {formatTimeStr(schedule.event?.end_time ?? schedule.end_time)}
                                                 </span>
                                             </div>
                                             {schedule.notes && (

@@ -12,14 +12,20 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
+    const [mounted, setMounted] = React.useState(false);
+
     React.useEffect(() => {
-        if (open) {
+        setMounted(true);
+    }, []);
+
+    React.useEffect(() => {
+        if (mounted && open) {
             document.body.style.overflow = 'hidden';
         }
-        return () => { document.body.style.overflow = ''; };
-    }, [open]);
+        return () => { if (mounted) document.body.style.overflow = ''; };
+    }, [open, mounted]);
 
-    if (!open) return null;
+    if (!mounted || !open) return null;
 
     return createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6">
