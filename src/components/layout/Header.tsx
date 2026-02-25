@@ -36,7 +36,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
 
-  const nameField = 'name_ar';
+  const nameField = `name_${locale}` as 'name_ar' | 'name_he' | 'name_en';
 
   useEffect(() => {
     if (searchOpen) {

@@ -412,7 +412,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             <div className="flex justify-between items-start mb-1">
                                                 <div className="flex-1 min-w-0">
                                                     <h4 className={`font-bold text-sm ${titleColor} truncate`}>
-                                                        {schedule.event?.title_ar || teamName}
+                                                        {(locale === 'he' ? (schedule.event?.title_he || schedule.event?.title_ar) : schedule.event?.title_ar) || teamName}
                                                     </h4>
                                                     {categoryName && (
                                                         <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${isGame ? 'bg-orange-500/20 text-orange-300' : 'bg-green-500/20 text-green-300'}`}>

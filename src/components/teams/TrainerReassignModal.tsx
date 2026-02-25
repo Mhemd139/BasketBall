@@ -29,16 +29,17 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
     const [selectedId, setSelectedId] = useState<string | null>(currentTrainerId || null)
     const router = useRouter()
     const { toast } = useToast()
-    const isRTL = locale !== 'he'
+    const isRTL = locale === 'ar' || locale === 'he'
 
     useEffect(() => {
         async function fetchTrainers() {
             const supabase = createClient()
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('trainers')
                 .select('id, name_ar, name_he, name_en, phone')
                 .order('name_ar')
-            if (data) setTrainers(data)
+                .limit(200)
+            if (!error && data) setTrainers(data)
             setLoading(false)
         }
         fetchTrainers()

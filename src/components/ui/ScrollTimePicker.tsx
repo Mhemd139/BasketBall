@@ -15,9 +15,14 @@ interface ScrollColumnProps {
 function ScrollColumn({ items, value, onChange, ariaLabel, accent = 'text-royal' }: ScrollColumnProps) {
     const ref = useRef<HTMLDivElement>(null)
     const selectedIndex = items.indexOf(value)
+    const isProgrammatic = useRef(false)
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const scrollTo = useCallback((index: number, smooth = false) => {
+        isProgrammatic.current = true
         ref.current?.scrollTo({ top: index * ITEM_H, behavior: smooth ? 'smooth' : 'instant' })
+        // Clear the programmatic flag after scroll settles
+        setTimeout(() => { isProgrammatic.current = false }, smooth ? 400 : 50)
     }, [])
 
     useEffect(() => {
@@ -31,6 +36,13 @@ function ScrollColumn({ items, value, onChange, ariaLabel, accent = 'text-royal'
         scrollTo(index, true)
         if (items[index] && items[index] !== value) onChange(items[index])
     }, [items, value, onChange, scrollTo])
+
+    const handleScroll = useCallback(() => {
+        // Ignore scroll events triggered by our own scrollTo calls
+        if (isProgrammatic.current) return
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(snapOnEnd, 80)
+    }, [snapOnEnd])
 
     return (
         <div className="relative flex-1 overflow-hidden select-none" aria-label={ariaLabel}>
@@ -46,7 +58,7 @@ function ScrollColumn({ items, value, onChange, ariaLabel, accent = 'text-royal'
                 ref={ref}
                 onTouchEnd={snapOnEnd}
                 onMouseUp={snapOnEnd}
-                onScroll={snapOnEnd}
+                onScroll={handleScroll}
                 className="scroll-col"
             >
                 <div className="scroll-col-pad" />
@@ -82,6 +94,14 @@ export function ScrollTimePicker({ value, onChange, label, accentColor = 'text-r
         Math.abs(parseInt(cur) - parseInt(mm)) < Math.abs(parseInt(prev) - parseInt(mm)) ? cur : prev
     )
 
+    const handleHourChange = useCallback((h: string) => {
+        onChange(`${h}:${snappedMm}`)
+    }, [onChange, snappedMm])
+
+    const handleMinuteChange = useCallback((m: string) => {
+        onChange(`${hh}:${m}`)
+    }, [onChange, hh])
+
     return (
         <div className="bg-white rounded-2xl overflow-hidden">
             {label && (
@@ -93,7 +113,7 @@ export function ScrollTimePicker({ value, onChange, label, accentColor = 'text-r
                 <ScrollColumn
                     items={HOURS}
                     value={hh}
-                    onChange={(h) => onChange(`${h}:${snappedMm}`)}
+                    onChange={handleHourChange}
                     ariaLabel="Hour"
                     accent={accentColor}
                 />
@@ -104,7 +124,7 @@ export function ScrollTimePicker({ value, onChange, label, accentColor = 'text-r
                 <ScrollColumn
                     items={MINUTES}
                     value={snappedMm}
-                    onChange={(m) => onChange(`${hh}:${m}`)}
+                    onChange={handleMinuteChange}
                     ariaLabel="Minute"
                     accent={accentColor}
                 />

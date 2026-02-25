@@ -56,10 +56,19 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
 
     const handleClose = () => {
         setEditingSchedule(null)
+        setHallId('')
+        setStartTime('')
+        setEndTime('')
     }
 
     const handleSave = () => {
         if (!editingSchedule || !hallId) return
+        const [sh, sm] = startTime.split(':').map(Number)
+        const [eh, em] = endTime.split(':').map(Number)
+        if (eh * 60 + em <= sh * 60 + sm) {
+            toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error')
+            return
+        }
         startTransition(async () => {
             const res = await updateClassSchedule(editingSchedule.id, hallId, startTime + ':00', endTime + ':00')
             if (res.success) {
@@ -174,7 +183,7 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
                                         <Clock className="w-3.5 h-3.5 text-blue-500" />
                                         {'الوقت'}
                                     </label>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3" dir="ltr">
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] text-slate-400 font-bold text-center">{'من'}</p>
                                             <input
