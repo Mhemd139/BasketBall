@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getEventRefData } from '@/app/actions';
 import { GameSVG } from '../ui/svg/GameSVG';
 import { TrainingSVG } from '../ui/svg/TrainingSVG';
+import { ScrollTimePicker } from '../ui/ScrollTimePicker';
 import { format } from 'date-fns';
-import { Loader2, ArrowLeft, ArrowRight, CheckCircle2, Trash2, Clock, Calendar, X } from 'lucide-react';
+import { Loader2, ArrowLeft, ArrowRight, CheckCircle2, Trash2, Clock, Calendar, X, Check, Search } from 'lucide-react';
 
 interface InteractiveEventModalProps {
     isOpen: boolean;
@@ -141,34 +142,90 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     };
 
     const getName = (item: any) => locale === 'he' ? (item.name_he || item.name_ar) : (item.name_ar || item.name_he);
+    const getCategory = (item: any) => item.categories ? (locale === 'he' ? (item.categories.name_he || item.categories.name_ar) : (item.categories.name_ar || item.categories.name_he)) : null;
 
-    // Block Selector Component for premium feel instead of standard selects
-    const BlockSelector = ({ items, selectedId, onSelect, placeholder }: any) => (
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-4 hide-scrollbar -mx-6 px-6">
-            {items.map((item: any) => {
-                const isSelected = selectedId === item.id;
-                return (
-                    <motion.button
-                        key={item.id}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => onSelect(item.id)}
-                        className={`snap-center shrink-0 w-36 h-28 rounded-2xl p-4 flex flex-col justify-end text-right transition-all duration-300 relative overflow-hidden ${
-                            isSelected 
-                            ? 'bg-gradient-to-br from-electric to-blue-700 shadow-lg shadow-electric/30' 
-                            : 'bg-white border border-gray-100 shadow-soft'
-                        }`}
-                    >
-                        {isSelected && (
-                            <motion.div layoutId="activeBlock" className="absolute inset-0 bg-white/10" />
-                        )}
-                        <span className={`font-bold font-outfit text-sm leading-tight z-10 ${isSelected ? 'text-white' : 'text-royal'}`}>
-                            {getName(item)}
-                        </span>
-                    </motion.button>
-                );
-            })}
-        </div>
-    );
+    // Searchable vertical list picker — large touch targets, filter-as-you-type
+    const SearchPicker = ({ items, selectedId, onSelect, placeholder, showCategory = false, showAvailability = false }: any) => {
+        const [query, setQuery] = useState('');
+        const filtered = query.trim()
+            ? items.filter((item: any) => {
+                const name = getName(item)?.toLowerCase() || '';
+                const cat = showCategory ? (getCategory(item)?.toLowerCase() || '') : '';
+                return name.includes(query.toLowerCase()) || cat.includes(query.toLowerCase());
+            })
+            : items;
+
+        // Avatar color by index
+        const avatarColors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500', 'bg-teal-500'];
+
+        return (
+            <div className="flex flex-col gap-2">
+                {/* Search input */}
+                <div className="relative">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={placeholder || 'بحث...'}
+                        className="w-full bg-gray-100 rounded-xl pr-10 pl-4 py-3 text-sm text-royal outline-none focus:ring-2 focus:ring-electric/40 transition-all"
+                        dir="rtl"
+                    />
+                </div>
+
+                {/* List */}
+                <div className="max-h-[220px] overflow-y-auto rounded-2xl border border-gray-100 divide-y divide-gray-50 bg-white shadow-soft">
+                    {filtered.length === 0 && (
+                        <div className="py-6 text-center text-sm text-gray-400">لا توجد نتائج</div>
+                    )}
+                    {filtered.map((item: any, idx: number) => {
+                        const isSelected = selectedId === item.id;
+                        const label = getName(item);
+                        const category = showCategory ? getCategory(item) : null;
+                        const initials = label?.trim().split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase() || '?';
+                        const avatarColor = avatarColors[idx % avatarColors.length];
+                        return (
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => onSelect(item.id)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-right transition-colors active:scale-[0.99] touch-manipulation ${
+                                    isSelected ? 'bg-electric/8' : 'hover:bg-gray-50'
+                                }`}
+                            >
+                                {/* Avatar */}
+                                <div className={`w-9 h-9 rounded-full ${avatarColor}/20 border ${avatarColor.replace('bg-', 'border-')}/30 flex items-center justify-center shrink-0 text-xs font-bold ${avatarColor.replace('bg-', 'text-').replace('-500', '-700')}`}>
+                                    {initials}
+                                </div>
+
+                                {/* Name + subtitle */}
+                                <div className="flex-1 min-w-0 text-right">
+                                    <p className={`font-bold text-sm leading-tight ${isSelected ? 'text-electric' : 'text-royal'}`}>{label}</p>
+                                    {category && (
+                                        <span className="inline-block mt-0.5 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                            {category}
+                                        </span>
+                                    )}
+                                    {showAvailability && item.availability?.length > 0 && (
+                                        <div className="flex gap-1 mt-0.5 flex-row-reverse">
+                                            {item.availability.slice(0, 3).map((day: string) => (
+                                                <span key={day} className="text-[9px] uppercase font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                                    {day.slice(0, 2)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Checkmark */}
+                                {isSelected && <Check className="w-4 h-4 text-electric shrink-0" />}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
 
     const slideVariants: any = {
         hidden: { opacity: 0, x: 50 },
@@ -272,37 +329,55 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
 
                                 {/* STEP 2: DETAILS */}
                                 {step === 'details' && (
-                                    <motion.div key="details" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-8 pb-10">
+                                    <motion.div key="details" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 pb-10">
                                         {type === 'training' ? (
                                             <>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-royal mb-4 flex items-center gap-2">
-                                                        <span className="w-8 h-8 rounded-full bg-electric/10 text-electric flex items-center justify-center">1</span>
+                                                    <h3 className="text-base font-bold text-royal mb-3 flex items-center gap-2">
+                                                        <span className="w-7 h-7 rounded-full bg-electric/10 text-electric text-sm flex items-center justify-center font-bold">1</span>
                                                         المدرب المسؤول
                                                     </h3>
-                                                    <BlockSelector items={refData.trainers} selectedId={selectedTrainer} onSelect={setSelectedTrainer} />
+                                                    <SearchPicker
+                                                        items={refData.trainers}
+                                                        selectedId={selectedTrainer}
+                                                        onSelect={setSelectedTrainer}
+                                                        placeholder="ابحث عن مدرب..."
+                                                        showAvailability
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-royal mb-4 flex items-center gap-2">
-                                                        <span className="w-8 h-8 rounded-full bg-electric/10 text-electric flex items-center justify-center">2</span>
+                                                    <h3 className="text-base font-bold text-royal mb-3 flex items-center gap-2">
+                                                        <span className="w-7 h-7 rounded-full bg-electric/10 text-electric text-sm flex items-center justify-center font-bold">2</span>
                                                         الفريق المستهدف
                                                     </h3>
-                                                    <BlockSelector items={refData.classes} selectedId={selectedClass} onSelect={setSelectedClass} />
+                                                    <SearchPicker
+                                                        items={refData.classes}
+                                                        selectedId={selectedClass}
+                                                        onSelect={setSelectedClass}
+                                                        placeholder="ابحث عن فريق..."
+                                                        showCategory
+                                                    />
                                                 </div>
                                             </>
                                         ) : (
                                             <>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-royal mb-4">الفريق المضيف</h3>
-                                                    <BlockSelector items={refData.classes} selectedId={homeTeam} onSelect={setHomeTeam} />
+                                                    <h3 className="text-base font-bold text-royal mb-3">الفريق المضيف</h3>
+                                                    <SearchPicker
+                                                        items={refData.classes}
+                                                        selectedId={homeTeam}
+                                                        onSelect={setHomeTeam}
+                                                        placeholder="ابحث عن الفريق المضيف..."
+                                                        showCategory
+                                                    />
                                                 </div>
 
-                                                <div className="flex justify-center -my-2">
+                                                <div className="flex justify-center">
                                                     <div className="bg-neon/10 text-neon font-syncopate font-black text-2xl px-6 py-2 rounded-full border border-neon/20">VS</div>
                                                 </div>
 
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-royal mb-4">الفريق الضيف</h3>
+                                                    <h3 className="text-base font-bold text-royal mb-3">الفريق الضيف</h3>
                                                     <input
                                                         value={awayTeamName}
                                                         onChange={(e) => setAwayTeamName(e.target.value)}
@@ -317,27 +392,17 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
 
                                 {/* STEP 3: TIME */}
                                 {step === 'time' && (
-                                    <motion.div key="time" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-8 pb-10">
-                                        <div className="bg-white p-6 rounded-3xl shadow-soft isolate">
-                                            <h3 className="text-sm font-bold text-royal/50 uppercase tracking-wider mb-4">وقت البدء</h3>
-                                            <input
-                                                type="time"
-                                                value={startTime}
-                                                onChange={(e) => setStartTime(e.target.value)}
-                                                aria-label="Start time"
-                                                className="w-full bg-transparent border-none text-5xl sm:text-7xl font-space font-black text-royal outline-none focus:ring-0 p-0 text-center"
-                                            />
-                                        </div>
-                                        <div className="bg-white p-6 rounded-3xl shadow-soft isolate">
-                                            <h3 className="text-sm font-bold text-royal/50 uppercase tracking-wider mb-4">وقت الانتهاء</h3>
-                                            <input
-                                                type="time"
-                                                value={endTime}
-                                                onChange={(e) => setEndTime(e.target.value)}
-                                                aria-label="End time"
-                                                className="w-full bg-transparent border-none text-5xl sm:text-7xl font-space font-black text-royal outline-none focus:ring-0 p-0 text-center"
-                                            />
-                                        </div>
+                                    <motion.div key="time" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 pb-10">
+                                        <ScrollTimePicker
+                                            value={startTime}
+                                            onChange={setStartTime}
+                                            label="وقت البدء"
+                                        />
+                                        <ScrollTimePicker
+                                            value={endTime}
+                                            onChange={setEndTime}
+                                            label="وقت الانتهاء"
+                                        />
                                     </motion.div>
                                 )}
 

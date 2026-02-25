@@ -116,7 +116,7 @@ const config: Config = {
         outfit: ['var(--font-outfit)', 'sans-serif'],
         syncopate: ['var(--font-syncopate)', 'sans-serif'],
         space: ['var(--font-space-mono)', 'monospace'],
-        arabic: ['Cairo', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
+        arabic: ['var(--font-arabic)', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
         hebrew: ['Rubik', 'Noto Sans Hebrew', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },

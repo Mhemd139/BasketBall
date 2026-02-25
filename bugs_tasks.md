@@ -1,10 +1,15 @@
-# Bug 3: Team Selector Should Be Text Input for Games
+# Bug 5: Add Delete Button Inside Event Cards
 
 ## Root Cause
-Game team selection uses `BlockSelector` (horizontal card scroll) for home team. But games are against external teams — users need free text input, not a picker from internal classes. Cards also look crooked and are hard to scroll on mobile.
+One-time event cards in HallSchedule have no delete button. The edit button is `group-hover:opacity-100` — invisible on mobile (no hover). `InteractiveEventModal` already has a `delete-confirm` step and `onDelete` prop, but neither is wired in HallSchedule.
 
 ## Fix
-- Remove internal/external toggle — all games use text inputs
-- Home team: text input
-- Away team: text input
-- Keep `BlockSelector` only for training flow (trainer + class selection)
+1. Import `deleteEvent` action into HallSchedule
+2. Add `modalInitialStep` state so modal can open directly to `delete-confirm`
+3. Add `handleDeleteEvent` that deletes + updates local state (no redirect)
+4. Add `handleDeleteClick` that sets selectedEvent + opens modal at delete-confirm
+5. Wire `onDelete={handleDeleteEvent}` and `initialStep={modalInitialStep}` to modal
+6. Add trash icon button on each one-time event card (always visible on mobile)
+
+## File
+`src/components/halls/HallSchedule.tsx`

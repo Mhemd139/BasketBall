@@ -27,22 +27,23 @@ export default async function SchedulePage({
 }) {
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
-  const canManage = !!session
 
   const today = getTodayISO()
   const now = getNowInIsrael()
   const nextWeekDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
   const nextWeek = `${nextWeekDate.getFullYear()}-${String(nextWeekDate.getMonth() + 1).padStart(2, '0')}-${String(nextWeekDate.getDate()).padStart(2, '0')}`
 
-  // Fetch upcoming events for the next 7 days
-  const { data: events } = await supabase
-    .from('events')
-    .select('*, halls(*)')
-    .gte('event_date', today)
-    .lte('event_date', nextWeek)
-    .order('event_date', { ascending: true })
-    .order('start_time', { ascending: true })
+  const [session, { data: events }] = await Promise.all([
+    getSession(),
+    supabase
+      .from('events')
+      .select('*, halls(*)')
+      .gte('event_date', today)
+      .lte('event_date', nextWeek)
+      .order('event_date', { ascending: true })
+      .order('start_time', { ascending: true }),
+  ])
+  const canManage = !!session
 
   const allEvents = (events || []) as EventWithDetails[]
 
@@ -59,9 +60,9 @@ export default async function SchedulePage({
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
-      <Sidebar locale={locale} role={(await getSession())?.role} />
+      <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
         <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header
             locale={locale}
@@ -70,7 +71,7 @@ export default async function SchedulePage({
           />
         </div>
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-2xl mx-auto space-y-6 w-full">
             
             {sortedDates.length > 0 ? (
@@ -80,7 +81,7 @@ export default async function SchedulePage({
                     <div className="bg-[#0B132B]/60 backdrop-blur-2xl border border-white/20 rounded-full px-5 py-2 shadow-lg flex items-center gap-2">
                       <CalendarIcon className="w-4 h-4 text-indigo-400 drop-shadow-sm" />
                       <h2 className="text-sm font-syncopate font-bold text-white tracking-wider drop-shadow-sm uppercase">
-                        {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {new Date(date + 'T12:00:00').toLocaleDateString(locale === 'he' ? 'he-IL' : 'ar-SA', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </h2>
                     </div>
                   </div>
@@ -153,7 +154,7 @@ export default async function SchedulePage({
         </main>
 
         <div className="relative z-50">
-          <BottomNav locale={locale} role={(await getSession())?.role} />
+          <BottomNav locale={locale} role={session?.role} />
         </div>
       </div>
     </AnimatedMeshBackground>

@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, User as UserIcon, Phone, Save } from 'lucide-react'
+import { X, User as UserIcon, Phone, Save } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { updateTraineePayment } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
+import { Portal } from '@/components/ui/Portal'
 import type { Database } from '@/lib/supabase/types'
 
 type Trainee = Database['public']['Tables']['trainees']['Row']
@@ -40,8 +41,9 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white w-full max-w-lg rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10">
+        <Portal>
+        <div className="fixed inset-0 bg-black/50 z-[200] flex items-end md:items-center justify-center animate-in fade-in" onClick={onClose}>
+            <div className="bg-white w-full max-w-lg rounded-t-2xl md:rounded-3xl overflow-y-auto max-h-[90dvh] shadow-2xl animate-in slide-in-from-bottom-10" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="bg-gray-50 p-6 border-b border-gray-100 flex justify-between items-start">
                     <div className="flex items-center gap-4">
@@ -59,7 +61,7 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
                              </div>
                          </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                    <button type="button" onClick={onClose} aria-label="إغلاق" className="p-2 hover:bg-gray-200 rounded-full transition-colors">
                         <X className="w-5 h-5 text-gray-500" />
                     </button>
                 </div>
@@ -89,8 +91,9 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
                             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">{'المبلغ المدفوع (₪)'}</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-sans">₪</span>
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
+                                    aria-label="المبلغ المدفوع"
                                     value={amount}
                                     onChange={(e) => setAmount(Number(e.target.value))}
                                     className="w-full pl-8 p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 font-mono text-lg"
@@ -126,5 +129,6 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
                 </div>
             </div>
         </div>
+        </Portal>
     )
 }

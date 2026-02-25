@@ -45,7 +45,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
             backHref={`/${locale}/payments`}
         />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5">
             <div className="max-w-5xl mx-auto space-y-6">
                 
                 {/* Header Info */}

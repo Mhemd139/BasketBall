@@ -41,7 +41,7 @@ export function BottomNav({ locale, role }: BottomNavProps) {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-[72px] bg-[#0B132B]/80 backdrop-blur-3xl border-t border-white/10 shadow-2xl z-[100] pb-[env(safe-area-inset-bottom)] flex items-center justify-center px-2 md:hidden" suppressHydrationWarning>
+    <nav className="fixed bottom-0 left-0 right-0 bg-[#0B132B]/80 backdrop-blur-3xl border-t border-white/10 shadow-2xl z-[100] pt-2 pb-[max(env(safe-area-inset-bottom),8px)] flex items-center justify-center px-2 md:hidden" suppressHydrationWarning>
       <div className="flex items-center justify-evenly w-full max-w-[400px]">
         {navItems.map((item) => {
           const active = isActive(item.href);

@@ -33,7 +33,7 @@ export default async function TrainersPage({
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
         <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header
             locale={locale}
@@ -42,7 +42,7 @@ export default async function TrainersPage({
           />
         </div>
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             {(trainers || []).map((trainer: Trainer) => (
               <TrainerCard key={trainer.id} trainer={trainer} locale={locale} />

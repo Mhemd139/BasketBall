@@ -36,11 +36,16 @@ export function TeamCard({ cls, locale, isEditable }: TeamCardProps) {
                                     <h3 className="text-sm font-bold text-white mb-0.5 truncate drop-shadow-md">
                                         {cls.name_ar}
                                     </h3>
-                                    <div className="flex items-center gap-1.5 text-xs text-indigo-100/70 font-medium tracking-wide">
-                                        <User className="w-3 h-3" />
-                                        <span>
-                                            {traineeCount} {'لاعب'}
-                                        </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <div className="flex items-center gap-1 text-xs text-indigo-100/70 font-medium tracking-wide">
+                                            <User className="w-3 h-3" />
+                                            <span>{traineeCount} {'لاعب'}</span>
+                                        </div>
+                                        {cls.categories && (
+                                            <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/20">
+                                                {getLocalizedField(cls.categories, 'name', locale)}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 

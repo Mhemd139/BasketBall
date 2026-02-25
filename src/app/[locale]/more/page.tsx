@@ -61,7 +61,7 @@ export default async function MorePage({
       <div className="flex-1 flex flex-col md:ml-[240px]">
         <Header locale={locale} />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-5">
           <div className="max-w-4xl mx-auto space-y-8">
             {/* Header */}
             <section className="py-4 text-center md:text-start">

@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { Search, ChevronLeft, ChevronRight, User, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface HeaderProps {
@@ -26,7 +26,6 @@ interface SearchResult {
 // LANGUAGES constant removed
 
 export function Header({ locale, title, showBack, backHref, onBack }: HeaderProps) {
-  const isRTL = true;
   const BackIcon = ChevronRight;
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -34,10 +33,8 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
-  const langRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
 
   const nameField = 'name_ar';
 
@@ -134,37 +131,37 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 // Language switcher logic removed
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full bg-[#080e1f]/80 backdrop-blur-2xl border-b border-white/8 shadow-[0_1px_24px_0_rgba(0,0,0,0.4)] transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 md:h-20 gap-4">
-            
+        <div className="flex items-center justify-between h-14 md:h-16 gap-4">
+
             {/* Left: Logo & Back */}
-            <div className={`flex items-center gap-3 relative z-10 ${showBack ? 'pl-2' : ''}`}>
+            <div className={`flex items-center gap-2 relative z-10`}>
               {showBack && (
                 <button
                   onClick={onBack || (() => backHref ? router.push(backHref) : router.back())}
                   aria-label="Go back"
-                  className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                  className="p-2 rounded-xl hover:bg-white/10 active:bg-white/15 text-white/80 hover:text-white transition-all touch-manipulation"
                 >
-                  <BackIcon className="w-6 h-6" />
+                  <BackIcon className="w-5 h-5" />
                 </button>
               )}
-              
-              <Link href={`/${locale}`} className="flex items-center gap-3 group">
-                <div className="relative w-10 h-10 md:w-16 md:h-16 overflow-hidden transition-transform duration-300 group-hover:scale-105">
-                    <Image 
-                        src="/images/logo.jpg" 
-                        alt="Logo" 
+
+              <Link href={`/${locale}`} className="flex items-center gap-2.5 group">
+                <div className="relative w-9 h-9 md:w-10 md:h-10 overflow-hidden rounded-xl ring-1 ring-white/10 shadow-md transition-transform duration-200 group-hover:scale-105">
+                    <Image
+                        src="/images/logo.jpg"
+                        alt="Logo"
                         fill
                         className="object-contain"
                         priority
                     />
                 </div>
-                <div className="flex flex-col">
-                    <h1 className="font-outfit font-bold text-xl md:text-2xl leading-none text-white tracking-tight drop-shadow-md">
+                <div className="flex flex-col gap-0.5">
+                    <h1 className="font-bold text-base md:text-lg leading-none text-white tracking-tight">
                         {title || 'باقة الغربية'}
                     </h1>
-                    <p className="text-[10px] md:text-xs text-gold-400 font-bold tracking-wider uppercase opacity-90 drop-shadow-md">
+                    <p className="text-[9px] text-gold-400/80 font-semibold tracking-widest uppercase leading-none">
                         {'النادي الرياضي'}
                     </p>
                 </div>

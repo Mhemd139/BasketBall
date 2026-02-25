@@ -45,7 +45,7 @@ export default async function TrainerProfilePage({
         <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
             <Sidebar locale={locale} />
 
-            <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+            <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
                 <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
                   <Header 
                       locale={locale} 
@@ -55,7 +55,7 @@ export default async function TrainerProfilePage({
                   />
                 </div>
 
-                <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
+                <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5">
                     <div className="max-w-4xl mx-auto space-y-8">
                         
                         {/* Profile Header */}

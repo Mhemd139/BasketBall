@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Pencil, Check, X } from 'lucide-react'
+import { Pencil, Check, X, Clock, MapPin } from 'lucide-react'
 import { updateClassSchedule } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { useRouter } from 'next/navigation'
+import { Portal } from '@/components/ui/Portal'
 
 interface Schedule {
     id: string
@@ -33,7 +34,7 @@ const dayLabels: Record<number, string> = {
 }
 
 export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps) {
-    const [editingId, setEditingId] = useState<string | null>(null)
+    const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
     const [hallId, setHallId] = useState('')
     const [startTime, setStartTime] = useState('')
     const [endTime, setEndTime] = useState('')
@@ -47,19 +48,23 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
     }
 
     const startEdit = (s: Schedule) => {
-        setEditingId(s.id)
+        setEditingSchedule(s)
         setHallId(s.halls?.id || '')
         setStartTime(s.start_time.slice(0, 5))
         setEndTime(s.end_time.slice(0, 5))
     }
 
+    const handleClose = () => {
+        setEditingSchedule(null)
+    }
+
     const handleSave = () => {
-        if (!editingId || !hallId) return
+        if (!editingSchedule || !hallId) return
         startTransition(async () => {
-            const res = await updateClassSchedule(editingId, hallId, startTime + ':00', endTime + ':00')
+            const res = await updateClassSchedule(editingSchedule.id, hallId, startTime + ':00', endTime + ':00')
             if (res.success) {
                 toast('تم تحديث الجدول', 'success')
-                setEditingId(null)
+                setEditingSchedule(null)
                 router.refresh()
             } else {
                 toast(res.error || 'فشل التحديث', 'error')
@@ -75,77 +80,150 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
     }
 
     return (
-        <div className="space-y-2">
-            {validSchedules.map(s => (
-                <div key={s.id}>
-                    {editingId === s.id ? (
-                        <div className="space-y-2 bg-gray-50 p-3 rounded-xl">
-                            <div className="flex items-center gap-2 text-sm font-bold text-navy-900">
-                                {dayLabels[s.day_of_week]}
+        <>
+            {/* Schedule list — view only */}
+            <div className="space-y-2">
+                {validSchedules.map(s => (
+                    <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => startEdit(s)}
+                        className="w-full flex items-center gap-2 text-sm rounded-lg p-1 -m-1 hover:bg-gray-100 transition-colors group text-right"
+                    >
+                        <span className="font-bold text-slate-800">{dayLabels[s.day_of_week]}</span>
+                        <span dir="ltr" className="text-gray-500 font-medium">
+                            {s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}
+                        </span>
+                        {s.halls && (
+                            <span className="text-gray-400 text-xs truncate">• {getLocName(s.halls)}</span>
+                        )}
+                        <Pencil className="w-3 h-3 text-gray-400 ms-auto shrink-0" />
+                    </button>
+                ))}
+            </div>
+
+            {/* Edit modal — Portal so it escapes any overflow */}
+            {editingSchedule && (
+                <Portal>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-portal"
+                        onClick={handleClose}
+                    />
+
+                    {/* Bottom sheet */}
+                    <div
+                        className="fixed bottom-0 inset-x-0 z-[201] sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4"
+                        dir="rtl"
+                    >
+                        <div className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl">
+
+                            {/* Drag handle */}
+                            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                                <div className="w-10 h-1 rounded-full bg-slate-200" />
                             </div>
-                            <select
-                                value={hallId}
-                                onChange={e => setHallId(e.target.value)}
-                                aria-label="Select hall"
-                                className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-medium"
-                            >
-                                <option value="">{'اختر القاعة'}</option>
-                                {halls.map(h => (
-                                    <option key={h.id} value={h.id}>{getLocName(h)}</option>
-                                ))}
-                            </select>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="time"
-                                    value={startTime}
-                                    onChange={e => setStartTime(e.target.value)}
-                                    aria-label="Start time"
-                                    className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold flex-1"
-                                />
-                                <span className="text-gray-400">-</span>
-                                <input
-                                    type="time"
-                                    value={endTime}
-                                    onChange={e => setEndTime(e.target.value)}
-                                    aria-label="End time"
-                                    className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold flex-1"
-                                />
-                            </div>
-                            <div className="flex gap-2">
+
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-6 pt-4 pb-4 border-b border-slate-100">
+                                <div>
+                                    <h2 className="text-base font-bold text-slate-900">
+                                        {'تعديل الجدول'}
+                                    </h2>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        {dayLabels[editingSchedule.day_of_week]}
+                                    </p>
+                                </div>
                                 <button
-                                    onClick={handleSave}
-                                    disabled={isPending}
-                                    aria-label="Save"
-                                    className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-lg py-1.5 text-sm font-bold hover:bg-green-600 transition-colors disabled:opacity-50"
-                                >
-                                    <Check className="w-4 h-4" />
-                                    {'حفظ'}
-                                </button>
-                                <button
-                                    onClick={() => setEditingId(null)}
-                                    disabled={isPending}
-                                    aria-label="Cancel"
-                                    className="flex items-center justify-center px-3 bg-gray-200 text-gray-600 rounded-lg py-1.5 text-sm hover:bg-gray-300 transition-colors disabled:opacity-50"
+                                    type="button"
+                                    onClick={handleClose}
+                                    aria-label="إغلاق"
+                                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
+
+                            <div className="px-6 py-5 space-y-5">
+                                {/* Hall picker */}
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                                        {'القاعة'}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {halls.map(h => (
+                                            <button
+                                                key={h.id}
+                                                type="button"
+                                                onClick={() => setHallId(h.id)}
+                                                className={`py-2.5 px-3 rounded-xl text-sm font-bold border-2 transition-all ${
+                                                    hallId === h.id
+                                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {getLocName(h)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Time inputs */}
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        <Clock className="w-3.5 h-3.5 text-blue-500" />
+                                        {'الوقت'}
+                                    </label>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-[10px] text-slate-400 font-bold text-center">{'من'}</p>
+                                            <input
+                                                type="time"
+                                                value={startTime}
+                                                onChange={e => setStartTime(e.target.value)}
+                                                aria-label="وقت البداية"
+                                                className="w-full bg-slate-50 border-2 border-slate-200 focus:border-indigo-400 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 text-center outline-none transition-colors"
+                                            />
+                                        </div>
+                                        <span className="text-slate-400 font-bold mt-4">{'—'}</span>
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-[10px] text-slate-400 font-bold text-center">{'إلى'}</p>
+                                            <input
+                                                type="time"
+                                                value={endTime}
+                                                onChange={e => setEndTime(e.target.value)}
+                                                aria-label="وقت النهاية"
+                                                className="w-full bg-slate-50 border-2 border-slate-200 focus:border-indigo-400 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 text-center outline-none transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="px-6 pb-8 sm:pb-6 flex gap-3 border-t border-slate-100 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={handleClose}
+                                    disabled={isPending}
+                                    className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition-colors disabled:opacity-50"
+                                >
+                                    {'إلغاء'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={isPending || !hallId}
+                                    className="flex-[2] py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-40 transition-all shadow-lg shadow-indigo-200"
+                                >
+                                    <Check className="w-4 h-4" strokeWidth={2.5} />
+                                    {'حفظ التغييرات'}
+                                </button>
+                            </div>
                         </div>
-                    ) : (
-                        <button
-                            onClick={() => startEdit(s)}
-                            className="w-full flex items-center gap-2 text-sm group hover:bg-gray-50 rounded-lg p-1 -m-1 transition-colors"
-                        >
-                            <span className="font-bold text-navy-900">{dayLabels[s.day_of_week]}</span>
-                            <span dir="ltr" className="text-gray-600 font-medium">{s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}</span>
-                            {s.halls && (
-                                <span className="text-gray-400 text-xs">• {getLocName(s.halls)}</span>
-                            )}
-                            <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity ms-auto" />
-                        </button>
-                    )}
-                </div>
-            ))}
-        </div>
+                    </div>
+                </Portal>
+            )}
+        </>
     )
 }

@@ -17,27 +17,24 @@ export default async function PaymentsPage({
   params: Promise<{ locale: Locale }>
 }) {
   const { locale } = await params
-  const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
 
-  // Fetch classes with trainee counts
-  const { data: classes, error } = await (supabase as any)
-    .from('classes')
-    .select(`
-      *,
-      trainees (count),
-      trainers (name_en, name_ar, name_he)
-    `)
-    .order('name_ar')
-    .limit(50)
+  const [dict, session, { data: classes }] = await Promise.all([
+    getDictionary(locale),
+    getSession(),
+    (supabase as any)
+      .from('classes')
+      .select('id, name_en, name_ar, name_he, trainer_id, trainees(count), trainers(name_en, name_ar, name_he)')
+      .order('name_ar')
+      .limit(50),
+  ])
 
   const safeClasses = (classes || []) as any[]
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
           <Header 
               locale={locale} 
@@ -47,7 +44,7 @@ export default async function PaymentsPage({
           />
         </div>
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
             <div className="max-w-4xl mx-auto space-y-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                     <Trophy className="w-6 h-6 text-yellow-500" />
