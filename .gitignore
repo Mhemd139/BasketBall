@@ -72,6 +72,29 @@ nul
 .agents/
 _agent/
 _agents/
+.jules/
 
 # Local scripts
 scripts/
+
+# Dev notes & internal planning docs
+bugs.md
+bugs_tasks.md
+bugs_description.md
+tmp_fix_plan.md
+*.md.bak
+
+# Debug screenshots
+image.png
+image-*.png
+
+# DB scripts (sensitive)
+rls_security.sql
+
+# Data files
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+~$*
