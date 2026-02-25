@@ -49,11 +49,8 @@ export default async function AttendancePage({
   // Get class_id directly from event column, fallback to trainer's class
   let targetClassId: string | null = event.class_id || null
   if (!targetClassId && event.trainer_id) {
-    const { data: classData, error: classError } = await (supabase as any)
-      .from('classes').select('id').eq('trainer_id', event.trainer_id).limit(1).single()
-    if (classError) {
-      console.error(`Failed to find class for trainer ${event.trainer_id} (event ${event.id}):`, classError.message)
-    }
+    const { data: classData } = await (supabase as any)
+      .from('classes').select('id').eq('trainer_id', event.trainer_id).limit(1).maybeSingle()
     if (classData) targetClassId = classData.id
   }
 
@@ -70,7 +67,7 @@ export default async function AttendancePage({
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
 
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
           <Header
             locale={locale}
@@ -79,7 +76,7 @@ export default async function AttendancePage({
           />
         </div>
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-5">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-5">
           <div className="max-w-2xl mx-auto">
             {/* Event Info */}
             <section className="py-4">
@@ -99,7 +96,7 @@ export default async function AttendancePage({
                 <h1 className="heading-md">
                   {getLocalizedField(eventWithHall, 'title', locale)}
                 </h1>
-                <EventManagementActions event={event} locale={locale} />
+                <EventManagementActions event={event} locale={locale} hallId={event.hall_id} />
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">

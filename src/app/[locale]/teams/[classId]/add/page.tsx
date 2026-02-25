@@ -124,7 +124,7 @@ export default function AddTraineePage() {
           onBack={mode !== 'choice' ? () => setMode('choice') : undefined}
         />
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5">
           <div className="max-w-2xl mx-auto">
             
             <AnimatePresence mode="wait">

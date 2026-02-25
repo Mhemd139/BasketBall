@@ -716,13 +716,13 @@ export async function getEventRefData() {
     // Fetch Trainers
     const { data: trainers, error: trainersError } = await (supabase as any)
       .from('trainers')
-      .select('id, name_en, name_ar, name_he')
+      .select('id, name_en, name_ar, name_he, availability')
       .order('name_ar')
-  
-    // Fetch Classes (Teams)
+
+    // Fetch Classes (Teams) with category
     const { data: classes, error: classesError } = await (supabase as any)
       .from('classes')
-      .select('id, name_en, name_ar, name_he')
+      .select('id, name_en, name_ar, name_he, categories(name_he, name_ar, name_en)')
       .order('name_ar')
 
     // Fetch Halls
@@ -743,7 +743,7 @@ export async function fetchHallEvents(hallId: string, startDate: string, endDate
     
     const { data: events, error } = await (supabase as any)
         .from('events')
-        .select('id, title_he, title_ar, title_en, start_time, end_time, event_date, type, description, schedule_id, class_id, trainer_id, hall_id, notes_en, trainers(name_he, name_ar, name_en)')
+        .select('id, title_he, title_ar, title_en, start_time, end_time, event_date, type, schedule_id, class_id, trainer_id, hall_id, notes_en, trainers(name_he, name_ar, name_en), classes(name_he, name_ar, name_en, categories(name_he, name_ar, name_en))')
         .eq('hall_id', hallId)
         .gte('event_date', startDate)
         .lte('event_date', endDate)
@@ -762,7 +762,7 @@ export async function fetchHallSchedules(hallId: string) {
 
     const { data: schedules, error } = await (supabase as any)
         .from('class_schedules')
-        .select('*, classes(id, name_he, name_ar, name_en, trainer_id, trainers(name_he, name_ar, name_en))')
+        .select('*, classes(id, name_he, name_ar, name_en, trainer_id, trainers(name_he, name_ar, name_en), categories(name_he, name_ar, name_en))')
         .eq('hall_id', hallId)
         .order('day_of_week', { ascending: true })
         .order('start_time', { ascending: true })
@@ -824,24 +824,24 @@ export async function getOrCreateEventForSchedule(scheduleId: string, date: stri
 
     const supabase = await createServerSupabaseClient()
 
-    // 1. Get the schedule with class and hall info
-    const { data: schedule, error: schedError } = await (supabase as any)
-        .from('class_schedules')
-        .select('*, classes(id, name_he, name_ar, name_en, trainer_id), halls(id, name_he, name_ar, name_en)')
-        .eq('id', scheduleId)
-        .single()
+    // 1 + 2 in parallel: fetch schedule info AND check if event already exists
+    const [{ data: schedule, error: schedError }, { data: existing }] = await Promise.all([
+        (supabase as any)
+            .from('class_schedules')
+            .select('*, classes(id, name_he, name_ar, name_en, trainer_id), halls(id, name_he, name_ar, name_en)')
+            .eq('id', scheduleId)
+            .single(),
+        (supabase as any)
+            .from('events')
+            .select('id')
+            .eq('schedule_id', scheduleId)
+            .eq('event_date', date)
+            .limit(1),
+    ])
 
     if (schedError || !schedule) {
         return { success: false, error: 'Schedule not found' }
     }
-
-    // 2. Check if event already exists for this schedule+date (matches unique index)
-    const { data: existing } = await (supabase as any)
-        .from('events')
-        .select('id')
-        .eq('schedule_id', scheduleId)
-        .eq('event_date', date)
-        .limit(1)
 
     if (existing && existing.length > 0) {
         return { success: true, eventId: existing[0].id }

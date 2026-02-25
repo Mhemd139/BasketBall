@@ -5,6 +5,7 @@ import { Clock, Check, X } from 'lucide-react'
 import { updateEventTime } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { useRouter } from 'next/navigation'
+import { ScrollTimePicker } from '@/components/ui/ScrollTimePicker'
 
 interface EventTimeEditorProps {
     eventId: string
@@ -53,39 +54,31 @@ export function EventTimeEditor({ eventId, startTime, endTime }: EventTimeEditor
     }
 
     return (
-        <div className="flex items-center gap-2 flex-wrap">
-            <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
-            <input
-                type="time"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                aria-label="Start time"
-                className="bg-white/80 border border-indigo-200 rounded-lg px-2 py-1 text-sm font-bold text-navy-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-[100px]"
-            />
-            <span className="text-gray-400 text-sm">-</span>
-            <input
-                type="time"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                aria-label="End time"
-                className="bg-white/80 border border-indigo-200 rounded-lg px-2 py-1 text-sm font-bold text-navy-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-[100px]"
-            />
-            <button
-                onClick={handleSave}
-                disabled={isPending}
-                aria-label="Save time"
-                className="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors active:scale-95 disabled:opacity-50"
-            >
-                <Check className="w-4 h-4" />
-            </button>
-            <button
-                onClick={handleCancel}
-                disabled={isPending}
-                aria-label="Cancel"
-                className="w-8 h-8 rounded-lg bg-gray-200 text-gray-600 flex items-center justify-center hover:bg-gray-300 transition-colors active:scale-95 disabled:opacity-50"
-            >
-                <X className="w-4 h-4" />
-            </button>
+        <div className="w-full mt-3">
+            <div className="flex flex-col gap-4">
+                <ScrollTimePicker value={start} onChange={setStart} label="وقت البدء" />
+                <ScrollTimePicker value={end} onChange={setEnd} label="وقت الانتهاء" />
+            </div>
+            <div className="flex gap-3 mt-4">
+                <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isPending}
+                    className="flex-1 h-12 rounded-2xl bg-green-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors active:scale-95 disabled:opacity-50"
+                >
+                    <Check className="w-4 h-4" />
+                    حفظ
+                </button>
+                <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={isPending}
+                    className="flex-1 h-12 rounded-2xl bg-gray-100 text-gray-600 font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors active:scale-95 disabled:opacity-50"
+                >
+                    <X className="w-4 h-4" />
+                    إلغاء
+                </button>
+            </div>
         </div>
     )
 }

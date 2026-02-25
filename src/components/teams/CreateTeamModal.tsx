@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, User, MapPin, Save, Loader2, Languages, Trash2, AlertTriangle } from 'lucide-react'
+import { X, Users, User, MapPin, Save, Loader2, Trash2, AlertTriangle } from 'lucide-react'
 import { getEventRefData, createTeam, updateTeam, deleteTeam } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
+import { Portal } from '@/components/ui/Portal'
 
 interface CreateTeamModalProps {
     isOpen: boolean
@@ -26,8 +27,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [refData, setRefData] = useState<{ trainers: any[], halls: any[] }>({ trainers: [], halls: [] })
     const [formData, setFormData] = useState({
-        name_ar: initialData?.name_ar || '',
-        name_he: initialData?.name_he || '',
+        name: initialData?.name_ar || initialData?.name_he || '',
         trainer_id: initialData?.trainer_id || '',
         hall_id: initialData?.hall_id || ''
     })
@@ -47,28 +47,27 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
 
             if (isEdit && initialData) {
                 setFormData({
-                    name_ar: initialData.name_ar,
-                    name_he: initialData.name_he,
+                    name: initialData.name_ar || initialData.name_he || '',
                     trainer_id: initialData.trainer_id || '',
                     hall_id: initialData.hall_id || ''
                 })
             } else {
-                setFormData({ name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
+                setFormData({ name: '', trainer_id: '', hall_id: '' })
             }
         }
     }, [isOpen, isEdit, initialData])
 
     const handleSubmit = async () => {
-        if (!formData.name_ar || !formData.name_he) {
-            toast(locale === 'he' ? 'נא למלא את כל השדות' : 'يرجى ملء جميع الأسماء', 'warning')
+        if (!formData.name.trim()) {
+            toast(locale === 'he' ? 'נא להזין שם לקבוצה' : 'يرجى إدخال اسم الفريق', 'warning')
             return
         }
 
         setLoading(true)
         const payload = {
-            name_en: formData.name_ar,
-            name_ar: formData.name_ar,
-            name_he: formData.name_he,
+            name_en: formData.name,
+            name_ar: formData.name,
+            name_he: formData.name,
             trainer_id: formData.trainer_id || null,
             hall_id: formData.hall_id || null
         }
@@ -81,7 +80,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
             toast(isEdit ? (locale === 'he' ? 'הקבוצה עודכנה בהצלחה' : 'تم تحديث الفريق بنجاح') : (locale === 'he' ? 'הקבוצה נוצרה בהצלחה' : 'تم إنشاء الفريق بنجاح'), 'success')
             onClose()
             setStep(1)
-            setFormData({ name_ar: '', name_he: '', trainer_id: '', hall_id: '' })
+            setFormData({ name: '', trainer_id: '', hall_id: '' })
         } else {
             toast(res.error || (locale === 'he' ? 'הפעולה נכשלה' : 'فشلت العملية'), 'error')
         }
@@ -106,6 +105,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
     const getName = (item: any) => locale === 'he' ? (item.name_he || item.name_ar) : (item.name_ar || item.name_he)
 
     return (
+        <Portal>
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
                 initial={{ opacity: 0 }}
@@ -206,31 +206,18 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                 exit={{ opacity: 0, x: -20 }}
                                 className="space-y-6"
                             >
-                                <div className="space-y-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-black text-indigo-200/50 px-1 tracking-widest flex items-center gap-2">
-                                            <Languages className="w-3.5 h-3.5 text-emerald-400" /> {locale === 'he' ? 'שם בערבית' : 'الاسم بالعربية'}
-                                        </label>
-                                        <input
-                                            value={formData.name_ar}
-                                            onChange={(e) => setFormData(p => ({ ...p, name_ar: e.target.value }))}
-                                            placeholder="مثال: تحت الـ 14 نخبة"
-                                            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-emerald-500 outline-none transition-all font-bold text-white placeholder-indigo-200/30 text-right"
-                                            dir="rtl"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-black text-indigo-200/50 px-1 tracking-widest flex items-center gap-2">
-                                            <Languages className="w-3.5 h-3.5 text-orange-400" /> {locale === 'he' ? 'שם בעברית' : 'الاسم بالعبرية'}
-                                        </label>
-                                        <input
-                                            value={formData.name_he}
-                                            onChange={(e) => setFormData(p => ({ ...p, name_he: e.target.value }))}
-                                            placeholder="לדוגמה: מתחת לגיל 14 עילית"
-                                            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-orange-500 outline-none transition-all font-bold text-white placeholder-indigo-200/30 text-right"
-                                            dir="rtl"
-                                        />
-                                    </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] uppercase font-black text-indigo-200/50 px-1 tracking-widest flex items-center gap-2">
+                                        <Users className="w-3.5 h-3.5 text-indigo-400" /> {locale === 'he' ? 'שם הקבוצה' : 'اسم الفريق'}
+                                    </label>
+                                    <input
+                                        value={formData.name}
+                                        onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                                        placeholder={locale === 'he' ? 'לדוגמה: נוער נבחרת' : 'مثال: تحت الـ 14 نخبة'}
+                                        className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:border-indigo-500 outline-none transition-all font-bold text-white placeholder-indigo-200/30 text-right"
+                                        dir="rtl"
+                                        autoFocus
+                                    />
                                 </div>
                                 <button
                                     onClick={() => setStep(2)}
@@ -321,5 +308,6 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                 </div>
             </motion.div>
         </div>
+        </Portal>
     )
 }

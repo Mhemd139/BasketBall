@@ -1,10 +1,8 @@
-import { getDictionary } from '@/lib/i18n/get-dictionary'
 import type { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Card } from '@/components/ui/Card'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
@@ -21,26 +19,23 @@ export default async function HallsPage({
   params: Promise<{ locale: Locale }>
 }) {
   const { locale } = await params
-  const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
 
-  const { data: halls } = await supabase
-    .from('halls')
-    .select('*')
-    .order('created_at', { ascending: true })
-    .limit(50)
+  const [session, { data: halls }] = await Promise.all([
+    getSession(),
+    supabase.from('halls').select('*').order('created_at', { ascending: true }).limit(50),
+  ])
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
       
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
         <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header locale={locale} title={'القاعات'} />
         </div>
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto w-full">
 
 

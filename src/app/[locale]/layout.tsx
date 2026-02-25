@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Outfit, Syncopate, Space_Mono } from 'next/font/google'
+import { Inter, Outfit, Syncopate, Space_Mono, Noto_Sans_Arabic } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { locales, directions, type Locale } from '@/lib/i18n/config'
@@ -30,6 +30,13 @@ const spaceMono = Space_Mono({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-space-mono',
+  display: 'swap',
+})
+
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-arabic',
   display: 'swap',
 })
 
@@ -76,8 +83,8 @@ export default async function LocaleLayout({
 
   const direction = directions[locale]
   return (
-    <html lang={locale} dir={direction} className={`${inter.variable} ${outfit.variable} ${syncopate.variable} ${spaceMono.variable} scroll-smooth`}>
-      <body className="min-h-screen bg-background font-sans antialiased selection:bg-gold-400 selection:text-navy-900">
+    <html lang={locale} dir={direction} className={`${inter.variable} ${outfit.variable} ${syncopate.variable} ${spaceMono.variable} ${notoSansArabic.variable} scroll-smooth`}>
+      <body className={`min-h-screen bg-background antialiased selection:bg-gold-400 selection:text-navy-900 ${direction === 'rtl' ? 'font-arabic' : 'font-sans'}`}>
         <ToastProvider>
           <ConfirmProvider>
             {children}

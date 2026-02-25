@@ -53,24 +53,24 @@ export default async function HomePage({
     notFound()
   }
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
-  const canManage = !!session // Ensure logged-in trainers can see quick action shortcuts
-
   const today = getTodayISO()
 
   const [
+    session,
     { data: events },
     { count: hallsCount },
     { count: teamsCount },
     { count: traineesCount },
     schedulesRes
   ] = await Promise.all([
+    getSession(),
     supabase.from('events').select('*, halls(*)').eq('event_date', today).order('start_time', { ascending: true }),
     supabase.from('halls').select('*', { count: 'exact', head: true }),
     supabase.from('classes').select('*', { count: 'exact', head: true }),
     supabase.from('trainees').select('*', { count: 'exact', head: true }),
     fetchTodaySchedules(),
   ])
+  const canManage = !!session
 
   // One-time events (games, manually created) — filter out auto-created from schedules
   const manualEvents = ((events || []) as unknown as EventWithHall[]).filter(ev => {
@@ -87,12 +87,12 @@ export default async function HomePage({
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
       
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
         <div className="bg-[#050B14]/80 backdrop-blur-3xl border-b border-white/5 sticky top-0 z-40">
           <Header locale={locale} />
         </div>
 
-        <main className="flex-1 pt-20 pb-24 md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl md:max-w-7xl mx-auto w-full space-y-4 md:space-y-8">
             {/* Stats */}
             <section>
@@ -148,7 +148,7 @@ export default async function HomePage({
                 </h2>
                 <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 shadow-sm text-center">
                   <span className="font-syncopate text-xs text-white tracking-widest uppercase font-bold drop-shadow">
-                    {new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', timeZone: 'Asia/Jerusalem' })}
+                    {new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'ar-SA', { day: '2-digit', month: 'short', timeZone: 'Asia/Jerusalem' })}
                   </span>
                 </div>
               </div>

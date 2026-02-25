@@ -13,9 +13,10 @@ type EventRow = Database['public']['Tables']['events']['Row']
 interface EventManagementActionsProps {
     event: EventRow
     locale: string
+    hallId?: string | null
 }
 
-export function EventManagementActions({ event, locale }: EventManagementActionsProps) {
+export function EventManagementActions({ event, locale, hallId }: EventManagementActionsProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [initialStep, setInitialStep] = useState<'type' | 'delete-confirm'>('type')
     const router = useRouter()
@@ -37,7 +38,11 @@ export function EventManagementActions({ event, locale }: EventManagementActions
         if (res.success) {
             setIsOpen(false)
             toast('تم حذف الحدث بنجاح', 'success')
-            router.push(`/${locale}/schedule`)
+            if (hallId) {
+                router.push(`/${locale}/halls/${hallId}`)
+            } else {
+                router.push(`/${locale}/schedule`)
+            }
         } else {
             toast('فشل حذف الحدث', 'error')
         }

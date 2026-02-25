@@ -9,8 +9,8 @@ import {
     addMonths, subMonths
 } from 'date-fns';
 import { arSA } from 'date-fns/locale';
-import { Calendar, Clock, ChevronLeft, ChevronRight, Users } from 'lucide-react';
-import { upsertEvent, fetchHallEvents, getOrCreateEventForSchedule } from '@/app/actions';
+import { Calendar, Clock, ChevronLeft, ChevronRight, Users, Trash2 } from 'lucide-react';
+import { upsertEvent, fetchHallEvents, getOrCreateEventForSchedule, deleteEvent } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 
@@ -27,6 +27,7 @@ interface Event {
     schedule_id?: string | null;
     class_id?: string | null;
     trainers?: { name_he: string; name_ar: string; name_en: string } | null;
+    classes?: { name_he: string; name_ar: string; name_en: string; categories: { name_he: string; name_ar: string; name_en: string } | null } | null;
 }
 
 interface WeeklySchedule {
@@ -42,6 +43,11 @@ interface WeeklySchedule {
         name_en: string;
         trainer_id: string;
         trainers: {
+            name_he: string;
+            name_ar: string;
+            name_en: string;
+        } | null;
+        categories: {
             name_he: string;
             name_ar: string;
             name_en: string;
@@ -66,6 +72,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const [modalInitialStep, setModalInitialStep] = useState<'type' | 'delete-confirm'>('type');
     const [events, setEvents] = useState<Event[]>(initialEvents);
     const [loadingScheduleId, setLoadingScheduleId] = useState<string | null>(null);
 
@@ -152,11 +159,14 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                 };
             });
 
-        // Template schedules that have no event yet (future dates)
+        // Template schedules only for future dates — past/today shows only real events
+        const isFutureDate = isBefore(startOfDay(new Date()), startOfDay(selectedDate));
         const coveredScheduleIds = new Set(scheduledEvents.map(x => x.id));
-        const templates = weeklySchedules
-            .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00' && !coveredScheduleIds.has(s.id))
-            .map(s => ({ ...s, event: undefined as Event | undefined }));
+        const templates = isFutureDate
+            ? weeklySchedules
+                .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00' && !coveredScheduleIds.has(s.id))
+                .map(s => ({ ...s, event: undefined as Event | undefined }))
+            : [];
 
         return [...scheduledEvents, ...templates]
             .sort((a, b) => a.start_time.localeCompare(b.start_time));
@@ -176,12 +186,32 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
         const today = startOfDay(new Date());
         if (isBefore(startOfDay(selectedDate), today)) return;
         setSelectedEvent(null);
+        setModalInitialStep('type');
         setIsModalOpen(true);
     };
 
     const handleEditEvent = (event: Event) => {
         setSelectedEvent(event);
+        setModalInitialStep('type');
         setIsModalOpen(true);
+    };
+
+    const handleDeleteClick = (event: Event) => {
+        setSelectedEvent(event);
+        setModalInitialStep('delete-confirm');
+        setIsModalOpen(true);
+    };
+
+    const handleDeleteEvent = async (eventId: string) => {
+        const res = await deleteEvent(eventId);
+        if (res.success) {
+            setEvents(prev => prev.filter(e => e.id !== eventId));
+            setIsModalOpen(false);
+            setSelectedEvent(null);
+            toast('تم حذف الحدث بنجاح', 'success');
+        } else {
+            toast('فشل حذف الحدث', 'error');
+        }
     };
 
     const handleSaveEvent = async (eventData: any) => {
@@ -190,17 +220,10 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
             id: selectedEvent?.id,
             hall_id: hallId
         });
-        if (res.success && res.event) {
+        if (res.success) {
             setIsModalOpen(false);
             setSelectedEvent(null);
-            setEvents(prev => {
-                const newEvent = res.event as Event;
-                const exists = prev.find(e => e.id === newEvent.id);
-                if (exists) {
-                    return prev.map(e => e.id === newEvent.id ? newEvent : e);
-                }
-                return [...prev, newEvent];
-            });
+            refetchEvents();
         }
     };
 
@@ -355,21 +378,30 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                 const currentTime = now ? format(now, 'HH:mm:ss') : '';
                                 const isToday = now && isSameDay(selectedDate, now);
                                 const isCurrent = isToday && schedule.start_time <= currentTime && schedule.end_time >= currentTime;
-                                const teamName = schedule.classes?.name_he || '';
-                                const trainerName = schedule.classes?.trainers?.name_he || '';
+                                const locKey = `name_${locale}` as 'name_ar' | 'name_he' | 'name_en';
+                                const teamName = schedule.classes ? (schedule.classes[locKey] || schedule.classes.name_ar) : '';
+                                const trainerName = schedule.classes?.trainers ? (schedule.classes.trainers[locKey] || schedule.classes.trainers.name_ar) : '';
+                                const categoryName = schedule.classes?.categories ? (schedule.classes.categories[locKey] || schedule.classes.categories.name_ar) : null;
                                 const isLoading = loadingScheduleId === schedule.id;
                                 const isPastOrToday = !isBefore(startOfDay(new Date()), startOfDay(selectedDate));
+                                const eventType = schedule.event?.type ?? 'training';
+                                const isGame = eventType === 'game';
+                                const cardBg = isGame ? 'bg-orange-500/10 border-orange-400' : 'bg-green-500/10 border-green-400';
+                                const titleColor = isGame ? 'text-orange-300' : 'text-green-300';
+                                const dotColor = isGame ? 'bg-orange-500' : 'bg-green-500';
+                                const ringColor = isGame ? 'ring-orange-400' : 'ring-green-400';
+                                const timeLineColor = isGame ? 'bg-orange-400' : 'bg-green-400';
 
                                 return (
                                     <div key={schedule.id} className="relative flex items-start gap-3">
                                         <div className={`w-14 shrink-0 flex flex-col items-center text-[10px] font-bold text-indigo-200/60 z-10 bg-transparent py-1 ${isRTL ? 'pl-1' : 'pr-1'}`}>
                                             <span className="text-white/80">{formatTimeStr(schedule.event?.start_time ?? schedule.start_time)}</span>
-                                            <div className={`h-8 w-0.5 my-0.5 ${isCurrent ? 'bg-green-400' : 'bg-white/15'}`}></div>
+                                            <div className={`h-8 w-0.5 my-0.5 ${isCurrent ? timeLineColor : 'bg-white/15'}`}></div>
                                             <span className="text-white/40 font-normal">{formatTimeStr(schedule.event?.end_time ?? schedule.end_time)}</span>
                                         </div>
 
                                         <div
-                                            className={`relative flex-1 rounded-2xl p-3 border-l-4 shadow-sm transition-all bg-green-500/10 border-green-400 ${isCurrent ? 'ring-2 ring-green-400 ring-offset-0' : ''} ${isPastOrToday ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''} ${isLoading ? 'opacity-70' : ''}`}
+                                            className={`relative flex-1 rounded-2xl p-3 border-l-4 shadow-sm transition-all ${cardBg} ${isCurrent ? `ring-2 ${ringColor} ring-offset-0` : ''} ${isPastOrToday ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''} ${isLoading ? 'opacity-70' : ''}`}
                                             onClick={() => isPastOrToday && handleScheduleClick(schedule)}
                                         >
                                             {isLoading && (
@@ -378,20 +410,29 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                                 </div>
                                             )}
                                             <div className="flex justify-between items-start mb-1">
-                                                <h4 className="font-bold text-sm text-green-300">
-                                                    {teamName}
-                                                </h4>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className={`font-bold text-sm ${titleColor} truncate`}>
+                                                        {schedule.event?.title_ar || teamName}
+                                                    </h4>
+                                                    {categoryName && (
+                                                        <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${isGame ? 'bg-orange-500/20 text-orange-300' : 'bg-green-500/20 text-green-300'}`}>
+                                                            {categoryName}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {isCurrent && (
-                                                    <span className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
+                                                    <span className={`${isGame ? 'bg-orange-500' : 'bg-green-500'} text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse shrink-0`}>
                                                         NOW
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-white/50">
+                                                {trainerName && (
                                                 <span className="flex items-center gap-1">
                                                     <Users className="w-3 h-3" />
                                                     {trainerName}
                                                 </span>
+                                                )}
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
                                                     {formatTimeStr(schedule.event?.start_time ?? schedule.start_time)} - {formatTimeStr(schedule.event?.end_time ?? schedule.end_time)}
@@ -400,11 +441,30 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             {schedule.notes && (
                                                 <p className="text-[10px] text-white/30 mt-1">{schedule.notes}</p>
                                             )}
+                                            {isEditable && schedule.event && (
+                                                <div className="absolute top-2 end-2 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                    <button
+                                                        type="button"
+                                                        className="p-1 px-2 bg-white/10 backdrop-blur-md rounded-md text-xs font-bold text-white/80 shadow-sm border border-white/10 active:bg-white/20"
+                                                        onClick={() => handleEditEvent(schedule.event!)}
+                                                    >
+                                                        {'تعديل'}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="p-1.5 bg-red-500/20 backdrop-blur-md rounded-md text-red-400 shadow-sm border border-red-500/20 active:bg-red-500/40"
+                                                        onClick={() => handleDeleteClick(schedule.event!)}
+                                                        aria-label="حذف الحدث"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className={`absolute top-4 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10 transition-colors ${
                                             isRTL ? 'right-14 translate-x-1/2' : 'left-14 -translate-x-1/2'
-                                        } ${isCurrent ? 'bg-green-600 scale-125' : 'bg-green-500'}`}></div>
+                                        } ${isCurrent ? `${dotColor} scale-125` : dotColor}`}></div>
                                     </div>
                                 );
                             })}
@@ -431,11 +491,18 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             onClick={() => handleEventClick(event)}
                                         >
                                             <div className="flex justify-between items-start mb-1">
-                                                <h4 className={`font-bold text-sm ${event.type === 'game' ? 'text-orange-300' : 'text-blue-300'}`}>
-                                                    {event.title_ar}
-                                                </h4>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className={`font-bold text-sm truncate ${event.type === 'game' ? 'text-orange-300' : 'text-blue-300'}`}>
+                                                        {locale === 'he' ? (event.title_he || event.title_ar) : event.title_ar}
+                                                    </h4>
+                                                    {event.classes?.categories && (
+                                                        <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${event.type === 'game' ? 'bg-orange-500/20 text-orange-300' : 'bg-blue-500/20 text-blue-300'}`}>
+                                                            {(event.classes.categories as any)[`name_${locale}`] || event.classes.categories.name_ar}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {isCurrent && (
-                                                    <span className="bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
+                                                    <span className="bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse shrink-0">
                                                         NOW
                                                     </span>
                                                 )}
@@ -444,7 +511,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                                 {event.trainers && (
                                                     <span className="flex items-center gap-1">
                                                         <Users className="w-3 h-3" />
-                                                        {event.trainers.name_he || event.trainers.name_ar}
+                                                        {(event.trainers as any)[`name_${locale}`] || event.trainers.name_ar}
                                                     </span>
                                                 )}
                                                 <span className="flex items-center gap-1">
@@ -459,12 +526,21 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                         } ${isCurrent ? 'bg-indigo-600 scale-125' : (event.type === 'game' ? 'bg-orange-500' : 'bg-blue-500')}`}></div>
 
                                         {isEditable && (
-                                            <div className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="absolute top-2 end-2 flex items-center gap-1">
                                                 <button
-                                                    className="p-1 px-2 bg-white/10 backdrop-blur-md rounded-md hover:bg-white/20 text-xs font-bold text-white/80 shadow-sm border border-white/10"
+                                                    type="button"
+                                                    className="p-1 px-2 bg-white/10 backdrop-blur-md rounded-md text-xs font-bold text-white/80 shadow-sm border border-white/10 active:bg-white/20"
                                                     onClick={(e) => { e.stopPropagation(); handleEditEvent(event); }}
                                                 >
                                                     {'تعديل'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="p-1.5 bg-red-500/20 backdrop-blur-md rounded-md text-red-400 shadow-sm border border-red-500/20 active:bg-red-500/40"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteClick(event); }}
+                                                    aria-label="حذف الحدث"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         )}
@@ -489,8 +565,10 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                             isOpen={isModalOpen}
                             onClose={() => setIsModalOpen(false)}
                             onSave={handleSaveEvent}
+                            onDelete={handleDeleteEvent}
                             initialDate={selectedDate}
                             initialEvent={selectedEvent}
+                            initialStep={modalInitialStep}
                             locale={locale}
                         />
                         <AttendanceModal

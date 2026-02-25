@@ -10,12 +10,12 @@ export default async function ClassPaymentsPage({
   params: Promise<{ locale: Locale, classId: string }>
 }) {
   const { locale, classId } = await params
-  const dict = await getDictionary(locale)
   const supabase = await createServerSupabaseClient()
 
-  const [{ data: classData }, { data: trainees, error }] = await Promise.all([
-    supabase.from('classes').select('*, trainers (name_en, name_ar, name_he)').eq('id', classId).single(),
-    supabase.from('trainees').select('*, classes (name_en, name_ar, name_he)').eq('class_id', classId).order('name_ar'),
+  const [dict, { data: classData }, { data: trainees }] = await Promise.all([
+    getDictionary(locale),
+    supabase.from('classes').select('id, name_en, name_ar, name_he, trainers(name_en, name_ar, name_he)').eq('id', classId).single(),
+    supabase.from('trainees').select('*').eq('class_id', classId).order('name_ar').limit(200),
   ])
 
   return (
