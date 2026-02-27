@@ -17,14 +17,20 @@ export default async function TrainerProfilePage({
     params: Promise<{ locale: Locale, id: string }>
 }) {
     const { locale, id } = await params
-    const session = await getSession()
-    const res = await getTrainerProfile(id)
+    const [session, res] = await Promise.all([
+        getSession(),
+        getTrainerProfile(id),
+    ])
 
     if (!res.success || !res.trainer) {
         notFound()
     }
 
-    const { trainer, teams } = res
+    type TrainerWithSchedule = typeof res.trainer & {
+        availability_schedule?: { day: string; start: string; end: string }[]
+    }
+    const trainer = res.trainer as TrainerWithSchedule
+    const { teams } = res
 
     const daysMap: Record<string, string> = {
         'Sunday': 'الأحد',
@@ -46,7 +52,7 @@ export default async function TrainerProfilePage({
             <Sidebar locale={locale} />
 
             <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
-                <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+                <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
                   <Header 
                       locale={locale} 
                       title={getLocalizedField(trainer, 'name', locale)} 
@@ -71,7 +77,22 @@ export default async function TrainerProfilePage({
                                 </div>
 
                                 {/* Availability Section */}
-                                {trainer.availability && trainer.availability.length > 0 ? (
+                                {trainer.availability_schedule?.length > 0 ? (
+                                    <div className="w-full bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm space-y-2">
+                                        <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                            <Calendar className="w-4 h-4" />
+                                            {'ساعات التدريب المتاحة'}
+                                        </h3>
+                                        <div className="space-y-1.5">
+                                            {trainer.availability_schedule!.map((slot: { day: string; start: string; end: string }) => (
+                                                <div key={slot.day} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100">
+                                                    <span className="font-bold text-sm text-indigo-700">{daysMap[slot.day] || slot.day}</span>
+                                                    <span className="text-xs font-bold text-indigo-500 tabular-nums" dir="ltr">{slot.start} – {slot.end}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : trainer.availability && trainer.availability.length > 0 ? (
                                     <div className="w-full bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm space-y-2">
                                         <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
@@ -89,11 +110,9 @@ export default async function TrainerProfilePage({
                                     <div className="w-full bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm space-y-2 opacity-60">
                                         <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
-                                            {'أيام التدريب المتاحة'}
+                                            {'ساعات التدريب المتاحة'}
                                         </h3>
-                                        <p className="text-sm text-gray-400 italic">
-                                            {'غير محدد'}
-                                        </p>
+                                        <p className="text-sm text-gray-400 italic">{'غير محدد'}</p>
                                     </div>
                                 )}
                             </div>

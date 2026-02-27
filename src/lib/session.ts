@@ -2,15 +2,18 @@
 // In Edge runtime, process.env is accessed differently sometimes, but Next.js handles it.
 const secretKey = process.env.SESSION_SECRET || 'default-secret-key-change-me-in-production'
 
-function getCryptoKey() {
+let _cachedKey: CryptoKey | null = null
+async function getCryptoKey() {
+    if (_cachedKey) return _cachedKey
     const enc = new TextEncoder()
-    return crypto.subtle.importKey(
+    _cachedKey = await crypto.subtle.importKey(
         'raw',
         enc.encode(secretKey),
         { name: 'HMAC', hash: 'SHA-256' },
         false,
         ['sign', 'verify']
     )
+    return _cachedKey
 }
 
 function arrayBufferToBase64Url(buffer: ArrayBuffer): string {

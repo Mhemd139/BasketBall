@@ -52,6 +52,22 @@ export function getLocalizedField<T extends Record<string, any>>(
   return obj[localizedFieldName] || obj[`${fieldName}_ar`] || ''
 }
 
+// Normalize phone: convert Arabic/Persian digits to English, apply Israel format (05X → 9725X)
+export function normalizePhone(str: string): string {
+  let cleaned = str
+    .replace(/[٠١٢٣٤٥٦٧٨٩]/g, d => String(d.charCodeAt(0) - 1632))
+    .replace(/[۰۱۲۳۴۵۶۷۸۹]/g, d => String(d.charCodeAt(0) - 1776))
+    .replace(/[^\d+]/g, '')
+
+  if (cleaned.startsWith('05')) {
+    cleaned = '972' + cleaned.substring(1)
+  } else if (cleaned.startsWith('5') && cleaned.length === 9) {
+    cleaned = '972' + cleaned
+  }
+
+  return cleaned
+}
+
 // Phone number formatting helper
 export function formatPhoneNumber(value: string): string {
   // Remove all non-digit and non-plus characters first to handle the +972 case

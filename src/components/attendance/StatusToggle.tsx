@@ -11,36 +11,10 @@ interface StatusToggleProps {
   className?: string;
 }
 
-const baseToggleStyles: React.CSSProperties = {
-  width: '3rem',
-  height: '3rem',
-  borderRadius: '0.5rem',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '1.5rem',
-  fontWeight: 700,
-  transition: 'all 200ms',
-  cursor: 'pointer',
-  userSelect: 'none',
-}
-
-const statusStyles = {
-  present: {
-    backgroundColor: '#10b981',
-    color: '#ffffff',
-    border: '2px solid #10b981',
-  },
-  absent: {
-    backgroundColor: '#ef4444',
-    color: '#ffffff',
-    border: '2px solid #ef4444',
-  },
-  late: {
-    backgroundColor: '#f59e0b',
-    color: '#0a1628',
-    border: '2px solid #f59e0b',
-  },
+const statusClasses = {
+  present: 'bg-emerald-500 text-white border-2 border-emerald-500',
+  absent: 'bg-red-500 text-white border-2 border-red-500',
+  late: 'bg-amber-500 text-[#0a1628] border-2 border-amber-500',
 }
 
 export function StatusToggle({ 
@@ -64,8 +38,7 @@ export function StatusToggle({
   
   return (
     <button
-      className={cn(className)}
-      style={{ ...baseToggleStyles, ...statusStyles[status] }}
+      className={cn('w-12 h-12 rounded-lg flex items-center justify-center text-2xl font-bold transition-all duration-200 cursor-pointer select-none', statusClasses[status], className)}
       onClick={handleToggle}
       aria-label={`Status: ${status}`}
       type="button"

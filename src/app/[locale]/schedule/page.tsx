@@ -37,7 +37,7 @@ export default async function SchedulePage({
     getSession(),
     supabase
       .from('events')
-      .select('*, halls(*)')
+      .select('id, title_ar, title_he, title_en, start_time, end_time, event_date, type, hall_id, class_id, trainer_id, halls(id, name_ar, name_he, name_en)')
       .gte('event_date', today)
       .lte('event_date', nextWeek)
       .order('event_date', { ascending: true })

@@ -151,7 +151,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                 <Trash2 className="w-5 h-5" />
                             </button>
                         )}
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/50 hover:text-white">
+                        <button type="button" onClick={onClose} aria-label="إغلاق" className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/50 hover:text-white">
                             <X className="w-5 h-5" />
                         </button>
                     </div>

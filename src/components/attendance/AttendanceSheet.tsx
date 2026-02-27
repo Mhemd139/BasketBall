@@ -33,25 +33,25 @@ const statusCycle: AttendanceStatus[] = ['present', 'absent', 'late']
 const statusConfig = {
   present: {
     icon: Check,
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-700',
+    bg: 'bg-green-500/15',
+    border: 'border-green-400/30',
+    text: 'text-green-300',
     iconBg: 'bg-green-500',
     label: 'حاضر',
   },
   absent: {
     icon: X,
-    border: 'border-red-200',
-    bg: 'bg-red-50',
-    text: 'text-red-700',
+    border: 'border-red-400/30',
+    bg: 'bg-red-500/15',
+    text: 'text-red-300',
     iconBg: 'bg-red-500',
     label: 'غائب',
   },
   late: {
     icon: Clock,
-    border: 'border-amber-200',
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
+    border: 'border-amber-400/30',
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-300',
     iconBg: 'bg-amber-500',
     label: 'متأخر',
   },
@@ -123,14 +123,14 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
       <div className="flex gap-2">
         <button
           onClick={() => markAll('present')}
-          className="btn flex-1 text-sm py-2.5 px-3 rounded-xl bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors"
+          className="btn flex-1 text-sm py-2.5 px-3 rounded-xl bg-green-500/20 text-green-300 border border-green-400/30 hover:bg-green-500/30 transition-colors"
         >
           <CheckCheck className="w-4 h-4" />
           {'الكل حاضر'}
         </button>
         <button
           onClick={() => markAll('absent')}
-          className="btn flex-1 text-sm py-2.5 px-3 rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
+          className="btn flex-1 text-sm py-2.5 px-3 rounded-xl bg-red-500/20 text-red-300 border border-red-400/30 hover:bg-red-500/30 transition-colors"
         >
           <XCircle className="w-4 h-4" />
           {'الكل غائب'}
@@ -174,13 +174,13 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
               )}
             >
               {/* Jersey Number */}
-              <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center font-bold text-lg text-gray-800 shadow-sm flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0">
                 #{trainee.jersey_number ?? '—'}
               </div>
 
               {/* Name */}
               <div className="flex-1 text-start min-w-0">
-                <p className="font-semibold text-gray-900 truncate">
+                <p className="font-semibold text-white truncate">
                   {trainee.name_ar}
                 </p>
                 <p className={cn('text-xs font-medium', config.text)}>
@@ -202,7 +202,7 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
 
       {/* Summary Bar + Submit — in-flow, sticky to bottom of viewport */}
       <div className="sticky bottom-[72px] md:bottom-0 z-30 mt-4 px-1">
-        <div className="flex items-center justify-between bg-white/95 backdrop-blur-lg rounded-2xl p-3 border shadow-lg gap-3">
+        <div className="flex items-center justify-between bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 shadow-lg gap-3">
           <button
             onClick={() => {
               setShowSuccess(true);
@@ -229,9 +229,9 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
               <Clock className="w-4 h-4" strokeWidth={2.5} />
               {counts.late}
             </span>
-            <span className="flex items-center gap-1.5 text-gray-400">
+            <span className="flex items-center gap-1.5 text-white/50">
               <Users className="w-4 h-4" />
-              <span className="font-medium text-gray-600">{trainees.length}</span>
+              <span className="font-medium text-white/70">{trainees.length}</span>
             </span>
           </div>
         </div>

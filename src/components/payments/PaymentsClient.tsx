@@ -210,8 +210,10 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
                             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">{'المبلغ المدفوع'}</label>
                             <div className="relative">
                                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
+                                    title="المبلغ المدفوع"
+                                    placeholder="0"
                                     value={amount}
                                     onChange={(e) => setAmount(Number(e.target.value))}
                                     className="w-full pl-9 p-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 font-mono"

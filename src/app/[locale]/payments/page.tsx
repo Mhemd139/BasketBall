@@ -19,7 +19,7 @@ export default async function PaymentsPage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  const [dict, session, { data: classes }] = await Promise.all([
+  const [dict, session, { data: classes, error: classesError }] = await Promise.all([
     getDictionary(locale),
     getSession(),
     (supabase as any)
@@ -29,13 +29,17 @@ export default async function PaymentsPage({
       .limit(50),
   ])
 
+  if (classesError) {
+    console.error('Failed to fetch classes for payments:', classesError.message)
+  }
+
   const safeClasses = (classes || []) as any[]
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
       <Sidebar locale={locale} role={session?.role} />
       <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
-        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+        <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header 
               locale={locale} 
               title={dict.payments.title}

@@ -24,8 +24,8 @@ export function ExportButton({ table, filename, filters, className, label = 'ت�
     try {
       const res = await exportTableData(table, filters)
       if (res.success && res.data) {
-        const wb = createExcelWorkbook(res.data, table)
-        downloadWorkbook(wb, filename)
+        const wb = await createExcelWorkbook(res.data, table)
+        await downloadWorkbook(wb, filename)
         toast('تم تصدير البيانات بنجاح', 'success')
       } else {
         toast(res.error || 'فشل التصدير', 'error')

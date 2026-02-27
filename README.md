@@ -10,42 +10,51 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js 16" />
-  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss" alt="Tailwind CSS 4" />
-  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase" alt="Supabase" />
-  <img src="https://img.shields.io/badge/License-ISC-blue" alt="License" />
+  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js 16" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React 19" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript" alt="TypeScript" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss" alt="Tailwind CSS 4" /></a>
+  <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase" alt="Supabase" /></a>
+  <img src="https://img.shields.io/badge/Tests-106_passing-22C55E" alt="Tests" />
 </p>
 
 <p align="center">
-  <sub>Mobile-first &nbsp;|&nbsp; RTL-native (Arabic & Hebrew) &nbsp;|&nbsp; SMS OTP Auth &nbsp;|&nbsp; Excel Import/Export</sub>
+  <sub>Mobile-first &nbsp;|&nbsp; RTL-native (Arabic + Hebrew) &nbsp;|&nbsp; Stateless HMAC Auth &nbsp;|&nbsp; 106 Automated Tests</sub>
 </p>
 
 ---
 
 ## What is Basketball Manager?
 
-Basketball Manager is a production-grade operations platform built for head coaches to run their entire basketball training program from a single app. It replaces spreadsheets, WhatsApp groups, and paper attendance sheets with a unified system that works on any phone.
+Basketball Manager is a production-grade operations platform built for head coaches to run their entire basketball training program from a single app. It replaces spreadsheets, WhatsApp groups, and paper attendance sheets with a unified system designed for phones.
 
-**Who it's for:**
-- Head coaches managing multiple halls, trainers, and teams
-- Trainers tracking attendance and rosters for their assigned teams
-- Basketball academies handling seasonal payments and player data
+**Built for:**
+- **Head coaches** managing multiple halls, trainers, and teams
+- **Trainers** tracking attendance and rosters for their assigned teams
+- **Basketball academies** handling seasonal payments and player data
 
-**What it does:**
+---
+
+## Features
 
 | Module | Description |
 |--------|-------------|
-| **Halls** | Manage basketball venues with weekly event scheduling |
-| **Trainers** | Role-based access — head coaches manage everything, trainers see their teams |
-| **Teams** | Create teams (classes), assign trainers and halls, manage player rosters |
-| **Players** | Track trainees with jersey numbers, contact info, and team assignments |
-| **Attendance** | Tap-to-toggle attendance per event — present, absent, or late |
-| **Payments** | Seasonal payment tracking per player with transaction history |
-| **Schedule** | Calendar view of all events across halls |
-| **Reports** | Dashboard analytics and attendance summaries |
-| **Import/Export** | Bulk data operations via Excel (`.xlsx` / `.csv`) |
+| **Teams** | Create teams, assign trainers and halls, manage player rosters with jersey numbers |
+| **Attendance** | Tap-to-toggle per event (present / absent / late), bulk save, 30-day team history matrix |
+| **Schedules** | Define weekly recurring slots — events auto-generate daily from schedules |
+| **Payments** | Per-player payment tracking with transaction logs and class-wide status views |
+| **Halls** | Manage venues with monthly event calendars and weekly schedule grids |
+| **Trainers** | Profile management, availability scheduling, team reassignment |
+| **Search** | Global debounced search across trainees and trainers (parallel queries, 300ms) |
+| **Import/Export** | 4-step Excel wizard with smart column detection and multilingual header matching |
+| **Admin Panel** | Head coach area — trainer CRUD, bulk import/export, system management |
+
+**Additional capabilities:**
+- Bilingual RTL interface (Arabic + Hebrew) with trilingual database fields
+- Stateless HMAC-SHA256 phone authentication via Vonage or Twilio SMS
+- Glassmorphic dark UI with animated mesh backgrounds and Framer Motion transitions
+- Loading states with animated basketball spinner on every route
+- iOS safe area support with proper bottom nav padding
 
 ---
 
@@ -53,16 +62,17 @@ Basketball Manager is a production-grade operations platform built for head coac
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| **Framework** | [Next.js 16](https://nextjs.org/) | App Router, React Server Components, Server Actions, Turbopack |
+| **Framework** | [Next.js 16](https://nextjs.org/) | App Router, Server Components, Server Actions, Turbopack |
 | **UI** | [React 19](https://react.dev/) | Latest RSC support, concurrent features |
 | **Language** | [TypeScript 5.9](https://www.typescriptlang.org/) | Strict mode, full type safety |
 | **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) | Utility-first with RTL support, custom design tokens |
-| **Database** | [Supabase](https://supabase.com/) | PostgreSQL with Row Level Security + RPC functions |
-| **Auth** | Custom OTP via [Vonage](https://www.vonage.com/) | SMS-based, stateless HMAC verification |
-| **Animations** | [Framer Motion](https://www.framer.com/motion/) | Smooth transitions and micro-interactions |
-| **Icons** | [Lucide React](https://lucide.dev/) | Consistent, tree-shakable icon set |
-| **Excel** | [SheetJS](https://sheetjs.com/) | Client-side `.xlsx` / `.csv` parsing and generation |
-| **Deployment** | [Vercel](https://vercel.com/) | Edge-optimized hosting with automatic deployments |
+| **Database** | [Supabase](https://supabase.com/) | PostgreSQL with RLS + 24 SECURITY DEFINER RPCs |
+| **Auth** | Custom HMAC-SHA256 | Stateless OTP via [Vonage](https://www.vonage.com/) / [Twilio](https://www.twilio.com/) |
+| **Animations** | [Framer Motion](https://www.framer.com/motion/) | Page transitions, wizard steps, modal animations |
+| **Icons** | [Lucide React](https://lucide.dev/) | Tree-shakable, consistent icon set |
+| **Excel** | [SheetJS](https://sheetjs.com/) | Dynamic import for `.xlsx` / `.csv` parsing and generation |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 82 unit + 24 E2E tests |
+| **Deployment** | [Vercel](https://vercel.com/) | Edge-optimized with automatic deployments |
 
 ---
 
@@ -89,21 +99,26 @@ Basketball Manager is a production-grade operations platform built for head coac
                     │         Supabase (PostgreSQL)             │
                     │  RLS Policies (block direct writes)       │
                     │  SECURITY DEFINER Functions (RPCs)        │
-                    │  7 Tables · 17+ RPC Functions             │
+                    │  8 Tables · 24 RPC Functions              │
                     └─────────────────────────────────────────┘
 ```
 
-**Key decisions:**
-- **Server-first** — Pages default to Server Components. `'use client'` only when hooks or event handlers are needed.
-- **RPC-only mutations** — Direct table inserts/updates are blocked by RLS. All writes go through `SECURITY DEFINER` Postgres functions.
-- **Surgical caching** — No `force-dynamic`. Next.js caching with `revalidatePath()` after mutations.
-- **Parallel queries** — Independent database calls always wrapped in `Promise.all()`.
+**Key architectural decisions:**
+
+| Decision | Rationale |
+|----------|-----------|
+| Server-first components | Pages default to RSC. `'use client'` only for hooks and event handlers |
+| RPC-only mutations | Direct writes blocked by RLS. All mutations go through SECURITY DEFINER functions |
+| Surgical caching | No `force-dynamic`. `revalidatePath()` after mutations for targeted invalidation |
+| Parallel queries | Independent Supabase calls always wrapped in `Promise.all()` |
+| Stateless auth | HMAC-SHA256 tokens in httpOnly cookies — no session table, no JWT library |
+| Israel timezone | All date logic uses `Asia/Jerusalem` via `Intl.DateTimeFormat` for Vercel UTC compatibility |
 
 ---
 
 ## Database Schema
 
-7 tables with Row Level Security enabled on all of them:
+8 tables with Row Level Security enabled on all of them:
 
 ```
 ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
@@ -115,9 +130,9 @@ Basketball Manager is a production-grade operations platform built for head coac
 │ role         │   │   │ created_at   │   │   │ season       │  │
 │ gender       │   │   └──────────────┘   │   │ note         │  │
 │ availability │   │                      │   └──────────────┘  │
-└──────────────┘   │   ┌──────────────┐   │                     │
-       ▲           ├───│   events     │   │   ┌──────────────┐  │
-       │           │   │──────────────│   │   │  attendance   │  │
+│ avail_sched  │   │   ┌──────────────┐   │                     │
+└──────────────┘   │   │   events     │   │   ┌──────────────┐  │
+       ▲           ├───│──────────────│   │   │  attendance   │  │
        │           │   │ id           │◄──│───│──────────────│  │
        │           │   │ hall_id    ──│───┘   │ id           │  │
        │           │   │ trainer_id ──│───┐   │ trainee_id ──│──┤
@@ -125,106 +140,95 @@ Basketball Manager is a production-grade operations platform built for head coac
        │           │   │ title_ar/he  │   │   │ status       │
        │           │   │ event_date   │   │   │ marked_by  ──│───┐
        │           │   │ start/end    │   │   │ marked_at    │   │
-       │           │   │ recurrence   │   │   └──────────────┘   │
+       │           │   │ schedule_id  │   │   └──────────────┘   │
        │           │   └──────────────┘   │                      │
-       │           │                      │                      │
-       │           │   ┌──────────────┐   │                      │
-       │           └───│   classes    │   │                      │
-       │               │ (= Teams)   │   │                      │
-       │               │──────────────│   │                      │
-       │               │ id           │◄──│──────────────────────┘
-       │               │ name_ar/he/en│   │
-       └───────────────│ trainer_id   │   │
-                       │ hall_id    ──│───┘
-                       │ schedule_info│
-                       └──────┬───────┘
-                              │
-                       ┌──────┴───────┐
-                       │  trainees    │
-                       │ (= Players)  │
-                       │──────────────│
-                       │ id           │
-                       │ name_ar/he/en│
-                       │ phone        │
-                       │ jersey_number│
-                       │ class_id   ──│
-                       │ is_paid      │
-                       │ amount_paid  │
-                       │ gender       │
-                       └──────────────┘
+       │           │          ▲           │   ┌──────────────┐   │
+       │           │          │           │   │ categories   │   │
+       │           │   ┌──────┴───────┐   │   │──────────────│   │
+       │           └───│   classes    │   │   │ id           │   │
+       │               │ (= Teams)   │   │   │ name_ar/he/en│   │
+       │               │──────────────│   │   └──────┬───────┘   │
+       │               │ id           │◄──│──────────┘           │
+       │               │ name_ar/he/en│   │                      │
+       └───────────────│ trainer_id   │   │                      │
+                       │ category_id  │   │                      │
+                       └──────┬───────┘   │                      │
+                              │           │                      │
+         ┌────────────────────┤           │                      │
+         │                    │           │                      │
+  ┌──────┴───────┐     ┌─────┴────────┐  │                      │
+  │  trainees    │     │class_schedules│  │                      │
+  │ (= Players)  │     │──────────────│  │                      │
+  │──────────────│     │ id           │  │                      │
+  │ id           │     │ class_id   ──│──┘                      │
+  │ name_ar/he/en│     │ hall_id   ──│                           │
+  │ phone        │     │ day_of_week │                           │
+  │ jersey_number│     │ start/end   │                           │
+  │ class_id   ──│     └─────────────┘                           │
+  │ is_paid      │                                               │
+  │ amount_paid  │───────────────────────────────────────────────┘
+  │ gender       │
+  └──────────────┘
 ```
 
-**Relationships:**
-- A **trainer** manages many **teams** (classes) and is assigned to many **events**
-- A **hall** hosts many **events** and can be home to many **teams**
-- A **team** belongs to one trainer and one hall, and contains many **players** (trainees)
-- **Attendance** records link a player to an event with a status
+**Key relationships:**
+- A **trainer** manages many **teams** and is assigned to many **events**
+- A **team** has one trainer, one category, many **players**, and many **weekly schedule slots**
+- **Schedule slots** auto-generate **events** daily via the `ensure_events_for_schedules` RPC
+- **Attendance** records link a player to an event with a status (present / absent / late)
 - **Payment logs** track individual transactions per player per season
+- All text fields are **trilingual** — `name_ar`, `name_he`, `name_en` on every entity
 
-**All names are trilingual** — every entity stores `name_ar`, `name_he`, and `name_en` columns. The UI renders the correct one based on the active locale.
+See [docs/DATABASE.md](docs/DATABASE.md) for the complete column reference and ER diagram.
 
 ---
 
 ## Authentication
 
-Custom cookie-based auth flow (not Supabase Auth):
+Custom cookie-based auth flow — no Supabase Auth, no JWT library:
 
 ```
-Phone Number → Vonage SMS OTP → HMAC Verify → Session Cookie
+Phone → Normalize (Arabic/Persian digits) → SMS OTP (Vonage/Twilio) → HMAC Verify → Session Cookie
 ```
 
-1. User enters phone number on the login page
-2. Server sends OTP via Vonage SMS API
-3. OTP is verified using stateless HMAC-SHA256 (no database lookup)
-4. On success, a signed `admin_session` httpOnly cookie is set with `{ id, name, role }`
-5. `getSession()` reads and verifies the cookie on every request
-6. Middleware enforces auth on all routes except `/login` and `/api/auth`
+1. User enters phone number (supports Arabic ٠-٩ and Persian ۰-۹ digit input)
+2. Phone normalized to Israeli format (`05X` → `9725X`)
+3. 4-digit OTP sent via Vonage or Twilio (whichever keys are configured)
+4. OTP verified stateless via HMAC-SHA256 — no database lookup needed
+5. Signed `admin_session` httpOnly cookie set with `{ id, name, role }`
+6. New users complete a profile setup step (name, gender, availability)
+7. Middleware enforces auth on all routes except `/login`
 
 **Roles:**
 
 | Role | Access |
 |------|--------|
 | `headcoach` | Full admin — manage trainers, teams, halls, import/export, all data |
-| `sub_trainer` | View assigned teams, mark attendance, view own profile |
+| `trainer` | View assigned teams, mark attendance, edit own profile |
 
 ---
 
-## Features
+## Testing
 
-### Dashboard
-Real-time overview of today's events with stat cards showing total halls, teams, and players. Quick-action shortcuts for common operations.
+106 automated tests — all passing:
 
-### Hall Management
-Each hall displays its weekly event schedule on an interactive timeline. Head coaches can create, edit, and delete events with multilingual titles, date/time ranges, trainer assignment, and recurrence rules.
+| Suite | Tests | Runner | Time |
+|-------|-------|--------|------|
+| Unit | 82 | Vitest | ~3s |
+| E2E | 24 | Playwright (Desktop Chrome) | ~55s |
 
-### Team Management
-Teams (stored as `classes` in the database) are assigned to a trainer and optionally a home hall. Head coaches can create teams, reassign trainers, manage rosters, and transfer players between teams.
+```bash
+npm test              # Unit tests (watch mode)
+npm run test:run      # Unit tests (single run)
+npm run test:coverage # Unit tests with v8 coverage report
+npm run test:e2e      # E2E tests (starts dev server automatically)
+```
 
-### Attendance Tracking
-Tap-to-toggle attendance marking for each event. Three statuses: **present**, **absent**, **late**. Supports bulk attendance operations. Attendance history is available per team and per player.
+**Unit tests cover:** utility functions (38), HMAC session tokens (10), i18n config (13), StatusToggle component (11), BottomNav component (10).
 
-### Payment Tracking
-Track seasonal payments per player with detailed transaction logs. Payment modals support custom amounts and notes. View payment status across an entire team at a glance.
+**E2E tests cover:** full OTP login flow, page navigation, team/hall/payment drill-down, attendance links, RTL direction verification, accessibility audits via axe-core, mobile UX (sticky header, nav structure, touch targets).
 
-### Excel Import/Export
-
-**Import** (head coach only) — 6-step wizard:
-
-| Step | Action |
-|------|--------|
-| 1. Upload | Drag-and-drop `.xlsx`, `.xls`, or `.csv` files |
-| 2. Sheet Select | Pick which sheet from the workbook |
-| 3. Column Mapping | Auto-maps headers using keyword scoring in Arabic, Hebrew, and English |
-| 4. Preview | Validate every row — green (valid), yellow (warning), red (error) |
-| 5. Resolve Trainers | Create missing trainer accounts for referenced names |
-| 6. Import | Batch insert via RPC functions with real-time progress |
-
-Supports importing: **Teams**, **Trainers**, **Players**, **Halls**
-
-**Export** — Download any table as `.xlsx` from the head coach admin panel.
-
-### Admin Panel
-Head coach exclusive area for managing trainers (create, edit, delete, role assignment), bulk data import/export, and system-wide operations.
+See [docs/TESTING.md](docs/TESTING.md) for the full testing strategy and how to add new tests.
 
 ---
 
@@ -232,15 +236,15 @@ Head coach exclusive area for managing trainers (create, edit, delete, role assi
 
 | Locale | Direction | Status |
 |--------|-----------|--------|
-| Arabic (`ar`) | RTL | Primary — full translations |
-| Hebrew (`he`) | RTL | Full translations |
-| English (`en`) | LTR | Available |
+| Arabic (`ar`) | RTL | Primary — full UI translations |
+| Hebrew (`he`) | RTL | Full UI translations |
 
-- Locale routing via `[locale]` dynamic segment in the URL
-- Middleware auto-detects locale from cookies, defaults to Arabic
-- Dictionary-based translations in `src/dictionaries/`
-- Database records store all names in three columns (`_ar`, `_he`, `_en`)
-- `getLocalizedField(obj, field, locale)` utility for runtime locale selection
+- URL-based locale routing: `/ar/teams`, `/he/teams`
+- Middleware auto-detects locale from cookie, defaults to Arabic
+- Dictionary-based UI translations in `src/dictionaries/`
+- All database fields store three values (`_ar`, `_he`, `_en`)
+- `getLocalizedField(obj, field, locale)` utility with Arabic fallback
+- English (`en`) columns exist for data export and admin tooling
 
 ---
 
@@ -249,68 +253,37 @@ Head coach exclusive area for managing trainers (create, edit, delete, role assi
 ```
 src/
 ├── app/
-│   ├── layout.tsx                        # Root HTML layout
-│   ├── actions.ts                        # 25+ server actions (all mutations)
-│   ├── globals.css                       # Design system tokens + Tailwind
-│   └── [locale]/
-│       ├── layout.tsx                    # Locale layout (RTL/LTR, fonts)
-│       ├── page.tsx                      # Dashboard — today's events + stats
-│       ├── loading.tsx                   # Loading state (bouncing basketball)
-│       ├── login/page.tsx                # SMS OTP login flow
-│       ├── halls/
-│       │   ├── page.tsx                  # All halls grid
-│       │   └── [id]/page.tsx             # Hall detail + event schedule
-│       ├── teams/
-│       │   ├── page.tsx                  # All teams grid
-│       │   ├── [classId]/page.tsx        # Team roster + details
-│       │   └── [classId]/add/page.tsx    # Add player to team
-│       ├── trainers/
-│       │   ├── page.tsx                  # All trainers grid
-│       │   └── [id]/page.tsx             # Trainer profile + assigned teams
-│       ├── attendance/
-│       │   └── [eventId]/page.tsx        # Mark attendance for event
-│       ├── payments/
-│       │   ├── page.tsx                  # Team selector for payments
-│       │   └── [classId]/page.tsx        # Per-team payment tracking
-│       ├── schedule/page.tsx             # Full calendar schedule
-│       ├── reports/page.tsx              # Analytics dashboard
-│       ├── head-coach/
-│       │   ├── page.tsx                  # Admin panel
-│       │   └── import/page.tsx           # Excel import wizard
-│       ├── profile/page.tsx              # User profile
-│       ├── settings/
-│       │   ├── page.tsx                  # Settings
-│       │   └── language/page.tsx         # Language switcher
-│       └── more/page.tsx                 # Overflow menu
-│
-├── components/
-│   ├── layout/                           # AppShell, Header, Sidebar, BottomNav
-│   ├── ui/                               # Button, Card, Input, Badge, Dialog,
-│   │                                     # Toast, ConfirmModal, LoadingSpinner,
-│   │                                     # AnimatedMeshBackground, SVGs
-│   ├── halls/                            # HallCard, HallSchedule, EventModals
-│   ├── teams/                            # TeamCard, CreateTeamModal, TraineeList
-│   ├── trainers/                         # TrainerCard, ProfileModal, EditModal
-│   ├── trainees/                         # TraineeProfileModal
-│   ├── attendance/                       # AttendanceSheet, StatusToggle
-│   ├── payments/                         # PaymentsClient, PaymentModal
-│   ├── events/                           # EventCard, EventManagementActions
-│   ├── import/                           # 6-step ImportWizard + ExportButton
-│   ├── home/                             # QuickActions dashboard
-│   ├── schedule/                         # ScheduleActions
-│   ├── profile/                          # ProfileContent
-│   ├── admin/                            # TrainerManager
-│   └── players/                          # CreatePlayerModal
-│
+│   ├── actions.ts                   # 40+ server actions (all mutations)
+│   └── [locale]/                    # All routes under locale prefix
+│       ├── page.tsx                 # Dashboard — stats + today's schedule
+│       ├── login/                   # 3-step OTP login flow
+│       ├── teams/                   # List → detail → attendance history → add player
+│       ├── halls/                   # List → detail with monthly calendar
+│       ├── attendance/[eventId]/    # Per-event attendance sheet
+│       ├── trainers/               # List → profile with availability
+│       ├── payments/               # Hub → per-team payment tracking
+│       ├── schedule/               # 7-day schedule view
+│       ├── head-coach/             # Admin panel + Excel import wizard
+│       └── profile/, more/, settings/, reports/
+├── components/                      # 50+ components across 12 domains
+│   ├── layout/                      # Header, Sidebar, BottomNav, AppShell
+│   ├── attendance/                  # AttendanceSheet, StatusToggle
+│   ├── teams/                       # TraineeList, ScheduleEditor, AttendanceHistoryView
+│   ├── halls/                       # HallSchedule, InteractiveEventModal
+│   ├── payments/                    # PaymentModal, ClassPaymentsClient
+│   ├── import/                      # 4-step ImportWizard, ExportButton
+│   └── ui/                          # Toast, ScrollTimePicker, JerseyNumber, etc.
 ├── lib/
-│   ├── supabase/                         # Client + Server + DB Types
-│   ├── i18n/                             # Locale config + dictionary loader
-│   ├── excel/                            # Parser, Mapper, Transformer, Exporter
-│   ├── session.ts                        # HMAC session sign/verify
-│   └── utils.ts                          # cn(), formatDate, getLocalizedField
-│
-├── dictionaries/                         # ar.json, he.json, en.json
-└── middleware.ts                          # Auth enforcement + locale routing
+│   ├── utils.ts                     # cn(), date/timezone helpers, phone normalization
+│   ├── session.ts                   # HMAC sign/verify (Web Crypto API)
+│   ├── i18n/                        # Locale config + dictionary loader
+│   ├── excel/                       # Parser, mapper, transformer, analyzer, exporter
+│   └── supabase/                    # Client/server instances + generated types
+├── middleware.ts                     # Locale detection + auth enforcement
+└── dictionaries/                    # ar.json, he.json UI strings
+
+e2e/                                 # 9 Playwright spec files
+src/**/__tests__/                    # 5 Vitest test files
 ```
 
 ---
@@ -319,74 +292,69 @@ src/
 
 ### Prerequisites
 
-- **Node.js** 18+ (recommended: 20+)
+- **Node.js** 20+ and **npm**
 - **Supabase** project with the schema applied
-- **Vonage** API credentials for SMS OTP
+- **Vonage** or **Twilio** API credentials (for production SMS OTP)
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/Mhemd139/BasketBall.git
 cd BasketBall
-
-# Install dependencies
 npm install
 ```
 
 ### Environment Variables
 
-Create a `.env.local` file in the project root:
+Create `.env.local` in the project root:
 
 ```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
-# Session Security
-SESSION_SECRET=your_hmac_secret_key
+# Session signing
+HMAC_SECRET=your_random_secret_key
 
-# Vonage SMS
-VONAGE_API_KEY=your_vonage_key
-VONAGE_API_SECRET=your_vonage_secret
+# SMS Provider (at least one for production)
+VONAGE_API_KEY=your_key
+VONAGE_API_SECRET=your_secret
+VONAGE_FROM_NUMBER=your_number
 ```
 
 ### Development
 
 ```bash
-npm run dev        # Start dev server with Turbopack (http://localhost:3000)
-npm run build      # Production build
-npm start          # Start production server
-npm run lint       # Run ESLint
+npm run dev     # Start with Turbopack on localhost:3000
 ```
 
-The app auto-redirects to `/ar` (Arabic) on first visit.
+Open `http://localhost:3000/ar` (Arabic) or `http://localhost:3000/he` (Hebrew).
 
 ---
 
 ## Design System
 
-### Color Palette
+### Visual Identity
 
 | Token | Hex | Usage |
 |-------|-----|-------|
 | Navy | `#254263` | Primary backgrounds, headers |
 | Navy Dark | `#0f1f3d` | Deep backgrounds |
-| Gold | `#ffd700` | Accent, highlights, CTAs |
+| Gold | `#ffd700` | Accent, highlights, active indicators |
 | Orange | `#d97639` | Basketball-themed secondary |
-| Success | `#22c55e` | Positive states (present, paid) |
-| Error | `#ef4444` | Negative states (absent, errors) |
-| Warning | `#f59e0b` | Caution states (late, warnings) |
+| Success | `#22c55e` | Present, paid, positive states |
+| Error | `#ef4444` | Absent, errors, negative states |
+| Warning | `#f59e0b` | Late, caution states |
 
 ### Typography
 
 | Font | Usage |
 |------|-------|
-| Inter | Default UI text |
 | Cairo | Arabic text |
 | Rubik | Hebrew text |
-| Outfit | Secondary headings |
+| Inter | Default UI text |
 | Syncopate | Display headings |
+| Outfit | Secondary headings |
 
 ### Layout Constants
 
@@ -398,72 +366,72 @@ The app auto-redirects to `/ar` (Arabic) on first visit.
 
 ### Mobile-First Principles
 
-- Designed for **375px viewport** first, desktop is progressive enhancement
+- Designed for **375px viewport** first — desktop is progressive enhancement
 - Touch targets **>= 48px** on all interactive elements
-- **Bottom nav** is the primary navigation (5 items, thumb-reachable)
+- **Bottom nav** is the primary mobile navigation (4-5 thumb-reachable tabs)
 - Primary actions positioned in the **thumb zone** (bottom half of screen)
+- iOS safe area: `pb-[max(env(safe-area-inset-bottom),8px)]`
 
 ---
 
 ## Security
 
-- **Row Level Security (RLS)** enabled on all tables — direct writes blocked
-- **SECURITY DEFINER** Postgres functions for controlled mutations
-- **HMAC-SHA256** signed session cookies — tamper-proof
-- **httpOnly cookies** — not accessible via JavaScript
-- **Middleware auth enforcement** — unauthenticated users redirected to login
-- **Role-based access** — head coach vs. trainer permissions
-- **No service role key** in client code — all elevated operations via RPC
+| Measure | Implementation |
+|---------|---------------|
+| Row Level Security | Enabled on all tables — direct writes blocked |
+| SECURITY DEFINER RPCs | 24 Postgres functions for controlled mutations |
+| HMAC-SHA256 sessions | Signed, tamper-proof session tokens |
+| httpOnly cookies | Not accessible via JavaScript |
+| Middleware enforcement | Unauthenticated users redirected to login |
+| Role-based access | Head coach vs. trainer permissions |
+| No service role key | All elevated operations go through RPCs |
 
 ---
 
 ## Performance
 
-| Practice | Implementation |
-|----------|---------------|
-| Parallel queries | `Promise.all()` for independent DB calls |
+| Rule | Implementation |
+|------|---------------|
+| Parallel queries | `Promise.all()` for independent Supabase calls |
 | Bounded queries | Every `.select()` has `.limit()` or date filter |
-| Surgical caching | `revalidatePath()` after mutations, no `force-dynamic` |
+| Surgical caching | `revalidatePath()` after mutations — no `force-dynamic` |
 | Debounced search | 300ms debounce on keystroke-triggered queries |
 | Server Components | Default RSC — `'use client'` only when necessary |
-| Selective columns | `select('id, name')` instead of `select('*')` where possible |
-| Optimized images | `next/image` with proper sizing and lazy loading |
+| Selective columns | Fetch only needed fields, not `select('*')` |
+| Image optimization | `next/image` with proper sizing and lazy loading |
+| Dynamic imports | Excel library loaded on demand (avoids 200KB upfront) |
+
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed rules with code examples.
 
 ---
 
-## RPC Functions
+## Scripts
 
-All database mutations go through these `SECURITY DEFINER` Postgres functions:
-
-| Function | Purpose |
-|----------|---------|
-| `create_trainer` | Create a new trainer account |
-| `update_trainer_rpc` | Update trainer details |
-| `delete_trainer_rpc` | Delete a trainer |
-| `upsert_event` | Create or update an event |
-| `delete_event` | Delete an event |
-| `insert_class` | Create a new team |
-| `update_class` | Update team details |
-| `delete_class` | Delete a team |
-| `insert_trainee` | Add a new player |
-| `update_trainee_rpc` | Update player details |
-| `delete_trainee` | Delete a player |
-| `upsert_attendance` | Mark attendance (single) |
-| `bulk_upsert_attendance` | Mark attendance (batch) |
-| `update_trainee_payment_rpc` | Update payment total |
-| `insert_payment_log` | Record a payment transaction |
-| `update_hall_rpc` | Update hall names |
-| `insert_hall` | Create a new hall |
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm start` | Start production server |
+| `npm run lint` | ESLint check |
+| `npm test` | Unit tests (watch mode) |
+| `npm run test:run` | Unit tests (single run) |
+| `npm run test:coverage` | Unit tests with v8 coverage |
+| `npm run test:e2e` | E2E tests (Playwright) |
 
 ---
 
-## Contributing
+## Documentation
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | System design, auth flow, data flow diagrams |
+| [Features](docs/FEATURES.md) | Deep dives into each major feature |
+| [Database](docs/DATABASE.md) | Complete schema, ER diagram, RPC reference |
+| [Testing](docs/TESTING.md) | Testing strategy and how to add new tests |
+| [API Reference](docs/API.md) | All 40+ server actions documented |
+| [Setup Guide](docs/SETUP.md) | Local development setup and troubleshooting |
+| [Components](docs/COMPONENTS.md) | Component library reference |
+| [Performance](docs/PERFORMANCE.md) | Enforced performance rules with code examples |
 
 ---
 
@@ -474,5 +442,5 @@ All database mutations go through these `SECURITY DEFINER` Postgres functions:
 ---
 
 <p align="center">
-  <sub>Built with Next.js 16 + Supabase + Tailwind CSS 4</sub>
+  <sub>Built with Next.js 16 + React 19 + Supabase + Tailwind CSS 4</sub>
 </p>

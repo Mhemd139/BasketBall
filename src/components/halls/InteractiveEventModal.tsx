@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getEventRefData } from '@/app/actions';
@@ -9,6 +9,7 @@ import { TrainingSVG } from '../ui/svg/TrainingSVG';
 import { ScrollTimePicker } from '../ui/ScrollTimePicker';
 import { format } from 'date-fns';
 import { Loader2, ArrowLeft, ArrowRight, CheckCircle2, Trash2, Clock, Calendar, X, Check, Search } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 interface InteractiveEventModalProps {
     isOpen: boolean;
@@ -56,6 +57,8 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         return '';
     });
 
+    const { toast } = useToast();
+
     // Common
     const [startTime, setStartTime] = useState(initialEvent?.start_time || '16:00');
     const [endTime, setEndTime] = useState(initialEvent?.end_time || '18:00');
@@ -71,15 +74,39 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         return () => { document.body.style.overflow = 'auto'; };
     }, [isOpen, initialStep]);
 
+    const refDataCache = useRef<{ data: { trainers: any[]; classes: any[] }; ts: number } | null>(null);
+
     const loadRefData = async () => {
-        const res = await getEventRefData();
-        if (res.success) setRefData({ trainers: res.trainers, classes: res.classes });
+        if (refDataCache.current && Date.now() - refDataCache.current.ts < 5 * 60 * 1000) {
+            setRefData(refDataCache.current.data);
+            return;
+        }
+        try {
+            const res = await getEventRefData();
+            if (!res.success) {
+                toast(res.error || 'فشل تحميل البيانات', 'error');
+                return;
+            }
+            const data = { trainers: res.trainers ?? [], classes: res.classes ?? [] };
+            refDataCache.current = { data, ts: Date.now() };
+            setRefData(data);
+        } catch {
+            toast('فشل تحميل البيانات', 'error');
+        }
     };
 
     const handleNext = () => {
         if (step === 'type') setStep('details');
         else if (step === 'details') setStep('time');
-        else if (step === 'time') setStep('review');
+        else if (step === 'time') {
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+            if (eh * 60 + em <= sh * 60 + sm) {
+                toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
+                return;
+            }
+            setStep('review');
+        }
     };
 
     const handleBack = () => {
@@ -120,6 +147,15 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                 homeBtn: homeTeam,
                 awayName: awayTeamName
             };
+
+            // Validate end time is after start time
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+            if (eh * 60 + em <= sh * 60 + sm) {
+                toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
+                setLoading(false);
+                return;
+            }
 
             await onSave({
                 type,
@@ -418,7 +454,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                         
                                         <div>
                                             <h3 className="text-3xl font-syncopate font-black text-royal mb-2">{generateTitle()}</h3>
-                                            <div className="inline-flex items-center gap-2 bg-royal/5 px-4 py-2 rounded-full font-space text-royal/70 font-bold">
+                                            <div className="inline-flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-space text-royal/70 font-bold border border-gray-200">
                                                 <Calendar className="w-4 h-4" /> {initialDate ? format(initialDate, 'dd/MM/yyyy') : ''}
                                                 <span className="mx-2 opacity-30">|</span>
                                                 <Clock className="w-4 h-4" /> {startTime} - {endTime}
@@ -461,7 +497,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             >
                                                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'نعم، قم بالحذف قطعيًا'}
                                             </motion.button>
-                                            <button onClick={() => setStep('review')} className="py-4 font-bold text-royal/60 hover:bg-royal/5 rounded-2xl">
+                                            <button onClick={() => setStep('review')} className="py-4 font-bold text-royal/60 hover:bg-gray-100 rounded-2xl">
                                                 تراجع
                                             </button>
                                         </div>

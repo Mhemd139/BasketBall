@@ -91,6 +91,7 @@ export function FileUploadStep({ onParsed }: FileUploadStepProps) {
           ref={inputRef}
           type="file"
           accept=".xlsx,.xls,.csv"
+          aria-label="اختر ملف Excel أو CSV"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]
@@ -105,7 +106,7 @@ export function FileUploadStep({ onParsed }: FileUploadStepProps) {
             </div>
             <p className="text-lg font-semibold text-slate-700">جاري قراءة {fileName}...</p>
             <div className="w-48 h-1.5 bg-gray-200 rounded-full mx-auto overflow-hidden">
-              <div className="h-full bg-amber-500 rounded-full animate-[progress_1.5s_ease-in-out_infinite]" style={{ width: '60%' }} />
+              <div className="h-full bg-amber-500 rounded-full animate-[progress_1.5s_ease-in-out_infinite] w-[60%]" />
             </div>
           </div>
         ) : (
@@ -139,7 +140,7 @@ export function FileUploadStep({ onParsed }: FileUploadStepProps) {
           <div>
             <p className="font-medium text-sm">{error}</p>
           </div>
-          <button onClick={() => setError('')} className="mr-auto">
+          <button onClick={() => setError('')} aria-label="إغلاق" className="mr-auto">
             <X className="w-4 h-4 text-red-400 hover:text-red-600" />
           </button>
         </div>

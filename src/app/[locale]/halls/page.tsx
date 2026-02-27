@@ -6,12 +6,9 @@ import { Card } from '@/components/ui/Card'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
-import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
 import { Building2 } from 'lucide-react'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
-
-type Hall = Database['public']['Tables']['halls']['Row']
 
 export default async function HallsPage({
   params,
@@ -21,10 +18,14 @@ export default async function HallsPage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  const [session, { data: halls }] = await Promise.all([
+  const [session, { data: halls, error: hallsError }] = await Promise.all([
     getSession(),
-    supabase.from('halls').select('*').order('created_at', { ascending: true }).limit(50),
+    supabase.from('halls').select('id, name_ar, name_he, name_en, description_ar, description_he, description_en').order('created_at', { ascending: true }).limit(50),
   ])
+
+  if (hallsError) {
+    console.error('Failed to fetch halls:', hallsError.message)
+  }
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
@@ -43,7 +44,7 @@ export default async function HallsPage({
             <section>
               {halls && halls.length > 0 ? (
                 <div className="space-y-3">
-                  {halls.map((hall: Hall, index: number) => (
+                  {halls.map((hall, index) => (
                     <Link key={hall.id} href={`/${locale}/halls/${hall.id}`} className="block">
                       <Card 
                         interactive 

@@ -56,7 +56,7 @@ export default async function HallDetailPage({
       <Sidebar locale={locale} role={session?.role} />
       
       <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
-        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+        <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header locale={locale} showBack backHref={`/${locale}/halls`} />
         </div>
 

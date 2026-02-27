@@ -79,6 +79,8 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
     const dateLocale = arSA;
     const isRTL = true;
 
+    const monthKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`
+
     const refetchEvents = useCallback(async () => {
         const start = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
         const end = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
@@ -86,31 +88,35 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
         if (res.success && res.events) {
             setEvents(res.events as Event[]);
         }
-    }, [selectedDate, hallId]);
+    }, [monthKey, hallId]);
 
     // Refetch on mount and when date/hall changes
-    const mountRef = useRef(0);
     useEffect(() => {
-        // Always refetch — covers both initial mount and dependency changes
         refetchEvents();
-        mountRef.current++;
     }, [refetchEvents]);
 
     // Re-fetch when returning to this page (tab switch, app switch, browser back/forward)
+    // visibilitychange/pageshow refetch immediately; focus is debounced to prevent rapid multi-fire
     useEffect(() => {
+        let focusDebounce: ReturnType<typeof setTimeout> | null = null;
         const onVisibility = () => {
             if (document.visibilityState === 'visible') refetchEvents();
         };
         const onPageShow = (e: PageTransitionEvent) => {
             if (e.persisted) refetchEvents();
         };
+        const onFocus = () => {
+            if (focusDebounce) clearTimeout(focusDebounce);
+            focusDebounce = setTimeout(refetchEvents, 300);
+        };
         document.addEventListener('visibilitychange', onVisibility);
         window.addEventListener('pageshow', onPageShow);
-        window.addEventListener('focus', refetchEvents);
+        window.addEventListener('focus', onFocus);
         return () => {
+            if (focusDebounce) clearTimeout(focusDebounce);
             document.removeEventListener('visibilitychange', onVisibility);
             window.removeEventListener('pageshow', onPageShow);
-            window.removeEventListener('focus', refetchEvents);
+            window.removeEventListener('focus', onFocus);
         };
     }, [refetchEvents]);
 
@@ -159,25 +165,23 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                 };
             });
 
-        // Template schedules only for future dates — past/today shows only real events
-        const isFutureDate = isBefore(startOfDay(new Date()), startOfDay(selectedDate));
+        // Show templates for all dates (past, today, future) — real events take priority via coveredScheduleIds
         const coveredScheduleIds = new Set(scheduledEvents.map(x => x.id));
-        const templates = isFutureDate
-            ? weeklySchedules
-                .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00' && !coveredScheduleIds.has(s.id))
-                .map(s => ({ ...s, event: undefined as Event | undefined }))
-            : [];
+        const templates = weeklySchedules
+            .filter(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00' && !coveredScheduleIds.has(s.id))
+            .map(s => ({ ...s, event: undefined as Event | undefined }));
 
         return [...scheduledEvents, ...templates]
             .sort((a, b) => a.start_time.localeCompare(b.start_time));
     }, [weeklySchedules, selectedDate, allDayEvents]);
 
-    // Check if a day has events or schedules
+    // Precompute which dates and weekdays have content to avoid O(N) .some() per calendar cell
+    const eventDates = useMemo(() => new Set(events.map(e => e.event_date)), [events]);
+    const scheduleDays = useMemo(() => new Set(weeklySchedules.filter(s => s.start_time !== '00:00:00').map(s => s.day_of_week)), [weeklySchedules]);
+
     const hasContent = (date: Date) => {
-        const hasEvent = events.some(e => isSameDay(parseISO(e.event_date), date));
-        const dayOfWeek = date.getDay();
-        const hasSchedule = weeklySchedules.some(s => s.day_of_week === dayOfWeek && s.start_time !== '00:00:00');
-        return hasEvent || hasSchedule;
+        const dateStr = format(date, 'yyyy-MM-dd');
+        return eventDates.has(dateStr) || scheduleDays.has(date.getDay());
     };
 
     const formatTimeStr = (timeStr: string) => timeStr.slice(0, 5);
@@ -203,13 +207,17 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
     };
 
     const handleDeleteEvent = async (eventId: string) => {
-        const res = await deleteEvent(eventId);
-        if (res.success) {
-            setEvents(prev => prev.filter(e => e.id !== eventId));
-            setIsModalOpen(false);
-            setSelectedEvent(null);
-            toast('تم حذف الحدث بنجاح', 'success');
-        } else {
+        try {
+            const res = await deleteEvent(eventId);
+            if (res.success) {
+                setEvents(prev => prev.filter(e => e.id !== eventId));
+                setIsModalOpen(false);
+                setSelectedEvent(null);
+                toast('تم حذف الحدث بنجاح', 'success');
+            } else {
+                toast('فشل حذف الحدث', 'error');
+            }
+        } catch {
             toast('فشل حذف الحدث', 'error');
         }
     };
@@ -412,7 +420,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             <div className="flex justify-between items-start mb-1">
                                                 <div className="flex-1 min-w-0">
                                                     <h4 className={`font-bold text-sm ${titleColor} truncate`}>
-                                                        {schedule.event?.title_ar || teamName}
+                                                        {schedule.event?.[`title_${locale}` as 'title_ar' | 'title_he' | 'title_en'] || schedule.event?.title_ar || teamName}
                                                     </h4>
                                                     {categoryName && (
                                                         <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${isGame ? 'bg-orange-500/20 text-orange-300' : 'bg-green-500/20 text-green-300'}`}>
@@ -493,7 +501,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             <div className="flex justify-between items-start mb-1">
                                                 <div className="flex-1 min-w-0">
                                                     <h4 className={`font-bold text-sm truncate ${event.type === 'game' ? 'text-orange-300' : 'text-blue-300'}`}>
-                                                        {locale === 'he' ? (event.title_he || event.title_ar) : event.title_ar}
+                                                        {event[`title_${locale}` as 'title_ar' | 'title_he' | 'title_en'] || event.title_ar}
                                                     </h4>
                                                     {event.classes?.categories && (
                                                         <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${event.type === 'game' ? 'bg-orange-500/20 text-orange-300' : 'bg-blue-500/20 text-blue-300'}`}>

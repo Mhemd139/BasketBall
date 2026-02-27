@@ -22,6 +22,12 @@ export function EventTimeEditor({ eventId, startTime, endTime }: EventTimeEditor
     const router = useRouter()
 
     const handleSave = () => {
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        if (eh * 60 + em <= sh * 60 + sm) {
+            toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
+            return;
+        }
         startTransition(async () => {
             const res = await updateEventTime(eventId, start + ':00', end + ':00')
             if (res.success) {

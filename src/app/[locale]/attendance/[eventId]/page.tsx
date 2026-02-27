@@ -29,13 +29,14 @@ export default async function AttendancePage({
 }) {
   const { locale, eventId } = await params
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
 
-  // Fetch event + attendance in parallel
+  // Fetch session + event + attendance in parallel
   const [
+    session,
     { data: event, error: eventError },
     { data: attendanceRecords }
   ] = await Promise.all([
+    getSession(),
     (supabase as any).from('events').select('*, halls(*)').eq('id', eventId).single(),
     (supabase as any).from('attendance').select('trainee_id, status').eq('event_id', eventId),
   ])
@@ -58,8 +59,9 @@ export default async function AttendancePage({
   let trainees: Trainee[] = []
   if (targetClassId) {
     const { data } = await (supabase as any)
-      .from('trainees').select('*').eq('class_id', targetClassId)
+      .from('trainees').select('id, name_ar, name_he, name_en, jersey_number, gender, class_id').eq('class_id', targetClassId)
       .order('jersey_number', { ascending: true })
+      .limit(200)
     trainees = data || []
   }
 
@@ -68,7 +70,7 @@ export default async function AttendancePage({
       <Sidebar locale={locale} role={session?.role} />
 
       <div className="flex-1 flex flex-col md:ml-[240px] relative z-10 w-full">
-        <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+        <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header
             locale={locale}
             title={getLocalizedField(eventWithHall, 'title', locale)}
@@ -87,19 +89,19 @@ export default async function AttendancePage({
                       : 'تدريب'
                     }
                 </Badge>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-white/50">
                   {formatDate(event.event_date, locale)}
                 </span>
               </div>
 
               <div className="flex items-start justify-between gap-4 mb-2">
-                <h1 className="heading-md">
+                <h1 className="text-xl font-semibold text-white">
                   {getLocalizedField(eventWithHall, 'title', locale)}
                 </h1>
                 <EventManagementActions event={event} locale={locale} hallId={event.hall_id} />
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
                 {eventWithHall.halls && (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="w-4 h-4" />
@@ -123,8 +125,8 @@ export default async function AttendancePage({
                   initialAttendance={(attendanceRecords || []) as { trainee_id: string; status: 'present' | 'absent' | 'late' }[]}
                 />
               ) : (
-                <div className="text-center py-12 bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl animate-fade-in-up shadow-sm">
-                  <p className="text-sm font-bold text-gray-500">
+                <div className="text-center py-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl animate-fade-in-up">
+                  <p className="text-sm font-bold text-white/50">
                     {'لا يوجد لاعبون مسجلون لهذا الحدث'}
                   </p>
                 </div>

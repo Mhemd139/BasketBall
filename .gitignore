@@ -11,9 +11,11 @@ node_modules/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
 
 # next.js
 .next/
@@ -66,6 +68,9 @@ nul
 *.csv
 ~$*
 
+# Claude Code
+CLAUDE.md
+
 # AI Agent Framework
 .antigravity_tools/
 .agent/
@@ -83,6 +88,13 @@ bugs_tasks.md
 bugs_description.md
 tmp_fix_plan.md
 *.md.bak
+lana_bugs.md
+lana_tasks.md
+coderabbit_bugs.md
+schedule_editor_ux_rework.md
+time_trainer_change.md
+performance_optimization_plan.md
+tasks.md
 
 # Debug screenshots
 image.png
@@ -90,6 +102,9 @@ image-*.png
 
 # DB scripts (sensitive)
 rls_security.sql
+
+# Supabase CLI temp files
+supabase/.temp/
 
 # Data files
 *.xlsx

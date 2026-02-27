@@ -9,13 +9,25 @@ import { Card } from '@/components/ui/Card'
 import { Search, DollarSign, Users, Phone, Edit2, Save, X, User as UserIcon } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { updateTraineePayment } from '@/app/actions'
-import type { Database } from '@/lib/supabase/types'
 import { PaymentModal } from '@/components/payments/PaymentModal'
 
-type Trainee = Database['public']['Tables']['trainees']['Row']
+type PaymentTrainee = {
+  id: string
+  name_ar: string
+  name_he: string
+  name_en: string
+  jersey_number: number | null
+  phone: string | null
+  is_paid: boolean | null
+  amount_paid: number | null
+  payment_comment_ar: string | null
+  payment_comment_he: string | null
+  payment_comment_en: string | null
+  gender: string | null
+}
 
 interface ClassPaymentsClientProps {
-  trainees: Trainee[]
+  trainees: PaymentTrainee[]
   classData: any
   locale: string
   dict: any
@@ -24,7 +36,7 @@ interface ClassPaymentsClientProps {
 export default function ClassPaymentsClient({ trainees, classData, locale, dict }: ClassPaymentsClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const deferredSearch = useDeferredValue(searchTerm)
-  const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null)
+  const [selectedTrainee, setSelectedTrainee] = useState<PaymentTrainee | null>(null)
 
   const className = classData ? classData.name_ar : ''
   const trainerName = classData?.trainers ? classData.trainers.name_ar : ''
@@ -32,7 +44,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
   const filteredTrainees = useMemo(() => trainees.filter(t => {
       const name = t.name_ar
       return name.toLowerCase().includes(deferredSearch.toLowerCase())
-  }), [trainees, deferredSearch, locale])
+  }), [trainees, deferredSearch])
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -46,7 +58,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
         />
 
         <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5">
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto space-y-6">
                 
                 {/* Header Info */}
                 <div className="flex justify-between items-end">
@@ -101,7 +113,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
   )
 }
 
-function TraineeRow({ trainee, locale, onClick }: { trainee: Trainee, locale: string, onClick: () => void }) {
+function TraineeRow({ trainee, locale, onClick }: { trainee: PaymentTrainee, locale: string, onClick: () => void }) {
     const name = trainee.name_ar
     const amount = trainee.amount_paid || 0
     const goal = 3000
