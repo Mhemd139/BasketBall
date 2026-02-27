@@ -7,12 +7,23 @@ import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { updateTraineePayment } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { Portal } from '@/components/ui/Portal'
-import type { Database } from '@/lib/supabase/types'
-
-type Trainee = Database['public']['Tables']['trainees']['Row']
+type PaymentTrainee = {
+    id: string
+    name_ar: string
+    name_he: string
+    name_en: string
+    jersey_number: number | null
+    phone: string | null
+    is_paid: boolean | null
+    amount_paid: number | null
+    payment_comment_ar: string | null
+    payment_comment_he: string | null
+    payment_comment_en: string | null
+    gender: string | null
+}
 
 interface PaymentModalProps {
-    trainee: Trainee
+    trainee: PaymentTrainee
     onClose: () => void
 }
 
