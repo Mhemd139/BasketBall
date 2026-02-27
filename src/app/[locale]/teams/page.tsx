@@ -15,7 +15,7 @@ export default async function TeamsPage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  const [session, { data: classes }] = await Promise.all([
+  const [session, { data: classes, error: classesError }] = await Promise.all([
     getSession(),
     supabase
       .from('classes')
@@ -23,6 +23,10 @@ export default async function TeamsPage({
       .order('created_at', { ascending: true })
       .limit(50),
   ])
+
+  if (classesError) {
+    console.error('Failed to fetch classes:', classesError.message)
+  }
   const canCreate = !!session
 
   return (

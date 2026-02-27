@@ -68,6 +68,9 @@ nul
 *.csv
 ~$*
 
+# Claude Code
+CLAUDE.md
+
 # AI Agent Framework
 .antigravity_tools/
 .agent/

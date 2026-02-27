@@ -9,6 +9,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Calendar, Edit2, LogOut, Loader2, Phone, Clock, ChevronLeft, User } from 'lucide-react'
 import type { Locale } from '@/lib/i18n/config'
+import { BouncingBasketballLoader } from '@/components/ui/BouncingBasketballLoader'
 import { formatPhoneNumber, cn } from '@/lib/utils'
 
 const DAYS_AR: Record<string, string> = {
@@ -69,7 +70,7 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#060d1a] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                <BouncingBasketballLoader />
             </div>
         )
     }

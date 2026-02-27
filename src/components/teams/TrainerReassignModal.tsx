@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast'
 import { getLocalizedField } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { Portal } from '@/components/ui/Portal'
+import { BouncingBasketballLoader } from '@/components/ui/BouncingBasketballLoader'
 
 interface TrainerReassignModalProps {
     classId: string
@@ -24,6 +25,7 @@ const AVATAR_COLORS = [
 export function TrainerReassignModal({ classId, currentTrainerId, locale, onClose }: TrainerReassignModalProps) {
     const [trainers, setTrainers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [fetchError, setFetchError] = useState<string | null>(null)
     const [saving, setSaving] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedId, setSelectedId] = useState<string | null>(currentTrainerId || null)
@@ -39,7 +41,11 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                 .select('id, name_ar, name_he, name_en, phone')
                 .order('name_ar')
                 .limit(200)
-            if (!error && data) setTrainers(data)
+            if (error) {
+                setFetchError('فشل تحميل المدربين')
+            } else if (data) {
+                setTrainers(data)
+            }
             setLoading(false)
         }
         fetchTrainers()
@@ -130,9 +136,12 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                     {/* Trainer list */}
                     <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
                         {loading ? (
-                            <div className="py-16 flex flex-col items-center gap-3 text-white/30">
-                                <Loader2 className="w-7 h-7 animate-spin" />
-                                <span className="text-xs font-medium">{'جاري التحميل...'}</span>
+                            <div className="py-8 flex flex-col items-center gap-3 text-white/30">
+                                <BouncingBasketballLoader />
+                            </div>
+                        ) : fetchError ? (
+                            <div className="py-12 text-center text-red-400/70 text-sm">
+                                {fetchError}
                             </div>
                         ) : filteredTrainers.length === 0 ? (
                             <div className="py-12 text-center text-white/30 text-sm">

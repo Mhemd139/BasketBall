@@ -85,8 +85,8 @@ export async function upsertEvent(eventData: any) {
 }
 
 export async function sendOTP(phone: string) {
-  // E2E mock mode — skip real SMS providers
-  if (process.env.E2E_MOCK_OTP === 'true') {
+  // E2E mock mode — skip real SMS providers (test runtime only)
+  if (process.env.NODE_ENV === 'test' && process.env.E2E_MOCK_OTP === 'true') {
     return { success: true }
   }
 
@@ -173,8 +173,8 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   const supabase = await createServerSupabaseClient()
   const cleanPhone = phone.trim()
 
-  // E2E mock mode — skip real SMS verification, accept 1111/1234
-  if (process.env.E2E_MOCK_OTP === 'true') {
+  // E2E mock mode — skip real SMS verification, accept 1111/1234 (test runtime only)
+  if (process.env.NODE_ENV === 'test' && process.env.E2E_MOCK_OTP === 'true') {
     if (otp !== '1111' && otp !== '1234') return { success: false, error: 'Invalid OTP' }
   } else {
   // 1. Twilio Check

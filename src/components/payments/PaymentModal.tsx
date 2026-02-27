@@ -145,7 +145,7 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
                                 type="number"
                                 aria-label="المبلغ المدفوع"
                                 value={amount}
-                                onChange={e => setAmount(Math.max(0, Math.min(goal, Number(e.target.value))))}
+                                onChange={e => { const v = Number(e.target.value); if (!isNaN(v)) setAmount(Math.max(0, Math.min(goal, v))) }}
                                 className="w-full px-3 py-2.5 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 outline-none text-white/80 text-sm font-mono text-center transition-colors [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                                 dir="ltr"
                             />

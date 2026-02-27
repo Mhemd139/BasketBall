@@ -18,10 +18,14 @@ export default async function HallsPage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  const [session, { data: halls }] = await Promise.all([
+  const [session, { data: halls, error: hallsError }] = await Promise.all([
     getSession(),
     supabase.from('halls').select('id, name_ar, name_he, name_en, description_ar, description_he, description_en').order('created_at', { ascending: true }).limit(50),
   ])
+
+  if (hallsError) {
+    console.error('Failed to fetch halls:', hallsError.message)
+  }
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>

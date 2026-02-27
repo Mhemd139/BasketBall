@@ -124,6 +124,88 @@ const handleSearch = (term: string) => {
 
 Never leave `console.log` in server components or API routes. Use them for debugging only and remove before finishing.
 
+---
+
+# Error Handling Rules (MANDATORY)
+
+## Always surface errors — never swallow them silently
+
+If something fails, the user needs to know. A silent fallback that returns empty data or renders nothing is worse than showing an error — it hides bugs and makes debugging hell.
+
+**Rules:**
+- Every Supabase query result must destructure `error`. If `error` is set, handle it — don't just skip it.
+- Server components: log the error with `console.error` AND render a visible error state (don't just fall back to an empty list).
+- Client components: set an error state and display it in the UI. Never silently ignore a failed fetch or mutation.
+- Server actions: always return `{ success: false, error: error.message }` on failure. Never return `{ success: false }` without a message.
+- Never use `data || []` as a silent fallback without first checking if `error` is set. If error is set, that's a bug — treat it as one.
+
+```ts
+// WRONG — error is swallowed, UI looks empty for no reason
+const { data: classes } = await supabase.from('classes').select('*')
+return <TeamList classes={classes || []} />
+
+// RIGHT — error is caught, logged, visible
+const { data: classes, error } = await supabase.from('classes').select('*')
+if (error) {
+  console.error('Failed to load classes:', error.message)
+  return <ErrorState message="فشل تحميل الفرق" />
+}
+return <TeamList classes={classes} />
+```
+
+```ts
+// WRONG — client fetch failure is invisible
+const { data, error } = await supabase.from('trainers').select('...')
+if (!error && data) setTrainers(data)
+
+// RIGHT — error is shown to the user
+const { data, error } = await supabase.from('trainers').select('...')
+if (error) {
+  setFetchError('فشل تحميل المدربين')
+} else if (data) {
+  setTrainers(data)
+}
+```
+
+## Input validation — guard against invalid values before using them
+
+Never trust raw user input. Validate at the boundary before it touches state or gets sent to the server.
+
+```ts
+// WRONG — Number('') is 0, Number('abc') is NaN — both corrupt state
+onChange={e => setAmount(Number(e.target.value))}
+
+// RIGHT
+onChange={e => { const v = Number(e.target.value); if (!isNaN(v)) setAmount(v) }}
+```
+
+## Environment-gated backdoors
+
+Any code path that bypasses real logic (auth, OTP, validation) for testing purposes **must** be gated on BOTH `NODE_ENV === 'test'` AND the feature flag. One condition alone is not enough.
+
+```ts
+// WRONG — works in production if someone sets the env var
+if (process.env.E2E_MOCK_OTP === 'true') { ... }
+
+// RIGHT — inert in production/staging no matter what
+if (process.env.NODE_ENV === 'test' && process.env.E2E_MOCK_OTP === 'true') { ... }
+```
+
+## Migration idempotency
+
+SQL migrations must be safe to re-run. UPDATE migrations must always include a guard so they don't overwrite data that was already migrated.
+
+```sql
+-- WRONG — re-running this nukes manually edited data
+UPDATE trainers SET availability_schedule = (...)
+WHERE availability IS NOT NULL;
+
+-- RIGHT — skip rows that already have data
+UPDATE trainers SET availability_schedule = (...)
+WHERE availability IS NOT NULL
+  AND (availability_schedule IS NULL OR availability_schedule = '[]'::jsonb);
+```
+
 ## 6. Select Only What You Need
 
 When querying Supabase, select specific columns instead of `*` when the component only uses a few fields. For count-only queries, use `{ count: 'exact', head: true }`.
