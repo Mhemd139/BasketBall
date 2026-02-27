@@ -8,7 +8,6 @@ import { useToast } from '@/components/ui/Toast'
 import { getLocalizedField } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { Portal } from '@/components/ui/Portal'
-import { BouncingBasketballLoader } from '@/components/ui/BouncingBasketballLoader'
 
 interface TrainerReassignModalProps {
     classId: string
@@ -144,8 +143,8 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                     {/* Trainer list */}
                     <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
                         {loading ? (
-                            <div className="py-8 flex flex-col items-center gap-3 text-white/30">
-                                <BouncingBasketballLoader />
+                            <div className="py-8 flex items-center justify-center">
+                                <Loader2 className="w-7 h-7 animate-spin text-indigo-400" />
                             </div>
                         ) : fetchError ? (
                             <div className="py-12 text-center text-red-400/70 text-sm">

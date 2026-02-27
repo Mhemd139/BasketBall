@@ -9,7 +9,6 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Calendar, Edit2, LogOut, Loader2, Phone, Clock, ChevronLeft, User } from 'lucide-react'
 import type { Locale } from '@/lib/i18n/config'
-import { BouncingBasketballLoader } from '@/components/ui/BouncingBasketballLoader'
 import { formatPhoneNumber, cn } from '@/lib/utils'
 
 const DAYS_AR: Record<string, string> = {
@@ -38,11 +37,11 @@ type TrainerProfile = {
 interface ProfileContentProps {
     locale: Locale
     role?: string
+    initialTrainer?: TrainerProfile | null
 }
 
-export default function ProfileContent({ locale, role }: ProfileContentProps) {
-    const [trainer, setTrainer] = useState<TrainerProfile | null>(null)
-    const [loading, setLoading] = useState(true)
+export default function ProfileContent({ locale, role, initialTrainer }: ProfileContentProps) {
+    const [trainer, setTrainer] = useState<TrainerProfile | null>(initialTrainer ?? null)
     const [modalState, setModalState] = useState<{ open: boolean; mode: 'all' | 'personal' | 'schedule' }>({
         open: false,
         mode: 'all',
@@ -52,7 +51,7 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
     const router = useRouter()
 
     useEffect(() => {
-        // Only refetch when modal closes (to pick up edits)
+        // Refetch when modal closes (to pick up edits)
         if (modalState.open) return
 
         const fetchTrainer = async () => {
@@ -61,8 +60,6 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
                 if (data) setTrainer(data)
             } catch {
                 console.error('Failed to fetch trainer profile')
-            } finally {
-                setLoading(false)
             }
         }
         fetchTrainer()
@@ -82,14 +79,6 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
     const openModal = useCallback((mode: 'personal' | 'schedule') => {
         setModalState({ open: true, mode })
     }, [])
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[#060d1a] flex items-center justify-center">
-                <BouncingBasketballLoader />
-            </div>
-        )
-    }
 
     if (!trainer) return null
 
