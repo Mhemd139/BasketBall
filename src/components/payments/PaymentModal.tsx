@@ -43,7 +43,7 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
 
     const handleSave = async () => {
         setLoading(true)
-        const res = await updateTraineePayment(trainee.id, amount, comment)
+        const res = await updateTraineePayment(trainee.id, delta, comment)
         if (res.success) {
             toast('تم تحديث الدفع بنجاح', 'success')
             router.refresh()

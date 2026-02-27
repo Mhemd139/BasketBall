@@ -618,6 +618,7 @@ export async function getClassAttendanceStats(classId: string) {
     .select('trainee_id, status')
     .in('trainee_id', traineeIds)
     .gte('created_at', sixMonthsAgo)
+    .limit(5000)
 
   if (error || !data) return {}
 
@@ -683,6 +684,7 @@ export async function getTeamAttendanceHistory(classId: string) {
         .select('event_id, trainee_id, status')
         .in('event_id', candidateEventIds)
         .in('trainee_id', traineeIds)
+        .limit(5000)
 
     // 6. Filter Events: Only keep events that have at least one record (present/absent/late) for this class
     // OR if we want to be generous, maybe events that match the class Hall? 

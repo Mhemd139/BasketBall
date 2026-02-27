@@ -26,7 +26,11 @@ export default async function TrainerProfilePage({
         notFound()
     }
 
-    const { trainer, teams } = res
+    type TrainerWithSchedule = typeof res.trainer & {
+        availability_schedule?: { day: string; start: string; end: string }[]
+    }
+    const trainer = res.trainer as TrainerWithSchedule
+    const { teams } = res
 
     const daysMap: Record<string, string> = {
         'Sunday': 'الأحد',
@@ -73,14 +77,14 @@ export default async function TrainerProfilePage({
                                 </div>
 
                                 {/* Availability Section */}
-                                {(trainer as any).availability_schedule?.length > 0 ? (
+                                {trainer.availability_schedule?.length > 0 ? (
                                     <div className="w-full bg-white/70 backdrop-blur-xl p-4 rounded-xl border border-white/40 shadow-sm space-y-2">
                                         <h3 className="text-sm font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
                                             {'ساعات التدريب المتاحة'}
                                         </h3>
                                         <div className="space-y-1.5">
-                                            {(trainer as any).availability_schedule.map((slot: any) => (
+                                            {trainer.availability_schedule!.map((slot) => (
                                                 <div key={slot.day} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100">
                                                     <span className="font-bold text-sm text-indigo-700">{daysMap[slot.day] || slot.day}</span>
                                                     <span className="text-xs font-bold text-indigo-500 tabular-nums" dir="ltr">{slot.start} – {slot.end}</span>

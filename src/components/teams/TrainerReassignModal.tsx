@@ -22,8 +22,16 @@ const AVATAR_COLORS = [
     'bg-orange-500', 'bg-pink-500', 'bg-teal-500', 'bg-rose-500',
 ]
 
+type Trainer = {
+    id: string
+    name_ar: string | null
+    name_he: string | null
+    name_en: string | null
+    phone: string | null
+}
+
 export function TrainerReassignModal({ classId, currentTrainerId, locale, onClose }: TrainerReassignModalProps) {
-    const [trainers, setTrainers] = useState<any[]>([])
+    const [trainers, setTrainers] = useState<Trainer[]>([])
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState<string | null>(null)
     const [saving, setSaving] = useState(false)
@@ -70,7 +78,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
         return name.includes(searchQuery.toLowerCase())
     })
 
-    const getInitials = (trainer: any) => {
+    const getInitials = (trainer: Trainer) => {
         const name = getLocalizedField(trainer, 'name', locale) || ''
         return name.trim().split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase()
     }

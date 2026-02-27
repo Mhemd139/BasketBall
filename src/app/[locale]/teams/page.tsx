@@ -19,7 +19,7 @@ export default async function TeamsPage({
     getSession(),
     supabase
       .from('classes')
-      .select('*, trainees(count), categories(name_ar, name_he, name_en)')
+      .select('id, name_ar, name_he, name_en, trainer_id, hall_id, category_id, trainees(count), categories(name_ar, name_he, name_en)')
       .order('created_at', { ascending: true })
       .limit(50),
   ])

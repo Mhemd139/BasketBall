@@ -22,13 +22,26 @@ const DAYS_AR: Record<string, string> = {
     Saturday: 'السبت',
 }
 
+type TrainerProfile = {
+    id: string
+    name_ar: string | null
+    name_he: string | null
+    name_en: string | null
+    name?: string | null
+    phone: string | null
+    gender: string | null
+    role: string | null
+    availability: string[] | null
+    availability_schedule: { day: string; start: string; end: string }[] | null
+}
+
 interface ProfileContentProps {
     locale: Locale
     role?: string
 }
 
 export default function ProfileContent({ locale, role }: ProfileContentProps) {
-    const [trainer, setTrainer] = useState<any>(null)
+    const [trainer, setTrainer] = useState<TrainerProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [modalState, setModalState] = useState<{ open: boolean; mode: 'all' | 'personal' | 'schedule' }>({
         open: false,
@@ -39,12 +52,15 @@ export default function ProfileContent({ locale, role }: ProfileContentProps) {
     const router = useRouter()
 
     useEffect(() => {
+        // Only refetch when modal closes (to pick up edits)
+        if (modalState.open) return
+
         const fetchTrainer = async () => {
             try {
                 const data = await getTrainerProfileServer()
                 if (data) setTrainer(data)
             } catch {
-                // silently fail
+                console.error('Failed to fetch trainer profile')
             } finally {
                 setLoading(false)
             }

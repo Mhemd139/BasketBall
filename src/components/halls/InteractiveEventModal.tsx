@@ -81,11 +81,17 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
             setRefData(refDataCache.current.data);
             return;
         }
-        const res = await getEventRefData();
-        if (res.success) {
-            const data = { trainers: res.trainers, classes: res.classes };
+        try {
+            const res = await getEventRefData();
+            if (!res.success) {
+                toast(res.error || 'فشل تحميل البيانات', 'error');
+                return;
+            }
+            const data = { trainers: res.trainers ?? [], classes: res.classes ?? [] };
             refDataCache.current = { data, ts: Date.now() };
             setRefData(data);
+        } catch {
+            toast('فشل تحميل البيانات', 'error');
         }
     };
 
@@ -447,8 +453,8 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                         </div>
                                         
                                         <div>
-                                            <h3 className="text-3xl font-syncopate font-black text-white mb-2">{generateTitle()}</h3>
-                                            <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full font-space text-white/70 font-bold">
+                                            <h3 className="text-3xl font-syncopate font-black text-royal mb-2">{generateTitle()}</h3>
+                                            <div className="inline-flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full font-space text-royal/70 font-bold border border-gray-200">
                                                 <Calendar className="w-4 h-4" /> {initialDate ? format(initialDate, 'dd/MM/yyyy') : ''}
                                                 <span className="mx-2 opacity-30">|</span>
                                                 <Clock className="w-4 h-4" /> {startTime} - {endTime}
@@ -474,8 +480,8 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             <Trash2 className="w-16 h-16" />
                                         </div>
                                         <div>
-                                            <h3 className="text-3xl font-black text-white mb-4">هل أنت متأكد؟</h3>
-                                            <p className="text-white/60">هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الفعالية وكل ما يرتبط بها.</p>
+                                            <h3 className="text-3xl font-black text-royal mb-4">هل أنت متأكد؟</h3>
+                                            <p className="text-royal/60">هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الفعالية وكل ما يرتبط بها.</p>
                                         </div>
                                         
                                         <div className="w-full flex flex-col gap-3 mt-4">
@@ -491,7 +497,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                             >
                                                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'نعم، قم بالحذف قطعيًا'}
                                             </motion.button>
-                                            <button onClick={() => setStep('review')} className="py-4 font-bold text-white/60 hover:bg-white/5 rounded-2xl">
+                                            <button onClick={() => setStep('review')} className="py-4 font-bold text-royal/60 hover:bg-gray-100 rounded-2xl">
                                                 تراجع
                                             </button>
                                         </div>

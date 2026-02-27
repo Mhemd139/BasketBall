@@ -33,7 +33,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
       {/* Header */}
       <div className="bg-[#0B132B]/60 backdrop-blur-3xl p-4 border-b border-white/10 sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <Link href={`/${locale}/more`} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
+          <Link href={`/${locale}/more`} aria-label={locale === 'he' ? 'חזרה' : 'العودة'} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
             <BackIcon className="w-5 h-5 text-white" />
           </Link>
           <h1 className="font-outfit font-black text-xl tracking-wide text-white drop-shadow-sm">
