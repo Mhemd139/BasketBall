@@ -63,8 +63,16 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
 
     const handleSave = () => {
         if (!editingSchedule || !hallId) return
+        if (!startTime || !endTime) {
+            toast('يرجى تحديد وقت البداية والنهاية', 'error')
+            return
+        }
         const [sh, sm] = startTime.split(':').map(Number)
         const [eh, em] = endTime.split(':').map(Number)
+        if (!Number.isFinite(sh) || !Number.isFinite(sm) || !Number.isFinite(eh) || !Number.isFinite(em)) {
+            toast('وقت غير صالح', 'error')
+            return
+        }
         if (eh * 60 + em <= sh * 60 + sm) {
             toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error')
             return
@@ -85,7 +93,7 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
         .sort((a, b) => a.day_of_week - b.day_of_week)
 
     if (validSchedules.length === 0) {
-        return <p className="font-black text-navy-900 text-sm">{'غير محدد'}</p>
+        return <p className="font-black text-white/40 text-sm">{'غير محدد'}</p>
     }
 
     return (
@@ -97,16 +105,16 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
                         key={s.id}
                         type="button"
                         onClick={() => startEdit(s)}
-                        className="w-full flex items-center gap-2 text-sm rounded-lg p-1 -m-1 hover:bg-gray-100 transition-colors group text-right"
+                        className="w-full flex items-center gap-2 text-sm rounded-xl px-2 py-1.5 -mx-2 hover:bg-white/10 transition-colors group text-right"
                     >
-                        <span className="font-bold text-slate-800">{dayLabels[s.day_of_week]}</span>
-                        <span dir="ltr" className="text-gray-500 font-medium">
+                        <span className="font-bold text-white">{dayLabels[s.day_of_week]}</span>
+                        <span dir="ltr" className="text-white/50 font-medium text-xs">
                             {s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}
                         </span>
                         {s.halls && (
-                            <span className="text-gray-400 text-xs truncate">• {getLocName(s.halls)}</span>
+                            <span className="text-white/30 text-xs truncate">• {getLocName(s.halls)}</span>
                         )}
-                        <Pencil className="w-3 h-3 text-gray-400 ms-auto shrink-0" />
+                        <Pencil className="w-3 h-3 text-white/30 group-hover:text-white/60 ms-auto shrink-0 transition-colors" />
                     </button>
                 ))}
             </div>
@@ -183,7 +191,7 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
                                         <Clock className="w-3.5 h-3.5 text-blue-500" />
                                         {'الوقت'}
                                     </label>
-                                    <div className="flex items-center gap-3" dir="ltr">
+                                    <div className="flex items-center gap-3">
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] text-slate-400 font-bold text-center">{'من'}</p>
                                             <input
@@ -191,6 +199,7 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
                                                 value={startTime}
                                                 onChange={e => setStartTime(e.target.value)}
                                                 aria-label="وقت البداية"
+                                                dir="ltr"
                                                 className="w-full bg-slate-50 border-2 border-slate-200 focus:border-indigo-400 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 text-center outline-none transition-colors"
                                             />
                                         </div>
@@ -202,6 +211,7 @@ export function ScheduleEditor({ schedules, halls, locale }: ScheduleEditorProps
                                                 value={endTime}
                                                 onChange={e => setEndTime(e.target.value)}
                                                 aria-label="وقت النهاية"
+                                                dir="ltr"
                                                 className="w-full bg-slate-50 border-2 border-slate-200 focus:border-indigo-400 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 text-center outline-none transition-colors"
                                             />
                                         </div>

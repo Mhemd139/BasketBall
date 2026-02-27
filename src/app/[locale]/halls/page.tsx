@@ -23,7 +23,7 @@ export default async function HallsPage({
 
   const [session, { data: halls }] = await Promise.all([
     getSession(),
-    supabase.from('halls').select('*').order('created_at', { ascending: true }).limit(50),
+    supabase.from('halls').select('id, name_ar, name_he, name_en, description_ar, description_he, description_en').order('created_at', { ascending: true }).limit(50),
   ])
 
   return (

@@ -32,7 +32,7 @@ export default function ClassPaymentsClient({ trainees, classData, locale, dict 
   const filteredTrainees = useMemo(() => trainees.filter(t => {
       const name = t.name_ar
       return name.toLowerCase().includes(deferredSearch.toLowerCase())
-  }), [trainees, deferredSearch, locale])
+  }), [trainees, deferredSearch])
 
   return (
     <div className="min-h-screen bg-slate-50 flex">

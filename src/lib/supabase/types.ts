@@ -431,6 +431,7 @@ export type Database = {
         Row: {
           auth_user_id: string | null
           availability: string[] | null
+          availability_schedule: { day: string; start: string; end: string }[] | null
           created_at: string | null
           gender: string | null
           id: string
@@ -444,6 +445,7 @@ export type Database = {
         Insert: {
           auth_user_id?: string | null
           availability?: string[] | null
+          availability_schedule?: { day: string; start: string; end: string }[] | null
           created_at?: string | null
           gender?: string | null
           id?: string
@@ -457,6 +459,7 @@ export type Database = {
         Update: {
           auth_user_id?: string | null
           availability?: string[] | null
+          availability_schedule?: { day: string; start: string; end: string }[] | null
           created_at?: string | null
           gender?: string | null
           id?: string

@@ -17,12 +17,22 @@ function ScrollColumn({ items, value, onChange, ariaLabel, accent = 'text-royal'
     const selectedIndex = items.indexOf(value)
     const isProgrammatic = useRef(false)
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const programmaticTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    // Cleanup debounce timer on unmount
+    useEffect(() => {
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current)
+            if (programmaticTimerRef.current) clearTimeout(programmaticTimerRef.current)
+        }
+    }, [])
 
     const scrollTo = useCallback((index: number, smooth = false) => {
         isProgrammatic.current = true
         ref.current?.scrollTo({ top: index * ITEM_H, behavior: smooth ? 'smooth' : 'instant' })
-        // Clear the programmatic flag after scroll settles
-        setTimeout(() => { isProgrammatic.current = false }, smooth ? 400 : 50)
+        // Cancel any previous timer before setting a new one to avoid premature reset
+        if (programmaticTimerRef.current) clearTimeout(programmaticTimerRef.current)
+        programmaticTimerRef.current = setTimeout(() => { isProgrammatic.current = false }, smooth ? 400 : 50)
     }, [])
 
     useEffect(() => {

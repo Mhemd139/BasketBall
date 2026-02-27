@@ -1,301 +1,283 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { getTrainerProfileServer, logout } from '@/app/actions'
 import { EditTrainerProfileModal } from '@/components/trainers/EditTrainerProfileModal'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { User, Calendar, Edit2, LogOut, Medal, Loader2, Phone, Settings } from 'lucide-react'
+import { Calendar, Edit2, LogOut, Loader2, Phone, Clock, ChevronLeft, User } from 'lucide-react'
 import type { Locale } from '@/lib/i18n/config'
-import Image from 'next/image'
-import { formatPhoneNumber } from '@/lib/utils'
+import { formatPhoneNumber, cn } from '@/lib/utils'
 
-const DAY_LABELS = {
-    sunday: { ar: 'الأحد' },
-    monday: { ar: 'الإثنين' },
-    tuesday: { ar: 'الثلاثاء' },
-    wednesday: { ar: 'الأربعاء' },
-    thursday: { ar: 'الخميس' },
-    friday: { ar: 'الجمعة' },
-    saturday: { ar: 'السبت' },
+const DAYS_AR: Record<string, string> = {
+    Sunday: 'الأحد',
+    Monday: 'الإثنين',
+    Tuesday: 'الثلاثاء',
+    Wednesday: 'الأربعاء',
+    Thursday: 'الخميس',
+    Friday: 'الجمعة',
+    Saturday: 'السبت',
 }
 
 interface ProfileContentProps {
-  locale: Locale
-  role?: string
+    locale: Locale
+    role?: string
 }
 
 export default function ProfileContent({ locale, role }: ProfileContentProps) {
-  const [trainer, setTrainer] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [modalState, setModalState] = useState<{ open: boolean, mode: 'all' | 'personal' | 'schedule' }>({
-      open: false,
-      mode: 'all'
-  })
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const router = useRouter()
+    const [trainer, setTrainer] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [modalState, setModalState] = useState<{ open: boolean; mode: 'all' | 'personal' | 'schedule' }>({
+        open: false,
+        mode: 'all',
+    })
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+    const [loggingOut, setLoggingOut] = useState(false)
+    const router = useRouter()
 
-  useEffect(() => {
-    const fetchTrainer = async () => {
-        try {
-            const data = await getTrainerProfileServer()
-            if (data) {
-                setTrainer(data)
+    useEffect(() => {
+        const fetchTrainer = async () => {
+            try {
+                const data = await getTrainerProfileServer()
+                if (data) setTrainer(data)
+            } catch {
+                // silently fail
+            } finally {
+                setLoading(false)
             }
-        } catch (error) {
-            console.error('Failed to fetch trainer', error)
-        } finally {
-            setLoading(false)
         }
-    }
-    fetchTrainer()
-  }, [modalState.open]) // Re-fetch when modal closes
+        fetchTrainer()
+    }, [modalState.open])
 
-  const handleLogout = async () => {
-    try {
-      await logout()
-      router.refresh()
-      router.push(`/${locale}/login`)
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
+    const handleLogout = useCallback(async () => {
+        setLoggingOut(true)
+        try {
+            await logout()
+            router.refresh()
+            router.push(`/${locale}/login`)
+        } catch {
+            setLoggingOut(false)
+        }
+    }, [locale, router])
 
-  const openModal = (mode: 'personal' | 'schedule') => {
-      setModalState({ open: true, mode })
-  }
+    const openModal = useCallback((mode: 'personal' | 'schedule') => {
+        setModalState({ open: true, mode })
+    }, [])
 
-  if (loading) return (
-      <div className="min-h-screen bg-navy-50 flex items-center justify-center">
-          <Loader2 className="w-10 h-10 text-gold-500 animate-spin" />
-      </div>
-  )
-
-  if (!trainer) return null
-
-  // Determine correct name to display
-  const displayName = trainer[`name_${locale}`] || trainer.name_en || trainer.name || ''
-
-  // Custom Avatar Component
-  const CoachAvatar = ({ gender }: { gender: string }) => {
-    const isMale = gender === 'male';
-    return (
-        <div className={`w-36 h-36 md:w-44 md:h-44 rounded-full p-1.5 flex items-center justify-center bg-gradient-to-br ${isMale ? 'from-navy-900 to-indigo-800' : 'from-rose-500 to-pink-500'} shadow-2xl shadow-navy-900/20`}>
-            <div className="w-full h-full rounded-full bg-white border-4 border-white overflow-hidden relative flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
-                 {isMale ? (
-                    <svg viewBox="0 0 100 100" className="w-full h-full transform translate-y-2">
-                         <path d="M50 20a15 15 0 1 1 0 30 15 15 0 0 1 0-30zm0 35c-20 0-35 15-35 45h70c0-30-15-45-35-45z" fill="#1e293b" opacity="0.8" />
-                         <circle cx="50" cy="35" r="12" fill="#fca5a5" />
-                         <path d="M35 80h30v20H35z" fill="#0f172a" />
-                    </svg>
-                 ) : (
-                    <svg viewBox="0 0 100 100" className="w-full h-full transform translate-y-2">
-                         <path d="M50 25a12 12 0 1 1 0 24 12 12 0 0 1 0-24zm0 28c-18 0-32 15-32 47h64c0-32-14-47-32-47z" fill="#be185d" opacity="0.8" />
-                         <circle cx="50" cy="37" r="10" fill="#fca5a5" />
-                         <path d="M35 85h30v15H35z" fill="#831843" />
-                         <path d="M20 40 q 30 -20 60 0" stroke="#000" strokeWidth="0" fill="none" /> 
-                    </svg>
-                 )}
-                 
-                 {/* Stylized "Coach" Badge overlay if svg fails or looks too simple */}
-                 <div className="absolute bottom-4 bg-white/90 backdrop-blur px-3 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-navy-900">Coach</span>
-                 </div>
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#060d1a] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
             </div>
-        </div>
-    );
-  };
+        )
+    }
 
-  return (
-    <div className="min-h-screen bg-gray-50 font-outfit text-royal pb-24 relative overflow-hidden">
-      {/* Static Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 bg-mesh-dark opacity-60 mix-blend-multiply" />
+    if (!trainer) return null
 
-      <Sidebar locale={locale} role={role} />
-      <div className="flex-1 flex flex-col md:ml-[240px] relative z-10">
-         {/* Header Wrapper */}
-         <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40 support-backdrop-blur:bg-white/60">
-            <Header 
-            locale={locale} 
-            title={'الملف الشخصي'} 
-            showBack 
-            backHref={`/${locale}/more`}
-            />
-        </div>
-        
-        <main className="flex-1 px-4 md:px-8 py-6 md:py-10 max-w-4xl mx-auto w-full">
-            
-            {/* Main Card */}
-            <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700">
-                
-                <div className="text-center mb-10 relative">
-                    <div className="relative inline-block group">
-                        <CoachAvatar gender={trainer.gender || 'male'} />
-                        {/* Only Edit Personal Info from here */}
-                        <button 
-                            onClick={() => openModal('personal')}
-                            className="absolute bottom-2 right-0 w-12 h-12 bg-white text-navy-900 rounded-2xl shadow-xl border border-gray-100 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group-hover:-translate-y-1 hover:text-gold-500 z-10"
-                            aria-label="Edit Personal Info"
-                        >
-                            <Edit2 size={20} className="w-5 h-5" />
-                        </button>
-                    </div>
-                    
-                    <h1 className="text-4xl md:text-5xl font-black text-navy-900 mt-6 mb-2 tracking-tighter drop-shadow-sm px-4">
-                        {displayName}
-                    </h1>
-                    
-                    <div className="flex items-center justify-center gap-2">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/50 backdrop-blur-md rounded-full border border-white/40 shadow-sm">
-                            <Medal size={16} className="text-gold-500" />
-                            <span className="text-sm font-bold text-navy-600 uppercase tracking-wider">
-                                {'مدرب كرة السلة'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+    const displayName = trainer[`name_${locale}`] || trainer.name_en || trainer.name || ''
+    const initials = displayName
+        .trim()
+        .split(' ')
+        .map((w: string) => w[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase()
+    const isFemale = trainer.gender === 'female'
+    const schedule: { day: string; start: string; end: string }[] =
+        trainer.availability_schedule ||
+        (trainer.availability || []).map((d: string) => ({ day: d, start: '', end: '' }))
 
-                {/* Stats / Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    {/* Training Schedule Card */}
-                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group flex flex-col h-full">
-                        <div className="flex justify-between items-start mb-6">
-                             <div>
-                                <h3 className="text-2xl font-black text-navy-900">
-                                    {'جدول التدريب'}
-                                </h3>
-                                <p className="text-xs text-gray-400 font-bold mt-1">
-                                    {trainer.availability?.length || 0} {'أيام نشطة'}
-                                </p>
-                             </div>
-                             <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-500">
-                                <Calendar size={24} />
-                             </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-2.5 mb-6 flex-1 content-start">
-                            {trainer.availability && trainer.availability.length > 0 ? (
-                                trainer.availability.map((dayId: string) => {
-                                    // @ts-ignore
-                                    const label = DAY_LABELS[dayId]?.ar || dayId
-                                    return (
-                                        <div 
-                                            key={dayId} 
-                                            className="px-4 py-2.5 rounded-xl bg-slate-50 text-slate-700 font-bold text-sm border border-slate-100 flex items-center gap-2 hover:bg-gold-50 hover:text-gold-700 hover:border-gold-100 transition-colors"
-                                        >
-                                            <div className="w-1.5 h-1.5 rounded-full bg-gold-400" />
-                                            {label}
-                                        </div>
-                                    )
-                                })
-                            ) : (
-                                <div className="w-full py-6 text-center border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
-                                    <p className="text-gray-400 font-medium italic text-sm">
-                                        {'لم يتم تحديد جدول'}
-                                    </p>
+    return (
+        <div className="min-h-screen bg-[#060d1a] text-white relative" dir="rtl">
+            <Sidebar locale={locale} role={role} />
+
+            <div className="flex-1 flex flex-col md:ml-[240px] relative z-10">
+                <Header locale={locale} title="الملف الشخصي" showBack backHref={`/${locale}/more`} />
+
+                <main className="flex-1 pt-2 pb-28 md:pb-8 px-4 md:px-6">
+                    <div className="max-w-md mx-auto space-y-5">
+                        {/* ─── Profile Hero ─── */}
+                        <section className="flex flex-col items-center pt-6 pb-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Avatar */}
+                            <div
+                                className={cn(
+                                    'w-20 h-20 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl rotate-3',
+                                    isFemale
+                                        ? 'bg-gradient-to-br from-pink-500 to-rose-600'
+                                        : 'bg-gradient-to-br from-indigo-500 to-violet-600'
+                                )}
+                            >
+                                {initials || <User className="w-10 h-10" />}
+                            </div>
+
+                            {/* Name + role */}
+                            <h1 className="text-2xl font-black text-white mt-4 tracking-tight">{displayName}</h1>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <span
+                                    className={cn(
+                                        'text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full ring-1',
+                                        isFemale
+                                            ? 'bg-pink-500/15 text-pink-300 ring-pink-500/25'
+                                            : 'bg-indigo-500/15 text-indigo-300 ring-indigo-500/25'
+                                    )}
+                                >
+                                    {trainer.role === 'headcoach' ? 'رئيس المدربين' : 'مدرب'}
+                                </span>
+                            </div>
+                        </section>
+
+                        {/* ─── Schedule Section ─── */}
+                        <section className="rounded-2xl bg-white/[0.06] ring-1 ring-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+                            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                        <Calendar className="w-4 h-4 text-indigo-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-white leading-tight">جدول التدريب</h2>
+                                        <p className="text-[10px] text-white/35">{schedule.length} أيام نشطة</p>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Dedicated Edit Schedule Button */}
-                        <button 
-                            onClick={() => openModal('schedule')}
-                            className="w-full py-3 rounded-2xl border-2 border-indigo-50 text-indigo-600 font-bold text-sm hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 group-hover:border-indigo-100"
-                        >
-                            <Settings className="w-4 h-4" />
-                            {'تعديل الجدول'}
-                        </button>
-                    </div>
-
-                    {/* Personal Info Card */}
-                    <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 group flex flex-col h-full">
-                        <div className="flex justify-between items-start mb-6">
-                             <div>
-                                <h3 className="text-2xl font-black text-navy-900">
-                                    {'المعلومات الشخصية'}
-                                </h3>
-                                <p className="text-xs text-gray-400 font-bold mt-1">
-                                    {'تفاصيل الاتصال'}
-                                </p>
-                             </div>
-                             <div className={`w-12 h-12 rounded-2xl ${trainer.gender === 'male' ? 'bg-blue-50 text-blue-500' : 'bg-pink-50 text-pink-500'} flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-500`}>
-                                <User size={24} />
-                             </div>
-                        </div>
-
-                        <div className="space-y-4 flex-1">
-                             <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 hover:bg-white border border-transparent hover:border-gray-100 transition-all duration-300 shadow-sm hover:shadow">
-                                <span className="font-bold text-gray-400 text-xs uppercase tracking-wider">{'الجنس'}</span>
-                                <span className="font-black text-navy-900 text-lg flex items-center gap-2">
-                                    {trainer.gender === 'male' 
-                                            ? 'ذكر' 
-                                            : 'أنثى'
-                                    }
-                                    <div className={`w-2 h-2 rounded-full ${trainer.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`} />
-                                </span>
-                             </div>
-
-                              <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 hover:bg-white border border-transparent hover:border-gray-100 transition-all duration-300 shadow-sm hover:shadow">
-                                <span className="font-bold text-gray-400 text-xs uppercase tracking-wider">{'رقم الهاتف'}</span>
-                                <span className="font-black text-navy-900 text-lg dir-ltr font-mono tracking-tight">
-                                    {formatPhoneNumber(trainer.phone || '') || '---'}
-                                </span>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Logout Section - Red & Vibrant */}
-                <div className="mt-12 flex flex-col items-center gap-4 pb-12">
-                    {!showLogoutConfirm ? (
-                        <button 
-                            onClick={() => setShowLogoutConfirm(true)}
-                            className="group relative px-10 py-4 rounded-2xl bg-white border border-red-100 text-red-500 font-black tracking-wide hover:bg-red-50 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-red-500/10"
-                        >
-                             <span className="relative z-10 flex items-center gap-3">
-                                <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-                                {'تسجيل الخروج'}
-                            </span>
-                        </button>
-                    ) : (
-                        <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in-95 duration-300">
-                            <p className="text-sm font-bold text-red-600 mb-1">
-                                {'هل أنت متأكد؟'}
-                            </p>
-                            <div className="flex gap-3">
-                                <button 
-                                    onClick={handleLogout}
-                                    className="px-8 py-3 rounded-xl bg-red-500 text-white font-black text-sm hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95"
+                                <button
+                                    type="button"
+                                    onClick={() => openModal('schedule')}
+                                    className="p-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-white/50 hover:text-indigo-400 transition-all active:scale-95 cursor-pointer"
+                                    aria-label="تعديل الجدول"
                                 >
-                                    {'نعم، تسجيل الخروج'}
-                                </button>
-                                <button 
-                                    onClick={() => setShowLogoutConfirm(false)}
-                                    className="px-8 py-3 rounded-xl bg-gray-100 text-gray-500 font-black text-sm hover:bg-gray-200 transition-all active:scale-95"
-                                >
-                                    {'إلغاء'}
+                                    <Edit2 className="w-4 h-4" />
                                 </button>
                             </div>
-                        </div>
-                    )}
-                </div>
+
+                            <div className="px-4 pb-4 space-y-1.5">
+                                {schedule.length > 0 ? (
+                                    schedule.map((slot) => (
+                                        <div
+                                            key={slot.day}
+                                            className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06]"
+                                        >
+                                            <span className="text-sm font-bold text-white/80">
+                                                {DAYS_AR[slot.day] || slot.day}
+                                            </span>
+                                            {slot.start && slot.end ? (
+                                                <span className="text-xs font-bold text-indigo-400 tabular-nums flex items-center gap-1.5" dir="ltr">
+                                                    <Clock className="w-3 h-3 text-indigo-400/60" />
+                                                    {slot.start} – {slot.end}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-white/25">غير محدد</span>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-6 text-center">
+                                        <p className="text-sm text-white/25">لم يتم تحديد جدول</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => openModal('schedule')}
+                                            className="mt-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                                        >
+                                            أضف أيام التدريب
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* ─── Personal Info Section ─── */}
+                        <section className="rounded-2xl bg-white/[0.06] ring-1 ring-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+                            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                                <div className="flex items-center gap-2.5">
+                                    <div
+                                        className={cn(
+                                            'w-8 h-8 rounded-xl flex items-center justify-center',
+                                            isFemale ? 'bg-pink-500/20' : 'bg-blue-500/20'
+                                        )}
+                                    >
+                                        <User className={cn('w-4 h-4', isFemale ? 'text-pink-400' : 'text-blue-400')} />
+                                    </div>
+                                    <h2 className="text-sm font-bold text-white leading-tight">المعلومات الشخصية</h2>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => openModal('personal')}
+                                    className="p-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-white/50 hover:text-indigo-400 transition-all active:scale-95 cursor-pointer"
+                                    aria-label="تعديل المعلومات"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="px-4 pb-4 space-y-1.5">
+                                {/* Gender */}
+                                <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06]">
+                                    <span className="text-xs font-bold text-white/40 uppercase tracking-wider">الجنس</span>
+                                    <span className="text-sm font-bold text-white/80 flex items-center gap-2">
+                                        {isFemale ? 'أنثى' : 'ذكر'}
+                                        <div className={cn('w-2 h-2 rounded-full', isFemale ? 'bg-pink-400' : 'bg-blue-400')} />
+                                    </span>
+                                </div>
+
+                                {/* Phone */}
+                                <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.05] ring-1 ring-white/[0.06]">
+                                    <span className="text-xs font-bold text-white/40 uppercase tracking-wider">الهاتف</span>
+                                    <span className="text-sm font-bold text-white/80 tabular-nums" dir="ltr">
+                                        {formatPhoneNumber(trainer.phone || '') || '—'}
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* ─── Logout ─── */}
+                        <section className="pt-4 pb-8 animate-in fade-in duration-500 delay-300">
+                            {!showLogoutConfirm ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLogoutConfirm(true)}
+                                    className="w-full py-3 rounded-xl bg-white/[0.05] ring-1 ring-red-500/20 text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/10 transition-all active:scale-[0.98] cursor-pointer"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    تسجيل الخروج
+                                </button>
+                            ) : (
+                                <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                                    <p className="text-center text-sm font-bold text-red-400">هل أنت متأكد؟</p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleLogout}
+                                            disabled={loggingOut}
+                                            className="flex-[2] py-3 rounded-xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-400 disabled:opacity-40 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-red-500/25"
+                                        >
+                                            {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                                            نعم، تسجيل الخروج
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowLogoutConfirm(false)}
+                                            className="flex-1 py-3 rounded-xl bg-white/10 text-white/60 font-bold text-sm hover:bg-white/15 transition-colors active:scale-[0.98] cursor-pointer"
+                                        >
+                                            إلغاء
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+                    </div>
+                </main>
+
+                <BottomNav locale={locale} role={role} />
             </div>
 
-            {/* Edit Modal Integrated */}
+            {/* Edit Modal */}
             <EditTrainerProfileModal
                 isOpen={modalState.open}
-                onClose={() => setModalState({ ...modalState, open: false })}
+                onClose={() => setModalState((s) => ({ ...s, open: false }))}
                 locale={locale}
                 trainer={trainer}
                 mode={modalState.mode}
             />
-        </main>
-        
-        <BottomNav locale={locale} role={role} />
-      </div>
-    </div>
-  )
+        </div>
+    )
 }

@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -54,7 +54,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-sm px-4">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[500] flex flex-col gap-2 w-full max-w-sm px-4">
         <AnimatePresence>
           {toasts.map(t => {
             const Icon = icons[t.type]
@@ -68,9 +68,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               >
                 <Icon className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-bold flex-1">{t.message}</span>
-                <button onClick={() => removeToast(t.id)} className="p-1 hover:bg-white/20 rounded-lg transition-colors shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
               </motion.div>
             )
           })}

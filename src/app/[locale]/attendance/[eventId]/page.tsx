@@ -29,13 +29,14 @@ export default async function AttendancePage({
 }) {
   const { locale, eventId } = await params
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
 
-  // Fetch event + attendance in parallel
+  // Fetch session + event + attendance in parallel
   const [
+    session,
     { data: event, error: eventError },
     { data: attendanceRecords }
   ] = await Promise.all([
+    getSession(),
     (supabase as any).from('events').select('*, halls(*)').eq('id', eventId).single(),
     (supabase as any).from('attendance').select('trainee_id, status').eq('event_id', eventId),
   ])
@@ -58,8 +59,9 @@ export default async function AttendancePage({
   let trainees: Trainee[] = []
   if (targetClassId) {
     const { data } = await (supabase as any)
-      .from('trainees').select('*').eq('class_id', targetClassId)
+      .from('trainees').select('id, name_ar, name_he, name_en, jersey_number, gender, class_id').eq('class_id', targetClassId)
       .order('jersey_number', { ascending: true })
+      .limit(200)
     trainees = data || []
   }
 
@@ -93,7 +95,7 @@ export default async function AttendancePage({
               </div>
 
               <div className="flex items-start justify-between gap-4 mb-2">
-                <h1 className="heading-md">
+                <h1 className="heading-md text-white">
                   {getLocalizedField(eventWithHall, 'title', locale)}
                 </h1>
                 <EventManagementActions event={event} locale={locale} hallId={event.hall_id} />

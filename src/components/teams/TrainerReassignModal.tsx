@@ -75,38 +75,38 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
         <Portal>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-portal"
+                className="fixed inset-0 z-[200] bg-[#0a1628]/0 backdrop-blur-sm animate-in fade-in duration-500"
                 onClick={onClose}
             />
 
-            {/* Sheet — slides up from bottom on mobile */}
+            {/* Sheet */}
             <div
                 className="fixed bottom-0 inset-x-0 z-[201] sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4"
                 dir={isRTL ? 'rtl' : 'ltr'}
             >
-                <div className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl flex flex-col max-h-[88dvh]">
+                <div className="bg-[#0B132B] w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-white/10 overflow-hidden flex flex-col max-h-[88dvh] animate-in slide-in-from-bottom-8 sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border-t-indigo-500/70">
 
                     {/* Drag handle (mobile) */}
-                    <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                        <div className="w-10 h-1 rounded-full bg-slate-200" />
+                    <div className="flex justify-center pt-2.5 pb-1 sm:hidden">
+                        <div className="w-8 h-[3px] rounded-full bg-white/20" />
                     </div>
 
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 pt-4 pb-4 border-b border-slate-100">
+                    <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-white/8">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-2xl bg-indigo-100 flex items-center justify-center">
-                                <UserRound className="w-5 h-5 text-indigo-600" />
+                            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                <UserRound className="w-5 h-5 text-indigo-400" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-slate-900 leading-tight">{'تعيين مدرب'}</h2>
-                                <p className="text-xs text-slate-400">{'اختر مدرباً لهذا الفريق'}</p>
+                                <h2 className="text-base font-bold text-white leading-tight">{'تعيين مدرب'}</h2>
+                                <p className="text-xs text-white/40">{'اختر مدرباً لهذا الفريق'}</p>
                             </div>
                         </div>
                         <button
                             type="button"
                             onClick={onClose}
                             aria-label="إغلاق"
-                            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
+                            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/50 hover:text-white transition-all"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -115,10 +115,10 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                     {/* Search */}
                     <div className="px-4 pt-4 pb-2">
                         <div className="relative">
-                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
                             <input
                                 type="text"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-10 pl-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:bg-white transition-all"
+                                className="w-full bg-white/[0.07] border border-white/10 rounded-xl pr-10 pl-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-all"
                                 placeholder={'ابحث عن مدرب...'}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
@@ -130,12 +130,12 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                     {/* Trainer list */}
                     <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
                         {loading ? (
-                            <div className="py-16 flex flex-col items-center gap-3 text-slate-400">
+                            <div className="py-16 flex flex-col items-center gap-3 text-white/30">
                                 <Loader2 className="w-7 h-7 animate-spin" />
                                 <span className="text-xs font-medium">{'جاري التحميل...'}</span>
                             </div>
                         ) : filteredTrainers.length === 0 ? (
-                            <div className="py-12 text-center text-slate-400 text-sm">
+                            <div className="py-12 text-center text-white/30 text-sm">
                                 {'لا توجد نتائج'}
                             </div>
                         ) : (
@@ -152,8 +152,8 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                                         onClick={() => setSelectedId(trainer.id)}
                                         className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all text-right ${
                                             isSelected
-                                                ? 'bg-indigo-50 ring-2 ring-indigo-500 ring-offset-0'
-                                                : 'hover:bg-slate-50'
+                                                ? 'bg-indigo-500/15 ring-1 ring-indigo-500/40'
+                                                : 'hover:bg-white/5'
                                         }`}
                                     >
                                         {/* Avatar */}
@@ -163,21 +163,21 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <div className={`font-bold text-sm truncate ${isSelected ? 'text-indigo-700' : 'text-slate-900'}`}>
+                                            <div className={`font-bold text-sm truncate ${isSelected ? 'text-indigo-300' : 'text-white'}`}>
                                                 {getLocalizedField(trainer, 'name', locale)}
                                             </div>
                                             {isCurrent && (
-                                                <span className="inline-block text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-0.5">
+                                                <span className="inline-block text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full mt-0.5">
                                                     {'المدرب الحالي'}
                                                 </span>
                                             )}
                                         </div>
 
-                                        {/* Check */}
+                                        {/* Radio circle */}
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
                                             isSelected
-                                                ? 'bg-indigo-600 border-indigo-600'
-                                                : 'border-slate-300'
+                                                ? 'bg-indigo-500 border-indigo-500'
+                                                : 'border-white/20'
                                         }`}>
                                             {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                                         </div>
@@ -188,11 +188,11 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 pt-3 pb-6 sm:pb-4 border-t border-slate-100 flex gap-3">
+                    <div className="px-4 pt-3 pb-6 sm:pb-4 border-t border-white/8 flex gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition-colors"
+                            className="flex-1 py-3 rounded-xl bg-white/10 text-white/60 font-bold text-sm hover:bg-white/15 transition-colors"
                         >
                             {'إلغاء'}
                         </button>
@@ -200,7 +200,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
                             type="button"
                             disabled={!canSave}
                             onClick={handleSave}
-                            className="flex-[2] py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-200"
+                            className="flex-[2] py-3 rounded-xl bg-indigo-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/25"
                         >
                             {saving
                                 ? <Loader2 className="w-4 h-4 animate-spin" />

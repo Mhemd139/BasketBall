@@ -60,9 +60,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Set locale cookie if present 
   const response = NextResponse.next()
-  if (locale) {
+  const existingLocale = request.cookies.get('NEXT_LOCALE')?.value
+  if (locale && locale !== existingLocale) {
     response.cookies.set('NEXT_LOCALE', locale, {
         maxAge: 60 * 60 * 24 * 365,
         path: '/',

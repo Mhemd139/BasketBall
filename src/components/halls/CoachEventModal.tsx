@@ -116,6 +116,7 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                                     type="time"
                                     value={startTime}
                                     onChange={e => setStartTime(e.target.value)}
+                                    aria-label="Start time"
                                     className="w-full pl-9 p-2 border rounded-md text-sm"
                                 />
                             </div>
@@ -130,6 +131,7 @@ export function CoachEventModal({ isOpen, onClose, onSave, initialDate, initialE
                                     type="time"
                                     value={endTime}
                                     onChange={e => setEndTime(e.target.value)}
+                                    aria-label="End time"
                                     className="w-full pl-9 p-2 border rounded-md text-sm"
                                 />
                             </div>

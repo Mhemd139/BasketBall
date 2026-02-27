@@ -57,7 +57,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
                     <button
                         type="button"
                         onClick={onClose}
-                        aria-label="إغلاق"
+                        aria-label={locale === 'he' ? 'סגירה' : 'إغلاق'}
                         className="absolute top-4 left-4 text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all z-10"
                     >
                         <X className="w-5 h-5" />

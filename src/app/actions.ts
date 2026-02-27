@@ -85,6 +85,11 @@ export async function upsertEvent(eventData: any) {
 }
 
 export async function sendOTP(phone: string) {
+  // E2E mock mode — skip real SMS providers
+  if (process.env.E2E_MOCK_OTP === 'true') {
+    return { success: true }
+  }
+
   // 1. Try Twilio
   const twilio = getTwilioClient()
   const twilioService = process.env.TWILIO_VERIFY_SERVICE_SID
@@ -167,7 +172,11 @@ export async function sendOTP(phone: string) {
 export async function verifyOTP(phone: string, otp: string, context?: string) {
   const supabase = await createServerSupabaseClient()
   const cleanPhone = phone.trim()
-  
+
+  // E2E mock mode — skip real SMS verification, accept 1111/1234
+  if (process.env.E2E_MOCK_OTP === 'true') {
+    if (otp !== '1111' && otp !== '1234') return { success: false, error: 'Invalid OTP' }
+  } else {
   // 1. Twilio Check
   const twilio = getTwilioClient()
   if (twilio && process.env.TWILIO_VERIFY_SERVICE_SID) {
@@ -201,6 +210,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   else {
     if (otp !== '1111' && otp !== '1234') return { success: false, error: 'Invalid OTP' }
   }
+  } // end E2E_MOCK_OTP else
 
   // ... rest of logic (Create User, Session) ...
   // ...
@@ -277,8 +287,9 @@ export async function getTrainers() {
     const supabase = await createServerSupabaseClient()
     const { data: trainers, error } = await (supabase as any)
         .from('trainers')
-        .select('*')
+        .select('id, name_ar, name_he, name_en, phone, gender, role, created_at')
         .order('created_at', { ascending: false })
+        .limit(200)
 
     if (error) return { success: false, error: error.message }
     return { success: true, trainers }
@@ -503,6 +514,7 @@ export async function saveAttendance(
     return { success: false, error: error.message }
   }
 
+  revalidatePath('/[locale]/attendance', 'page')
   return { success: true }
 }
 
@@ -519,6 +531,8 @@ export async function bulkSaveAttendance(
     return { success: false, error: error.message }
   }
 
+  revalidatePath('/[locale]/attendance', 'page')
+  revalidatePath('/[locale]/teams', 'layout')
   return { success: true }
 }
 
@@ -566,62 +580,98 @@ export async function addTrainee({
 
 export async function getTraineeAttendanceStats(traineeId: string) {
   const supabase = await createServerSupabaseClient()
-  
+
+  const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
   const { data, error } = await (supabase as any)
     .from('attendance')
     .select('status')
     .eq('trainee_id', traineeId)
-  
+    .gte('created_at', sixMonthsAgo)
+
   if (error) return { success: false, error: error.message }
-  
+
   const total = data.length
   const present = data.filter((r: any) => r.status === 'present').length
   const late = data.filter((r: any) => r.status === 'late').length
   const absent = data.filter((r: any) => r.status === 'absent').length
-  
+
   return { success: true, stats: { total, present, late, absent } }
+}
+
+export async function getClassAttendanceStats(classId: string) {
+  const supabase = await createServerSupabaseClient()
+
+  const { data: trainees } = await (supabase as any)
+    .from('trainees')
+    .select('id')
+    .eq('class_id', classId)
+
+  if (!trainees || trainees.length === 0) return {}
+
+  const traineeIds = trainees.map((t: any) => t.id)
+
+  const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  const { data, error } = await (supabase as any)
+    .from('attendance')
+    .select('trainee_id, status')
+    .in('trainee_id', traineeIds)
+    .gte('created_at', sixMonthsAgo)
+
+  if (error || !data) return {}
+
+  const statsMap: Record<string, { total: number; present: number; late: number; absent: number }> = {}
+  for (const row of data) {
+    if (!statsMap[row.trainee_id]) statsMap[row.trainee_id] = { total: 0, present: 0, late: 0, absent: 0 }
+    statsMap[row.trainee_id].total++
+    if (row.status === 'present') statsMap[row.trainee_id].present++
+    else if (row.status === 'late') statsMap[row.trainee_id].late++
+    else if (row.status === 'absent') statsMap[row.trainee_id].absent++
+  }
+  return statsMap
 }
 
 // --- Attendance Actions ---
 
 export async function getTeamAttendanceHistory(classId: string) {
     const supabase = await createServerSupabaseClient()
-    const session = await getSession()
-    
-    // 1. Get Class Details
-    const { data: team } = await (supabase as any)
-        .from('classes')
-        .select('trainer_id')
-        .eq('id', classId)
-        .single()
 
-    if (!team) return { success: false, error: 'Team not found' }
-
-    // 2. Get Date Range (Last 30 Days)
+    // 1. Get class trainer_id + date range
     const endDate = getNowInIsrael()
     const startDate = getNowInIsrael()
     startDate.setDate(startDate.getDate() - 30)
 
-    // 3. Get Trainees for this Class FIRST
-    const { data: trainees } = await (supabase as any)
-        .from('trainees')
-        .select('id, name_ar, name_en')
-        .eq('class_id', classId)
-        .order('name_ar')
+    // Get team and trainees in parallel (both only need classId)
+    const [{ data: team }, { data: trainees }] = await Promise.all([
+        (supabase as any)
+            .from('classes')
+            .select('trainer_id')
+            .eq('id', classId)
+            .single(),
+        (supabase as any)
+            .from('trainees')
+            .select('id, name_ar, name_en')
+            .eq('class_id', classId)
+            .order('name_ar'),
+    ])
 
-    if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {} } }
+    if (!team) return { success: false, error: 'Team not found' }
 
-    const traineeIds = trainees.map((t: any) => t.id)
-
-    // 4. Get Events for Trainer in range (Candidates)
+    // 2. Get events (needs trainer_id from above)
     const { data: candidateEvents } = await (supabase as any)
         .from('events')
         .select('id, event_date, type, title_ar, title_en, title_he, start_time')
-        .eq('trainer_id', team.trainer_id) 
+        .eq('trainer_id', team.trainer_id)
         .gte('event_date', startDate.toISOString())
         .lte('event_date', endDate.toISOString())
         .order('event_date', { ascending: false })
         .order('start_time', { ascending: false })
+        .limit(60)
+
+    if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {} } }
+
+    const traineeIds = trainees.map((t: any) => t.id)
 
     if (!candidateEvents || candidateEvents.length === 0) return { success: true, data: { trainees, events: [], attendanceMap: {} } }
     
@@ -630,7 +680,7 @@ export async function getTeamAttendanceHistory(classId: string) {
     // 5. Get Attendance for these events AND these trainees
     const { data: attendance } = await (supabase as any)
         .from('attendance')
-        .select('*')
+        .select('event_id, trainee_id, status')
         .in('event_id', candidateEventIds)
         .in('trainee_id', traineeIds)
 
@@ -713,28 +763,20 @@ export async function updateAttendance(eventId: string, traineeId: string, statu
 export async function getEventRefData() {
     const supabase = await createServerSupabaseClient()
     
-    // Fetch Trainers
-    const { data: trainers, error: trainersError } = await (supabase as any)
-      .from('trainers')
-      .select('id, name_en, name_ar, name_he, availability')
-      .order('name_ar')
+    const [
+      { data: trainers, error: trainersError },
+      { data: classes, error: classesError },
+      { data: halls, error: hallsError }
+    ] = await Promise.all([
+      (supabase as any).from('trainers').select('id, name_en, name_ar, name_he, availability').order('name_ar').limit(100),
+      (supabase as any).from('classes').select('id, name_en, name_ar, name_he, categories(name_he, name_ar, name_en)').order('name_ar').limit(100),
+      (supabase as any).from('halls').select('id, name_en, name_ar, name_he').order('name_ar').limit(50),
+    ])
 
-    // Fetch Classes (Teams) with category
-    const { data: classes, error: classesError } = await (supabase as any)
-      .from('classes')
-      .select('id, name_en, name_ar, name_he, categories(name_he, name_ar, name_en)')
-      .order('name_ar')
-
-    // Fetch Halls
-    const { data: halls, error: hallsError } = await (supabase as any)
-      .from('halls')
-      .select('id, name_en, name_ar, name_he')
-      .order('name_ar')
-  
     if (trainersError || classesError || hallsError) {
       return { success: false, error: 'Failed to fetch reference data' }
     }
-  
+
     return { success: true, trainers, classes, halls }
 }
 
@@ -879,7 +921,7 @@ export async function searchTrainees(query: string) {
     
     const { data: trainees, error } = await (supabase as any)
         .from('trainees')
-        .select('*, classes(name_en, name_ar, name_he)')
+        .select('id, name_ar, name_he, name_en, phone, jersey_number, gender, class_id, classes(name_en, name_ar, name_he)')
         .or(`name_en.ilike.%${query}%,name_ar.ilike.%${query}%,name_he.ilike.%${query}%,phone.ilike.%${query}%`)
         .limit(10)
 
@@ -927,10 +969,11 @@ export async function getTrainerProfile(trainerId: string) {
     const supabase = await createServerSupabaseClient()
 
     const [{ data: trainer, error: trainerError }, { data: teams, error: teamsError }] = await Promise.all([
-        (supabase as any).from('trainers').select('*').eq('id', trainerId).single(),
+        (supabase as any).from('trainers').select('id, name_ar, name_he, name_en, phone, gender, role, availability, availability_schedule').eq('id', trainerId).single(),
         (supabase as any).from('classes')
-            .select('*, categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))')
-            .eq('trainer_id', trainerId),
+            .select('id, name_ar, name_he, name_en, categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, halls(id, name_he, name_ar, name_en))')
+            .eq('trainer_id', trainerId)
+            .limit(50),
     ])
 
     if (trainerError) return { success: false, error: trainerError.message }
@@ -1164,8 +1207,8 @@ export async function updateTrainerDetails(id: string, data: any) {
         return { success: false, error: error.message }
     }
 
-    revalidatePath('/', 'layout')
     revalidatePath('/[locale]/trainers', 'page')
+    revalidatePath('/[locale]/trainers/[id]', 'page')
     return { success: true }
 }
 
@@ -1194,7 +1237,7 @@ export async function getTrainerProfileServer() {
     const supabase = await createServerSupabaseClient()
     const { data: trainer } = await (supabase as any)
         .from('trainers')
-        .select('*')
+        .select('id, name_ar, name_he, name_en, phone, gender, role, availability, availability_schedule')
         .eq('id', session.id)
         .single()
         
@@ -1236,21 +1279,32 @@ export async function createTrainersForImport(
   const nameToId: Record<string, string> = {}
   const errors: string[] = []
 
-  for (const trainer of trainers) {
-    const cleanPhone = trainer.phone.replace(/\D/g, '')
-    const { data, error } = await (supabase as any).rpc('create_trainer', {
-      p_phone: cleanPhone.startsWith('0') ? cleanPhone : `0${cleanPhone}`,
-      p_name: trainer.name,
-    })
-
-    if (error) {
-      errors.push(`${trainer.name}: ${error.message}`)
-    } else {
-      const created = Array.isArray(data) ? data[0] : data
-      if (created?.id) {
-        nameToId[trainer.name] = created.id
+  const BATCH = 10
+  for (let i = 0; i < trainers.length; i += BATCH) {
+    const batch = trainers.slice(i, i + BATCH)
+    const results = await Promise.allSettled(
+      batch.map(trainer => {
+        const cleanPhone = trainer.phone.replace(/\D/g, '')
+        return (supabase as any).rpc('create_trainer', {
+          p_phone: cleanPhone.startsWith('0') ? cleanPhone : `0${cleanPhone}`,
+          p_name: trainer.name,
+        })
+      })
+    )
+    results.forEach((result, idx) => {
+      const trainer = batch[idx]
+      if (result.status === 'fulfilled') {
+        const { data, error } = result.value
+        if (error) {
+          errors.push(`${trainer.name}: ${error.message}`)
+        } else {
+          const created = Array.isArray(data) ? data[0] : data
+          if (created?.id) nameToId[trainer.name] = created.id
+        }
+      } else {
+        errors.push(`${trainer.name}: ${result.reason?.message || 'Unknown error'}`)
       }
-    }
+    })
   }
 
   return { success: errors.length === 0, nameToId, errors }
@@ -1268,72 +1322,53 @@ export async function bulkImportRecords(
   const supabase = await createServerSupabaseClient()
   const results = { inserted: 0, skipped: 0, errors: [] as { row: number; error: string }[] }
 
-  for (let i = 0; i < records.length; i++) {
-    try {
-      const record = records[i]
-      let rpcError: any = null
-
-      switch (table) {
-        case 'trainees': {
-          const { error } = await (supabase as any).rpc('insert_trainee', {
-            p_data: {
-              name_ar: record.name_ar || '',
-              name_he: record.name_he || '',
-              name_en: record.name_en || '',
-              phone: record.phone || null,
-              jersey_number: record.jersey_number || null,
-              class_id: record.class_id || null,
-              is_paid: record.is_paid || false,
-              gender: record.gender || 'male',
-              amount_paid: record.amount_paid || 0,
-            },
-          })
-          rpcError = error
-          break
-        }
-        case 'trainers': {
-          const { error } = await (supabase as any).rpc('create_trainer', {
-            p_phone: String(record.phone || '0500000000'),
-            p_name: String(record.name_ar || ''),
-          })
-          rpcError = error
-          break
-        }
-        case 'classes': {
-          const { error } = await (supabase as any).rpc('insert_class', {
-            p_data: {
-              name_ar: record.name_ar || '',
-              name_he: record.name_he || '',
-              name_en: record.name_en || '',
-              trainer_id: record.trainer_id || null,
-              hall_id: record.hall_id || null,
-              schedule_info: record.schedule_info || null,
-            },
-          })
-          rpcError = error
-          break
-        }
-        case 'halls': {
-          const { error } = await (supabase as any).rpc('insert_hall', {
-            p_data: {
-              name_ar: record.name_ar || '',
-              name_he: record.name_he || '',
-              name_en: record.name_en || '',
-            },
-          })
-          rpcError = error
-          break
-        }
-      }
-
-      if (rpcError) {
-        results.errors.push({ row: i, error: rpcError.message })
-      } else {
-        results.inserted++
-      }
-    } catch (e: any) {
-      results.errors.push({ row: i, error: e.message })
+  const makeRpcCall = (record: Record<string, unknown>) => {
+    switch (table) {
+      case 'trainees':
+        return (supabase as any).rpc('insert_trainee', {
+          p_data: {
+            name_ar: record.name_ar || '', name_he: record.name_he || '', name_en: record.name_en || '',
+            phone: record.phone || null, jersey_number: record.jersey_number || null,
+            class_id: record.class_id || null, is_paid: record.is_paid || false,
+            gender: record.gender || 'male', amount_paid: record.amount_paid || 0,
+          },
+        })
+      case 'trainers':
+        return (supabase as any).rpc('create_trainer', {
+          p_phone: String(record.phone || '0500000000'), p_name: String(record.name_ar || ''),
+        })
+      case 'classes':
+        return (supabase as any).rpc('insert_class', {
+          p_data: {
+            name_ar: record.name_ar || '', name_he: record.name_he || '', name_en: record.name_en || '',
+            trainer_id: record.trainer_id || null, hall_id: record.hall_id || null,
+            schedule_info: record.schedule_info || null,
+          },
+        })
+      case 'halls':
+        return (supabase as any).rpc('insert_hall', {
+          p_data: { name_ar: record.name_ar || '', name_he: record.name_he || '', name_en: record.name_en || '' },
+        })
     }
+  }
+
+  const BATCH = 10
+  for (let i = 0; i < records.length; i += BATCH) {
+    const batch = records.slice(i, i + BATCH)
+    const batchResults = await Promise.allSettled(batch.map(makeRpcCall))
+    batchResults.forEach((result, idx) => {
+      const rowIndex = i + idx
+      if (result.status === 'fulfilled') {
+        const { error: rpcError } = result.value
+        if (rpcError) {
+          results.errors.push({ row: rowIndex, error: rpcError.message })
+        } else {
+          results.inserted++
+        }
+      } else {
+        results.errors.push({ row: rowIndex, error: result.reason?.message || 'Unknown error' })
+      }
+    })
   }
 
   // Revalidate relevant paths

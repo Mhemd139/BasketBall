@@ -20,7 +20,7 @@ export function TrainerReassignButton({ classId, currentTrainerId, locale, isAdm
         <>
             <button 
                 onClick={() => setShowModal(true)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
+                className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-indigo-400 transition-colors"
                 title={'تغيير المدرب'}
             >
                 <Edit2 className="w-4 h-4" />

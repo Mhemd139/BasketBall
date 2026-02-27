@@ -20,14 +20,15 @@ export default async function TrainersPage({
 }) {
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
-  const session = await getSession()
 
-  // Fetch trainers
-  const { data: trainers } = await (supabase as any)
-    .from('trainers')
-    .select('*')
-    .order('name_ar')
-    .limit(50)
+  const [session, { data: trainers }] = await Promise.all([
+    getSession(),
+    (supabase as any)
+      .from('trainers')
+      .select('id, name_ar, name_he, name_en, phone, gender, role')
+      .order('name_ar')
+      .limit(50),
+  ])
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>

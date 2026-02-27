@@ -2,6 +2,13 @@
 
 > These rules apply to ALL code generated in this project. Follow them strictly.
 
+## Approach (MANDATORY)
+
+- **Always be straightforward.** No clever abstractions, no over-engineering.
+- **Every problem is simple — solve it simply.** If a fix is one line, write one line.
+- **Be clear.** State what the problem is and what the fix is, directly.
+- **Simplify always.** The simplest solution that works is the right solution.
+
 ## NEVER Build
 
 - **NEVER** run `next build` or any build command to check for errors. The user will test manually.

@@ -40,6 +40,7 @@ export default async function TeamsPage({
               classes={classes || []}
               locale={locale}
               canCreate={canCreate}
+              currentTrainerId={session?.id ?? null}
             />
           </div>
         </main>

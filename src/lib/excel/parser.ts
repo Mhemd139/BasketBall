@@ -1,15 +1,16 @@
-import * as XLSX from 'xlsx'
 import type { ParsedWorkbook, ParsedSheet } from './types'
 
 /**
  * Parse an Excel/CSV file client-side using SheetJS.
  * Returns all sheets with headers and rows as keyed objects.
+ * XLSX is dynamically imported to avoid bundling ~200KB on initial load.
  */
 export function parseExcelFile(file: File): Promise<ParsedWorkbook> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import('xlsx')
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const workbook = XLSX.read(data, {
           type: 'array',

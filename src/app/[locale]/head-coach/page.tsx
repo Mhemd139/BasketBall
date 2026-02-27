@@ -5,17 +5,13 @@ import { ShieldCheck, ArrowRight, FileSpreadsheet, Download } from 'lucide-react
 import Link from 'next/link'
 import { ExportButton } from '@/components/import/ExportButton'
 
-export default async function HeadCoachPage({ params }: { params: { locale: string } }) {
-  const session = await getSession()
-  const { locale } = await params
+export default async function HeadCoachPage({ params }: { params: Promise<{ locale: string }> }) {
+  const [session, { locale }] = await Promise.all([getSession(), params])
 
-  // 1. Strict Role Check
-  // Note: We also check this in 'getTrainers' but doing it here prevents rendering empty UI
   if (!session || session.role !== 'headcoach') {
-      redirect(`/${locale}/login`) // Or 404/403
+      redirect(`/${locale}/login`)
   }
 
-  // 2. Fetch Data
   const { trainers, success, error } = await getTrainers()
 
   if (!success) {

@@ -15,7 +15,7 @@ export default async function ClassPaymentsPage({
   const [dict, { data: classData }, { data: trainees }] = await Promise.all([
     getDictionary(locale),
     supabase.from('classes').select('id, name_en, name_ar, name_he, trainers(name_en, name_ar, name_he)').eq('id', classId).single(),
-    supabase.from('trainees').select('*').eq('class_id', classId).order('name_ar').limit(200),
+    supabase.from('trainees').select('id, name_ar, name_he, name_en, jersey_number, phone, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en, gender').eq('class_id', classId).order('name_ar').limit(200),
   ])
 
   return (

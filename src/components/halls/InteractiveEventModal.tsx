@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getEventRefData } from '@/app/actions';
@@ -9,6 +9,7 @@ import { TrainingSVG } from '../ui/svg/TrainingSVG';
 import { ScrollTimePicker } from '../ui/ScrollTimePicker';
 import { format } from 'date-fns';
 import { Loader2, ArrowLeft, ArrowRight, CheckCircle2, Trash2, Clock, Calendar, X, Check, Search } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 interface InteractiveEventModalProps {
     isOpen: boolean;
@@ -56,6 +57,8 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         return '';
     });
 
+    const { toast } = useToast();
+
     // Common
     const [startTime, setStartTime] = useState(initialEvent?.start_time || '16:00');
     const [endTime, setEndTime] = useState(initialEvent?.end_time || '18:00');
@@ -71,15 +74,33 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         return () => { document.body.style.overflow = 'auto'; };
     }, [isOpen, initialStep]);
 
+    const refDataCache = useRef<{ data: { trainers: any[]; classes: any[] }; ts: number } | null>(null);
+
     const loadRefData = async () => {
+        if (refDataCache.current && Date.now() - refDataCache.current.ts < 5 * 60 * 1000) {
+            setRefData(refDataCache.current.data);
+            return;
+        }
         const res = await getEventRefData();
-        if (res.success) setRefData({ trainers: res.trainers, classes: res.classes });
+        if (res.success) {
+            const data = { trainers: res.trainers, classes: res.classes };
+            refDataCache.current = { data, ts: Date.now() };
+            setRefData(data);
+        }
     };
 
     const handleNext = () => {
         if (step === 'type') setStep('details');
         else if (step === 'details') setStep('time');
-        else if (step === 'time') setStep('review');
+        else if (step === 'time') {
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+            if (eh * 60 + em <= sh * 60 + sm) {
+                toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
+                return;
+            }
+            setStep('review');
+        }
     };
 
     const handleBack = () => {
@@ -120,6 +141,15 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                 homeBtn: homeTeam,
                 awayName: awayTeamName
             };
+
+            // Validate end time is after start time
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+            if (eh * 60 + em <= sh * 60 + sm) {
+                toast('وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
+                setLoading(false);
+                return;
+            }
 
             await onSave({
                 type,

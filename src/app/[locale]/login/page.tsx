@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { sendOTP, verifyOTP, updateProfile } from '@/app/actions'
+import { normalizePhone } from '@/lib/utils'
 import { Phone, ArrowRight, AlertCircle, Loader2, KeyRound, ArrowLeft, User } from 'lucide-react'
 
 export default function LoginPage() {
@@ -20,25 +21,6 @@ export default function LoginPage() {
   const router = useRouter()
   const params = useParams()
   const locale = params.locale as string
-
-  // Helper to convert Arabic/Persian digits to English and ensure International format (IL)
-  const normalizePhone = (str: string) => {
-    let cleaned = str
-      .replace(/[٠١٢٣٤٥٦٧٨٩]/g, d => ((d.charCodeAt(0) - 1632) as unknown as string))
-      .replace(/[۰۱۲۳۴۵۶۷۸۹]/g, d => ((d.charCodeAt(0) - 1776) as unknown as string))
-      .replace(/[^\d+]/g, '')
-    
-    // Israel specific fix: 05X -> 9725X
-    if (cleaned.startsWith('05')) {
-        cleaned = '972' + cleaned.substring(1)
-    }
-    // If just 5X (user forgot 0)
-    else if (cleaned.startsWith('5') && cleaned.length === 9) {
-        cleaned = '972' + cleaned
-    }
-    
-    return cleaned
-  }
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
