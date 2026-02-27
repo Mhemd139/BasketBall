@@ -6,12 +6,9 @@ import { Card } from '@/components/ui/Card'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSession } from '@/app/actions'
 import { getLocalizedField } from '@/lib/utils'
-import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
 import { Building2 } from 'lucide-react'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
-
-type Hall = Database['public']['Tables']['halls']['Row']
 
 export default async function HallsPage({
   params,
@@ -43,7 +40,7 @@ export default async function HallsPage({
             <section>
               {halls && halls.length > 0 ? (
                 <div className="space-y-3">
-                  {halls.map((hall: Hall, index: number) => (
+                  {halls.map((hall, index) => (
                     <Link key={hall.id} href={`/${locale}/halls/${hall.id}`} className="block">
                       <Card 
                         interactive 
