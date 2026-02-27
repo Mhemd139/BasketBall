@@ -84,7 +84,7 @@ export default async function LocaleLayout({
   const direction = directions[locale]
   return (
     <html lang={locale} dir={direction} className={`${inter.variable} ${outfit.variable} ${syncopate.variable} ${spaceMono.variable} ${notoSansArabic.variable} scroll-smooth`}>
-      <body className={`min-h-screen bg-background antialiased selection:bg-gold-400 selection:text-navy-900 ${direction === 'rtl' ? 'font-arabic' : 'font-sans'}`}>
+      <body className={`min-h-screen bg-[#0B132B] antialiased selection:bg-gold-400 selection:text-navy-900 ${direction === 'rtl' ? 'font-arabic' : 'font-sans'}`}>
         <ToastProvider>
           <ConfirmProvider>
             {children}

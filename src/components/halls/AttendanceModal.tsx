@@ -8,7 +8,6 @@ import { getEventAttendance, updateAttendance, quickRegisterAndAssign, assignTra
 import { JerseyNumber } from '@/components/ui/JerseyNumber';
 import { useToast } from '@/components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BouncingBasketballLoader } from '@/components/ui/BouncingBasketballLoader';
 
 interface AttendanceModalProps {
     isOpen: boolean;
@@ -302,8 +301,8 @@ export function AttendanceModal({ isOpen, onClose, event, locale }: AttendanceMo
 
                                 <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
                                     {loading ? (
-                                        <div className="flex flex-col items-center justify-center h-40 gap-3">
-                                            <BouncingBasketballLoader />
+                                        <div className="flex items-center justify-center h-40">
+                                            <Loader2 className="w-7 h-7 animate-spin text-indigo-500" />
                                         </div>
                                     ) : (
                                         <>
