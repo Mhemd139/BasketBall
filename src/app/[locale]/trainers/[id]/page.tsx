@@ -84,7 +84,7 @@ export default async function TrainerProfilePage({
                                             {'ساعات التدريب المتاحة'}
                                         </h3>
                                         <div className="space-y-1.5">
-                                            {trainer.availability_schedule!.map((slot) => (
+                                            {trainer.availability_schedule!.map((slot: { day: string; start: string; end: string }) => (
                                                 <div key={slot.day} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100">
                                                     <span className="font-bold text-sm text-indigo-700">{daysMap[slot.day] || slot.day}</span>
                                                     <span className="text-xs font-bold text-indigo-500 tabular-nums" dir="ltr">{slot.start} – {slot.end}</span>
