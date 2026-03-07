@@ -74,7 +74,7 @@ export function CreatePlayerModal({ isOpen, onClose, locale }: CreatePlayerModal
       const res = await addTrainee({
         name: formData.name,
         phone: formData.phone,
-        jerseyNumber: formData.jerseyNumber ? parseInt(formData.jerseyNumber) : null,
+        jerseyNumber: formData.jerseyNumber ? (Number(formData.jerseyNumber) || null) : null,
         gender: formData.gender,
         classId: formData.classId
       })

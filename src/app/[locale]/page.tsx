@@ -64,10 +64,10 @@ export default async function HomePage({
     schedulesRes
   ] = await Promise.all([
     getSession(),
-    supabase.from('events').select('*, halls(*)').eq('event_date', today).order('start_time', { ascending: true }),
-    supabase.from('halls').select('*', { count: 'exact', head: true }),
-    supabase.from('classes').select('*', { count: 'exact', head: true }),
-    supabase.from('trainees').select('*', { count: 'exact', head: true }),
+    supabase.from('events').select('id, schedule_id, notes_en, start_time, end_time, type, title_ar, title_en, title_he, halls(name_ar, name_en, name_he)').eq('event_date', today).order('start_time', { ascending: true }),
+    supabase.from('halls').select('id', { count: 'exact', head: true }),
+    supabase.from('classes').select('id', { count: 'exact', head: true }),
+    supabase.from('trainees').select('id', { count: 'exact', head: true }),
     fetchTodaySchedules(),
   ])
   const canManage = !!session

@@ -1,6 +1,5 @@
-// We need a consistent secret.
-// In Edge runtime, process.env is accessed differently sometimes, but Next.js handles it.
-const secretKey = process.env.SESSION_SECRET || 'default-secret-key-change-me-in-production'
+const secretKey = process.env.SESSION_SECRET
+if (!secretKey) throw new Error('SESSION_SECRET environment variable is required')
 
 let _cachedKey: CryptoKey | null = null
 async function getCryptoKey() {

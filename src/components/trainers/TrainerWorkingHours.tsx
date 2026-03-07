@@ -25,7 +25,7 @@ export function TrainerWorkingHours({ trainerId }: { trainerId: string }) {
     const [result, setResult] = useState<{ hours: number; minutes: number; totalEvents: number } | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
     const fetchHours = useCallback(async (start: string, end: string) => {
         if (!start || !end) return
@@ -33,7 +33,7 @@ export function TrainerWorkingHours({ trainerId }: { trainerId: string }) {
         setError('')
         const res = await getTrainerWorkingHours(trainerId, start, end)
         if (res.success) {
-            setResult({ hours: res.hours!, minutes: res.minutes!, totalEvents: res.totalEvents! })
+            setResult({ hours: res.hours ?? 0, minutes: res.minutes ?? 0, totalEvents: res.totalEvents ?? 0 })
         } else {
             setError(res.error || 'خطأ غير متوقع')
             setResult(null)
