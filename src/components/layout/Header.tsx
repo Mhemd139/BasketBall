@@ -33,7 +33,8 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const router = useRouter();
 
   const nameField = `name_${locale}` as 'name_ar' | 'name_he' | 'name_en';
@@ -54,24 +55,24 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
       return;
     }
 
-    // Debounce: clear previous timer, set new one
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
         const supabase = createClient();
+        const escaped = term.replace(/[%_\\]/g, c => `\\${c}`);
 
         const [traineeRes, trainerRes] = await Promise.all([
           (supabase as any)
             .from('trainees')
             .select('id, name_en, name_ar, name_he, class_id, phone')
-            .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
+            .or(`name_en.ilike.%${escaped}%,name_ar.ilike.%${escaped}%,name_he.ilike.%${escaped}%,phone.ilike.%${escaped}%`)
             .limit(5),
           (supabase as any)
             .from('trainers')
             .select('id, name_en, name_ar, name_he, phone')
-            .or(`name_en.ilike.%${term}%,name_ar.ilike.%${term}%,name_he.ilike.%${term}%,phone.ilike.%${term}%`)
+            .or(`name_en.ilike.%${escaped}%,name_ar.ilike.%${escaped}%,name_he.ilike.%${escaped}%,phone.ilike.%${escaped}%`)
             .limit(5),
         ]);
 
@@ -116,9 +117,10 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
       }
     };
     const onClick = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
+      const target = e.target as Node;
+      if (searchRef.current?.contains(target)) return;
+      if (mobileSearchRef.current?.contains(target)) return;
+      setSearchOpen(false);
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onClick);
@@ -233,7 +235,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 
        {/* Mobile Search Overlay */}
        {searchOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-xl p-4 animate-in slide-in-from-top-2 z-40 border-b border-gray-100">
+        <div ref={mobileSearchRef} className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-xl p-4 animate-in slide-in-from-top-2 z-40 border-b border-gray-100">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
