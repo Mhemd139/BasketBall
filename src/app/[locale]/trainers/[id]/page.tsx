@@ -9,6 +9,7 @@ import { User, Phone, Trophy, MapPin, Calendar, Clock, Shield, CheckCircle2, Bui
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { TrainerProfileActions } from '@/components/trainers/TrainerProfileActions'
+import { TrainerWorkingHours } from '@/components/trainers/TrainerWorkingHours'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
 export default async function TrainerProfilePage({
@@ -158,6 +159,9 @@ export default async function TrainerProfilePage({
                                 </div>
 
                         </section>
+
+                        {/* Working Hours */}
+                        <TrainerWorkingHours trainerId={id} />
 
                         {/* Teams Section */}
                         <section className="space-y-4">

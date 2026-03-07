@@ -65,21 +65,22 @@ export default function LoginPage() {
       const result = await verifyOTP(cleanPhone, code, context)
 
       if (result.success) {
+        // Keep verifyingRef locked so no more verify attempts happen
         if ((result as any).isNew) {
           setStep('profile-setup')
         } else {
           router.push(`/${locale}`)
           router.refresh()
         }
+        return
       } else {
         setError(result.error || 'Verification failed')
       }
     } catch (err: any) {
       setError(err.message)
-    } finally {
-      setLoading(false)
-      verifyingRef.current = false
     }
+    setLoading(false)
+    verifyingRef.current = false
   }
 
   const handleVerify = async (e: React.FormEvent) => {

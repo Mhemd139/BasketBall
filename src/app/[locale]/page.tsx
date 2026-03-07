@@ -96,10 +96,10 @@ export default async function HomePage({
           <div className="max-w-4xl md:max-w-7xl mx-auto w-full space-y-4 md:space-y-8">
             {/* Stats */}
             <section>
-              <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 py-4 -my-4 -mx-3 px-3 md:mx-0 md:px-0 md:grid md:grid-cols-3 scrollbar-hide">
+              <div className="grid grid-cols-3 gap-3">
                 
                 {/* Halls Card */}
-                <Link href={`/${locale}/halls`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
+                <Link href={`/${locale}/halls`} className="relative p-5 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-orange-500/10 group-hover:-translate-y-1 transition-transform bg-orange-500/10 text-orange-400">
                     <Building2 className="w-6 h-6" strokeWidth={2} />
@@ -109,7 +109,7 @@ export default async function HomePage({
                 </Link>
 
                 {/* Teams Card */}
-                <Link href={`/${locale}/teams`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
+                <Link href={`/${locale}/teams`} className="relative p-5 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-indigo-500/10 group-hover:-translate-y-1 transition-transform bg-indigo-500/10 text-indigo-400">
                     <Users className="w-6 h-6" strokeWidth={2} />
@@ -119,7 +119,7 @@ export default async function HomePage({
                 </Link>
 
                 {/* Trainees Card */}
-                <Link href={`/${locale}/teams`} className="relative min-w-[120px] md:min-w-0 p-5 snap-center shrink-0 flex-1 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
+                <Link href={`/${locale}/teams`} className="relative p-5 flex flex-col items-center transition-all hover:-translate-y-1 active:scale-95 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[28px] shadow-xl group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 border border-emerald-500/10 group-hover:-translate-y-1 transition-transform bg-emerald-500/10 text-emerald-400">
                     <User className="w-6 h-6" strokeWidth={2} />
@@ -154,7 +154,7 @@ export default async function HomePage({
               </div>
 
               {hasContent ? (
-                <div className="space-y-5">
+                <div className="flex flex-col gap-2.5">
                   {/* One-time events (games, etc) */}
                   {manualEvents.map((event, index) => (
                     <Link key={event.id} href={`/${locale}/attendance/${event.id}`}>

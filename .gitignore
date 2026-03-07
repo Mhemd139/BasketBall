@@ -70,6 +70,10 @@ nul
 
 # Claude Code
 CLAUDE.md
+.claude/
+
+# Expense reports
+expense-report-lana.md
 
 # AI Agent Framework
 .antigravity_tools/

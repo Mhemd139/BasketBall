@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { sign, verify } from '@/lib/session'
-import { getTodayISO, getNowInIsrael } from '@/lib/utils'
+import { getTodayISO, getNowInIsrael, normalizePhone } from '@/lib/utils'
 
 type AttendanceStatus = 'present' | 'absent' | 'late'
 
@@ -201,7 +201,8 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
           })
           const data = await resp.json()
           if (data.status !== '0') {
-              return { success: false, error: data.error_text || 'Invalid Code' }
+              console.error('Vonage verify failed:', data.status, data.error_text)
+              return { success: false, error: 'الرمز غير صحيح أو منتهي الصلاحية' }
           }
       }
   }
@@ -1199,6 +1200,10 @@ export async function updateTrainerDetails(id: string, data: any) {
         return { success: false, error: 'Unauthorized' }
     }
 
+    if (data.phone) {
+        data.phone = normalizePhone(data.phone)
+    }
+
     const supabase = await createServerSupabaseClient()
     const { error } = await (supabase as any).rpc('update_trainer_rpc', {
         p_id: id,
@@ -1380,6 +1385,39 @@ export async function bulkImportRecords(
   revalidatePath('/[locale]/head-coach', 'page')
 
   return { success: true, results }
+}
+
+export async function getTrainerWorkingHours(trainerId: string, startDate: string, endDate: string) {
+    const supabase = await createServerSupabaseClient()
+
+    const { data: events, error } = await (supabase as any)
+        .from('events')
+        .select('start_time, end_time')
+        .eq('trainer_id', trainerId)
+        .gte('event_date', startDate)
+        .lte('event_date', endDate)
+        .limit(500)
+
+    if (error) {
+        console.error('getTrainerWorkingHours error:', error)
+        return { success: false, error: 'فشل تحميل ساعات العمل' }
+    }
+
+    let totalMinutes = 0
+    for (const event of events || []) {
+        if (!event.start_time || !event.end_time) continue
+        const [sh, sm] = event.start_time.split(':').map(Number)
+        const [eh, em] = event.end_time.split(':').map(Number)
+        const diff = (eh * 60 + em) - (sh * 60 + sm)
+        if (diff > 0) totalMinutes += diff
+    }
+
+    return {
+        success: true,
+        hours: Math.floor(totalMinutes / 60),
+        minutes: totalMinutes % 60,
+        totalEvents: (events || []).length,
+    }
 }
 
 export async function exportTableData(
