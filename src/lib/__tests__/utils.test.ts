@@ -173,9 +173,8 @@ describe('normalizePhone', () => {
     expect(normalizePhone('501234567')).toBe('972501234567')
   })
 
-  it('strips non-digit characters except +', () => {
-    // normalizePhone preserves + (regex is [^\d+])
-    expect(normalizePhone('+972-50-123-4567')).toBe('+972501234567')
+  it('strips all non-digit characters including +', () => {
+    expect(normalizePhone('+972-50-123-4567')).toBe('972501234567')
   })
 
   it('passes through already-international format', () => {
