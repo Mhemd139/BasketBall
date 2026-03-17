@@ -182,7 +182,7 @@ export function InteractivePlayerModal({ isOpen, onClose, locale, classId }: Int
         return steps.indexOf(step)
     }
 
-    const slideVariants = {
+    const slideVariants: any = {
         hidden: { opacity: 0, x: 50 },
         visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
         exit: { opacity: 0, x: -50, transition: { duration: 0.2 } }
