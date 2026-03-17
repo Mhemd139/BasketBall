@@ -22,6 +22,8 @@ interface Trainee {
   payment_comment_ar?: string | null
   payment_comment_he?: string | null
   gender?: string | null
+  date_of_birth?: string | null
+  school_class?: string | null
 }
 
 type AttendanceStats = { total: number; present: number; late: number; absent: number }

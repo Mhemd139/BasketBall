@@ -50,7 +50,7 @@ export default async function TeamDetailPage({
     attendanceStatsMap
   ] = await Promise.all([
     supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, trainers(id, name_ar, name_he, name_en, phone, gender), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
-    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).limit(200),
+    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en, date_of_birth, school_class').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).limit(200),
     supabase.from('halls').select('id, name_ar, name_he, name_en').order('name_ar').limit(50),
     getClassAttendanceStats(classId),
   ])

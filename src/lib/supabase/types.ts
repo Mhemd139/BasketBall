@@ -367,6 +367,7 @@ export type Database = {
           amount_paid: number | null
           class_id: string | null
           created_at: string | null
+          date_of_birth: string | null
           gender: string | null
           id: string
           is_paid: boolean | null
@@ -379,12 +380,14 @@ export type Database = {
           payment_comment_he: string | null
           payment_date: string | null
           phone: string | null
+          school_class: string | null
           updated_at: string | null
         }
         Insert: {
           amount_paid?: number | null
           class_id?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           gender?: string | null
           id?: string
           is_paid?: boolean | null
@@ -397,12 +400,14 @@ export type Database = {
           payment_comment_he?: string | null
           payment_date?: string | null
           phone?: string | null
+          school_class?: string | null
           updated_at?: string | null
         }
         Update: {
           amount_paid?: number | null
           class_id?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           gender?: string | null
           id?: string
           is_paid?: boolean | null
@@ -415,6 +420,7 @@ export type Database = {
           payment_comment_he?: string | null
           payment_date?: string | null
           phone?: string | null
+          school_class?: string | null
           updated_at?: string | null
         }
         Relationships: [

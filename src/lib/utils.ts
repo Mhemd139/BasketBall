@@ -68,6 +68,22 @@ export function normalizePhone(str: string): string {
   return cleaned
 }
 
+// School class grades (1-12) with Arabic labels
+export const SCHOOL_CLASSES = [
+  { value: '1', label: 'صف أول' },
+  { value: '2', label: 'صف ثاني' },
+  { value: '3', label: 'صف ثالث' },
+  { value: '4', label: 'صف رابع' },
+  { value: '5', label: 'صف خامس' },
+  { value: '6', label: 'صف سادس' },
+  { value: '7', label: 'صف سابع' },
+  { value: '8', label: 'صف ثامن' },
+  { value: '9', label: 'صف تاسع' },
+  { value: '10', label: 'صف عاشر' },
+  { value: '11', label: 'صف حادي عشر' },
+  { value: '12', label: 'صف ثاني عشر' },
+] as const
+
 // Phone number formatting helper
 export function formatPhoneNumber(value: string): string {
   // Remove all non-digit and non-plus characters first to handle the +972 case

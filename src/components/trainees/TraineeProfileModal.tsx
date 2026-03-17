@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { PaymentModal } from '@/components/payments/PaymentModal'
 import { updateTrainee, deleteTrainee } from '@/app/actions'
-import { Phone, X, ChevronRight, CreditCard, Edit2, Save, Loader2, CheckCircle2, Clock, XCircle, Trash2 } from 'lucide-react'
+import { SCHOOL_CLASSES } from '@/lib/utils'
+import { Phone, X, ChevronRight, CreditCard, Edit2, Save, Loader2, CheckCircle2, Clock, XCircle, Trash2, Cake, GraduationCap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmModal'
@@ -38,6 +39,8 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
         phone: trainee.phone || '',
         jersey_number: trainee.jersey_number ?? '',
         gender: trainee.gender || 'male',
+        date_of_birth: trainee.date_of_birth || '',
+        school_class: trainee.school_class || '',
     })
 
     const isFemale = trainee.gender === 'female'
@@ -58,6 +61,8 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
         const res = await updateTrainee(trainee.id, {
             ...editForm,
             jersey_number: editForm.jersey_number !== '' ? parseInt(String(editForm.jersey_number)) : null,
+            date_of_birth: editForm.date_of_birth || null,
+            school_class: editForm.school_class || null,
         })
         if (res.success) {
             toast('تم تحديث البيانات', 'success')
@@ -165,6 +170,37 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                     {/* ── BODY ─────────────────────────────────── */}
                     <div className="px-4 pb-20 space-y-3">
 
+                        {/* ── Personal Info (read mode) ──── */}
+                        {!isEditing && (trainee.date_of_birth || trainee.school_class) && (
+                            <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4 flex items-center gap-4">
+                                {trainee.date_of_birth && (
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <Cake className="w-4 h-4 text-amber-400 shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">تاريخ الميلاد</p>
+                                            <p className="text-sm font-bold text-white/80" dir="ltr">
+                                                {new Date(trainee.date_of_birth).toLocaleDateString('ar', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                <span className="text-white/30 text-xs mr-1.5">
+                                                    ({Math.floor((Date.now() - new Date(trainee.date_of_birth).getTime()) / 31557600000)} سنة)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {trainee.school_class && (
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <GraduationCap className="w-4 h-4 text-blue-400 shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">الصف</p>
+                                            <p className="text-sm font-bold text-white/80">
+                                                {SCHOOL_CLASSES.find(sc => sc.value === trainee.school_class)?.label || trainee.school_class}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {isEditing ? (
                             <div className="space-y-3 pt-1 animate-in fade-in duration-200">
                                 <div>
@@ -199,6 +235,26 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                                     ? g === 'female' ? 'border-pink-400/50 bg-pink-500/15 text-pink-300' : 'border-indigo-400/50 bg-indigo-500/15 text-indigo-300'
                                                     : 'border-white/8 bg-white/8 text-white/30'}`}>
                                                 {g === 'female' ? 'أنثى' : 'ذكر'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-1.5">تاريخ الميلاد</label>
+                                    <input type="date" dir="ltr"
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 outline-none text-white/80 text-sm transition-colors placeholder:text-white/20 [color-scheme:dark]"
+                                        value={editForm.date_of_birth}
+                                        onChange={e => setEditForm(p => ({ ...p, date_of_birth: e.target.value }))} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-1.5">الصف الدراسي</label>
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                        {SCHOOL_CLASSES.map(sc => (
+                                            <button key={sc.value} type="button" onClick={() => setEditForm(p => ({ ...p, school_class: p.school_class === sc.value ? '' : sc.value }))}
+                                                className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition-all ${editForm.school_class === sc.value
+                                                    ? 'border-electric/50 bg-electric/15 text-electric'
+                                                    : 'border-white/8 bg-white/5 text-white/40 hover:bg-white/10'}`}>
+                                                {sc.label}
                                             </button>
                                         ))}
                                     </div>

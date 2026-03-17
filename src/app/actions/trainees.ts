@@ -97,6 +97,8 @@ interface TraineeUpdateData {
   class_id?: string
   is_paid?: boolean
   amount_paid?: number
+  date_of_birth?: string | null
+  school_class?: string | null
 }
 
 export async function updateTrainee(traineeId: string, updateData: TraineeUpdateData) {
