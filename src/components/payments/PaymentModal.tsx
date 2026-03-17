@@ -25,9 +25,10 @@ type PaymentTrainee = {
 interface PaymentModalProps {
     trainee: PaymentTrainee
     onClose: () => void
+    onSave?: (amount: number, comment: string) => void
 }
 
-export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
+export function PaymentModal({ trainee, onClose, onSave }: PaymentModalProps) {
     const original = trainee.amount_paid || 0
     const [amount, setAmount] = useState(original)
     const [comment, setComment] = useState(trainee.payment_comment_ar || '')
@@ -46,6 +47,7 @@ export function PaymentModal({ trainee, onClose }: PaymentModalProps) {
         const res = await updateTraineePayment(trainee.id, delta, comment)
         if (res.success) {
             toast('تم تحديث الدفع بنجاح', 'success')
+            onSave?.(amount, comment)
             router.refresh()
             onClose()
         } else {

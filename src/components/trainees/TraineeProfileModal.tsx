@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { PaymentModal } from '@/components/payments/PaymentModal'
 import { updateTrainee, deleteTrainee } from '@/app/actions'
@@ -10,6 +10,115 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 import { Portal } from '@/components/ui/Portal'
+
+const ITEM_HEIGHT = 40
+
+function ScrollWheel({ items, value, onChange }: {
+    items: { v: string; l: string }[]
+    value: string
+    onChange: (v: string) => void
+}) {
+    const ref = useRef<HTMLDivElement>(null)
+    const snapTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const isSnapping = useRef(false)
+
+    const selectedIdx = items.findIndex(i => i.v === value)
+
+    // Scroll to selected item on mount and when value changes externally
+    useEffect(() => {
+        const el = ref.current
+        if (!el) return
+        const idx = selectedIdx >= 0 ? selectedIdx : 0
+        el.scrollTop = idx * ITEM_HEIGHT
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+    const snapToNearest = useCallback(() => {
+        const el = ref.current
+        if (!el) return
+        isSnapping.current = true
+        const idx = Math.round(el.scrollTop / ITEM_HEIGHT)
+        const clamped = Math.max(0, Math.min(idx, items.length - 1))
+        el.scrollTo({ top: clamped * ITEM_HEIGHT, behavior: 'smooth' })
+        onChange(items[clamped]?.v ?? '')
+        // clear snapping flag after animation
+        setTimeout(() => { isSnapping.current = false }, 200)
+    }, [items, onChange])
+
+    // onScroll: fires for both native touch scroll AND mouse drag scroll.
+    // For touch: CSS snap handles alignment; we just read the final position.
+    // For mouse: we debounce and call snapToNearest.
+    const onScroll = () => {
+        if (isSnapping.current) return
+        clearTimeout(snapTimer.current)
+        snapTimer.current = setTimeout(snapToNearest, 150)
+    }
+
+    // Attach mousedown imperatively so nothing in the React tree can intercept it
+    useEffect(() => {
+        const el = ref.current
+        if (!el) return
+
+        const onMouseDown = (e: MouseEvent) => {
+            e.preventDefault()
+            e.stopPropagation()
+            const startY = e.clientY
+            const startScroll = el.scrollTop
+
+            const onMove = (ev: MouseEvent) => {
+                el.scrollTop = startScroll + (startY - ev.clientY)
+            }
+            const onUp = () => {
+                snapToNearest()
+                document.removeEventListener('mousemove', onMove)
+                document.removeEventListener('mouseup', onUp)
+            }
+            document.addEventListener('mousemove', onMove)
+            document.addEventListener('mouseup', onUp)
+        }
+
+        el.addEventListener('mousedown', onMouseDown)
+        return () => el.removeEventListener('mousedown', onMouseDown)
+    }, [snapToNearest])
+
+    return (
+        <div className="relative flex-1">
+            {/* selected highlight bar */}
+            <div className="absolute inset-x-0 pointer-events-none z-10" style={{ top: '50%', transform: 'translateY(-50%)', height: ITEM_HEIGHT }}>
+                <div className="h-full bg-white/10 rounded-xl ring-1 ring-white/15 mx-1" />
+            </div>
+            {/* fade top/bottom */}
+            <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-[#0B132B] to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0B132B] to-transparent pointer-events-none z-10" />
+            <div
+                ref={ref}
+                onScroll={onScroll}
+                className="overflow-y-scroll scrollbar-hide relative z-20 cursor-grab active:cursor-grabbing touch-pan-y"
+                style={{ height: ITEM_HEIGHT * 5, scrollSnapType: 'y mandatory', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+            >
+                {/* padding items top/bottom so first/last can center */}
+                <div style={{ height: ITEM_HEIGHT * 2 }} />
+                {items.map(item => (
+                    <div
+                        key={item.v}
+                        style={{ height: ITEM_HEIGHT, scrollSnapAlign: 'center' }}
+                        className={`flex items-center justify-center text-sm font-bold transition-all cursor-pointer select-none ${
+                            item.v === value ? 'text-white' : 'text-white/25'
+                        }`}
+                        onClick={() => {
+                            const el = ref.current
+                            const idx = items.findIndex(i => i.v === item.v)
+                            el?.scrollTo({ top: idx * ITEM_HEIGHT, behavior: 'smooth' })
+                            onChange(item.v)
+                        }}
+                    >
+                        {item.l}
+                    </div>
+                ))}
+                <div style={{ height: ITEM_HEIGHT * 2 }} />
+            </div>
+        </div>
+    )
+}
 
 type AttendanceStats = { total: number; present: number; late: number; absent: number }
 
@@ -21,9 +130,10 @@ interface TraineeProfileModalProps {
     isAdmin?: boolean
     attendanceStats?: AttendanceStats
     onClose: () => void
+    onSave?: (updated: { name_ar: string; phone: string; jersey_number: number | null; gender: string; date_of_birth: string; school_class: string }) => void
 }
 
-export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStats, onClose }: TraineeProfileModalProps) {
+export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStats, onClose, onSave }: TraineeProfileModalProps) {
     const router = useRouter()
     const { toast } = useToast()
     const { confirm } = useConfirm()
@@ -31,8 +141,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
-
-    const [editForm, setEditForm] = useState({
+    const initialForm = {
         name_ar: trainee.name_ar || '',
         name_en: trainee.name_en || '',
         name_he: trainee.name_he || '',
@@ -41,10 +150,13 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
         gender: trainee.gender || 'male',
         date_of_birth: trainee.date_of_birth || '',
         school_class: trainee.school_class || '',
-    })
+    }
+    const savedForm = useRef(initialForm)
+    const [editForm, setEditForm] = useState(initialForm)
 
-    const isFemale = trainee.gender === 'female'
-    const amountPaid = trainee.amount_paid ?? 0
+    const isFemale = editForm.gender === 'female'
+    const [amountPaid, setAmountPaid] = useState(trainee.amount_paid ?? 0)
+    const [paymentComment, setPaymentComment] = useState(trainee.payment_comment_ar || '')
     const paymentGoal = 3000
     const paymentPct = Math.min(100, Math.round((amountPaid / paymentGoal) * 100))
     const isPaidFull = amountPaid >= paymentGoal
@@ -66,6 +178,15 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
         })
         if (res.success) {
             toast('تم تحديث البيانات', 'success')
+            savedForm.current = { ...editForm }
+            onSave?.({
+                name_ar: editForm.name_ar,
+                phone: editForm.phone,
+                jersey_number: editForm.jersey_number !== '' ? parseInt(String(editForm.jersey_number)) : null,
+                gender: editForm.gender,
+                date_of_birth: editForm.date_of_birth,
+                school_class: editForm.school_class,
+            })
             setIsEditing(false)
             router.refresh()
         } else {
@@ -97,7 +218,11 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
     }
 
     if (showPayment) {
-        return <PaymentModal trainee={trainee} onClose={() => setShowPayment(false)} />
+        return <PaymentModal
+            trainee={{ ...trainee, amount_paid: amountPaid, payment_comment_ar: paymentComment }}
+            onClose={() => setShowPayment(false)}
+            onSave={(amount, comment) => { setAmountPaid(amount); setPaymentComment(comment) }}
+        />
     }
 
     return (
@@ -111,7 +236,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                 className="fixed bottom-0 inset-x-0 z-[201] sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6"
                 dir="rtl"
             >
-                <div className={`bg-[#0B132B] w-full sm:max-w-sm rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-white/10 overflow-hidden animate-in slide-in-from-bottom-8 sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isFemale ? 'border-t-pink-500/70' : 'border-t-indigo-500/70'}`}>
+                <div className={`bg-[#0B132B] w-full sm:max-w-sm rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-white/10 flex flex-col max-h-[92dvh] sm:max-h-[90vh] animate-in slide-in-from-bottom-8 sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isFemale ? 'border-t-pink-500/70' : 'border-t-indigo-500/70'}`}>
 
                     {/* Drag pill */}
                     <div className="flex justify-center pt-2.5 sm:hidden">
@@ -123,7 +248,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
 
                         {/* top row: close / gender / edit */}
                         <div className="flex items-center justify-between mb-5">
-                            <button type="button" onClick={isEditing ? () => setIsEditing(false) : onClose} aria-label={isEditing ? 'رجوع' : 'إغلاق'}
+                            <button type="button" onClick={isEditing ? () => { setEditForm(savedForm.current); setIsEditing(false) } : onClose} aria-label={isEditing ? 'رجوع' : 'إغلاق'}
                                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/50 hover:text-white transition-all">
                                 {isEditing ? <ChevronRight className="w-4 h-4" /> : <X className="w-4 h-4" />}
                             </button>
@@ -143,17 +268,17 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                         {/* Jersey + name block */}
                         <div className="flex items-center gap-4">
                             <JerseyNumber
-                                number={trainee.jersey_number}
-                                gender={trainee.gender}
+                                number={editForm.jersey_number !== '' ? Number(editForm.jersey_number) : null}
+                                gender={editForm.gender}
                                 className="w-16 h-16 text-2xl flex-shrink-0 shadow-xl"
                             />
                             <div className="min-w-0 flex-1">
-                                <h2 className="text-[22px] font-black text-white leading-tight tracking-tight">{trainee.name_ar}</h2>
+                                <h2 className="text-[22px] font-black text-white leading-tight tracking-tight">{editForm.name_ar}</h2>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                                    {trainee.phone && (
-                                        <a href={`tel:${trainee.phone}`} dir="ltr"
+                                    {editForm.phone && (
+                                        <a href={`tel:${editForm.phone}`} dir="ltr"
                                             className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors">
-                                            <Phone className="w-3 h-3" />{trainee.phone}
+                                            <Phone className="w-3 h-3" />{editForm.phone}
                                         </a>
                                     )}
                                     {teamName && <span className="text-xs text-white/20">{teamName}</span>}
@@ -168,7 +293,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                     </div>
 
                     {/* ── BODY ─────────────────────────────────── */}
-                    <div className="px-4 pb-20 space-y-3">
+                    <div className="px-4 pb-8 space-y-3 overflow-y-auto flex-1">
 
                         {isEditing ? (
                             <div className="space-y-3 pt-1 animate-in fade-in duration-200">
@@ -209,14 +334,48 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-1.5">تاريخ الميلاد</label>
-                                    <input type="date" dir="ltr"
-                                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 outline-none text-white/80 text-sm transition-colors placeholder:text-white/20 [color-scheme:dark]"
-                                        value={editForm.date_of_birth}
-                                        onChange={e => setEditForm(p => ({ ...p, date_of_birth: e.target.value }))} />
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest">تاريخ الميلاد</label>
+                                        {editForm.date_of_birth && (
+                                            <button type="button" onClick={() => setEditForm(p => ({ ...p, date_of_birth: '' }))}
+                                                className="flex items-center gap-1 text-[11px] text-white/25 hover:text-white/50 transition-colors">
+                                                مسح <X className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="rounded-2xl bg-white/[0.06] ring-1 ring-white/10 overflow-hidden" dir="ltr">
+                                        <div className="flex" style={{ height: 200 }}>
+                                            {[
+                                                { label: 'يوم', items: Array.from({ length: 31 }, (_, i) => ({ v: String(i + 1).padStart(2, '0'), l: String(i + 1) })), part: 2 },
+                                                { label: 'شهر', items: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'].map((n, i) => ({ v: String(i + 1).padStart(2, '0'), l: n })), part: 1 },
+                                                { label: 'سنة', items: Array.from({ length: new Date().getFullYear() - 1989 }, (_, i) => { const y = new Date().getFullYear() - i; return { v: String(y), l: String(y) } }), part: 0 },
+                                            ].map(({ label, items, part }, colIdx) => (
+                                                <div key={label} className={`flex flex-col flex-1 ${colIdx < 2 ? 'border-l border-white/[0.07]' : ''}`}>
+                                                    <div className="text-center text-[9px] font-bold text-white/20 uppercase tracking-widest pt-1.5 pb-0.5">{label}</div>
+                                                    <ScrollWheel
+                                                        items={items}
+                                                        value={editForm.date_of_birth ? editForm.date_of_birth.split('-')[part] : ''}
+                                                        onChange={v => {
+                                                            const parts = (editForm.date_of_birth || `${new Date().getFullYear()}-01-01`).split('-')
+                                                            parts[part] = v
+                                                            setEditForm(p => ({ ...p, date_of_birth: v ? parts.join('-') : '' }))
+                                                        }}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-1.5">الصف الدراسي</label>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest">الصف الدراسي</label>
+                                        {editForm.school_class && (
+                                            <button type="button" onClick={() => setEditForm(p => ({ ...p, school_class: '' }))}
+                                                className="flex items-center gap-1 text-[11px] text-white/25 hover:text-white/50 transition-colors">
+                                                مسح <X className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-4 gap-1.5">
                                         {SCHOOL_CLASSES.map(sc => (
                                             <button key={sc.value} type="button" onClick={() => setEditForm(p => ({ ...p, school_class: p.school_class === sc.value ? '' : sc.value }))}
@@ -234,7 +393,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                         حفظ التغييرات
                                     </button>
-                                    <button type="button" onClick={() => setIsEditing(false)}
+                                    <button type="button" onClick={() => { setEditForm(savedForm.current); setIsEditing(false) }}
                                         className="flex-1 py-3 rounded-xl bg-white/10 border border-white/10 text-white/50 font-bold text-sm hover:bg-white/10 active:scale-[0.98] transition-all">
                                         إلغاء
                                     </button>
@@ -243,36 +402,48 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                         ) : (
                             <div className="space-y-3 animate-in fade-in duration-200">
 
-                                {/* ── DOB & School Class (read-only display) ── */}
-                                {(trainee.date_of_birth || trainee.school_class) && (
-                                    <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4 flex items-center gap-4">
-                                        {trainee.date_of_birth && (
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <Cake className="w-4 h-4 text-amber-400 shrink-0" />
-                                                <div className="min-w-0">
-                                                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">تاريخ الميلاد</p>
-                                                    <p className="text-sm font-bold text-white/80">
-                                                        {new Date(trainee.date_of_birth).toLocaleDateString('ar', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                        <span className="text-white/30 text-xs mr-1.5">
-                                                            ({Math.floor((Date.now() - new Date(trainee.date_of_birth).getTime()) / 31557600000)} سنة)
-                                                        </span>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {trainee.school_class && (
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <GraduationCap className="w-4 h-4 text-blue-400 shrink-0" />
-                                                <div className="min-w-0">
-                                                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">الصف</p>
-                                                    <p className="text-sm font-bold text-white/80">
-                                                        {SCHOOL_CLASSES.find(sc => sc.value === trainee.school_class)?.label || trainee.school_class}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
+                                {/* ── DOB & School Class (always visible, tappable) ── */}
+                                <button type="button" onClick={() => setIsEditing(true)}
+                                    className={`w-full rounded-2xl p-4 space-y-3 text-right transition-all active:scale-[0.98] relative group ${
+                                        editForm.date_of_birth || editForm.school_class
+                                            ? 'bg-white/[0.07] ring-1 ring-white/10 hover:bg-white/[0.10]'
+                                            : 'bg-white/[0.03] border border-dashed border-white/15 hover:border-white/25 hover:bg-white/[0.05]'
+                                    }`}>
+                                    <Edit2 className="absolute top-3 left-3 w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors" />
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                                            <Cake className="w-3.5 h-3.5 text-amber-400" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">تاريخ الميلاد</p>
+                                            {editForm.date_of_birth ? (
+                                                <p className="text-sm font-bold text-white/80 mt-0.5">
+                                                    {new Date(editForm.date_of_birth).toLocaleDateString('ar', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                    <span className="text-white/30 text-xs mr-1.5">
+                                                        ({Math.floor((Date.now() - new Date(editForm.date_of_birth).getTime()) / 31557600000)} سنة)
+                                                    </span>
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-amber-400/40 mt-0.5">اضغط لإضافة تاريخ الميلاد</p>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+                                            <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">الصف الدراسي</p>
+                                            {editForm.school_class ? (
+                                                <p className="text-sm font-bold text-white/80 mt-0.5">
+                                                    {SCHOOL_CLASSES.find(sc => sc.value === editForm.school_class)?.label || editForm.school_class}
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-blue-400/40 mt-0.5">اضغط لتحديد الصف</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </button>
 
                                 {/* ── Attendance ──────────────────── */}
                                 <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4">
@@ -328,8 +499,8 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                             style={{ width: `${paymentPct}%` }}
                                         />
                                     </div>
-                                    {trainee.payment_comment_ar && (
-                                        <p className="text-[11px] text-white/25 mt-2 leading-relaxed">{trainee.payment_comment_ar}</p>
+                                    {paymentComment && (
+                                        <p className="text-[11px] text-white/25 mt-2 leading-relaxed">{paymentComment}</p>
                                     )}
                                 </div>
 

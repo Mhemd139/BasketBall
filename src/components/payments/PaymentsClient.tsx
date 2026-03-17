@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -132,6 +132,8 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
     const [amount, setAmount] = useState(trainee.amount_paid || 0)
     const [comment, setComment] = useState(trainee.payment_comment_en || '')
     const [loading, setLoading] = useState(false)
+    const savedAmount = useRef(trainee.amount_paid || 0)
+    const savedComment = useRef(trainee.payment_comment_en || '')
     const router = useRouter()
     const { toast } = useToast()
 
@@ -147,12 +149,20 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
         const res = await updateTraineePayment(trainee.id, amount, comment)
         if (res.success) {
             toast('تم تحديث الدفع بنجاح', 'success')
+            savedAmount.current = amount
+            savedComment.current = comment
             setIsEditing(false)
-            router.refresh()
+            startTransition(() => router.refresh())
         } else {
             toast('خطأ في تحديث الدفع', 'error')
         }
         setLoading(false)
+    }
+
+    const handleCancel = () => {
+        setAmount(savedAmount.current)
+        setComment(savedComment.current)
+        setIsEditing(false)
     }
 
     return (
@@ -196,9 +206,9 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
             )}
 
             {/* Comment Preview (if not editing) */}
-            {!isEditing && trainee.payment_comment_en && (
+            {!isEditing && comment && (
                 <div className="text-sm text-gray-500 italic bg-gray-50 p-2 rounded-lg border border-gray-100">
-                    "{trainee.payment_comment_en}"
+                    "{comment}"
                 </div>
             )}
 
@@ -247,8 +257,8 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
                         >
                             {loading ? <span className="loading loading-spinner text-white" /> : <><Save className="w-4 h-4" /> {'حفظ التغييرات'}</>}
                         </button>
-                        <button 
-                            onClick={() => setIsEditing(false)}
+                        <button
+                            onClick={handleCancel}
                             className="px-4 py-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
                         >
                             {'إلغاء'}

@@ -37,7 +37,8 @@ interface TraineeListProps {
   attendanceStatsMap?: Record<string, AttendanceStats>
 }
 
-export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName, attendanceStatsMap }: TraineeListProps) {
+export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamName, trainerName, attendanceStatsMap }: TraineeListProps) {
+  const [trainees, setTrainees] = useState(initialTrainees)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null)
   const router = useRouter()
@@ -178,6 +179,10 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName, 
           isAdmin={isAdmin}
           attendanceStats={attendanceStatsMap?.[selectedTrainee.id]}
           onClose={() => setSelectedTrainee(null)}
+          onSave={(updated) => {
+            setTrainees(prev => prev.map(t => t.id === selectedTrainee.id ? { ...t, ...updated } : t))
+            setSelectedTrainee(prev => prev ? { ...prev, ...updated } : prev)
+          }}
         />
       )}
     </>
