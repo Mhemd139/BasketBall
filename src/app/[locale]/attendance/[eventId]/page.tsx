@@ -37,7 +37,7 @@ export default async function AttendancePage({
     { data: attendanceRecords }
   ] = await Promise.all([
     getSession(),
-    (supabase as any).from('events').select('*, halls(*)').eq('id', eventId).single(),
+    (supabase as any).from('events').select('id, type, event_date, class_id, trainer_id, hall_id, title_ar, title_he, title_en, start_time, end_time, notes_en, halls(id, name_ar, name_he, name_en)').eq('id', eventId).single(),
     (supabase as any).from('attendance').select('trainee_id, status').eq('event_id', eventId),
   ])
 

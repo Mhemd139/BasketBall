@@ -57,7 +57,7 @@ export function normalizePhone(str: string): string {
   let cleaned = str
     .replace(/[٠١٢٣٤٥٦٧٨٩]/g, d => String(d.charCodeAt(0) - 1632))
     .replace(/[۰۱۲۳۴۵۶۷۸۹]/g, d => String(d.charCodeAt(0) - 1776))
-    .replace(/[^\d+]/g, '')
+    .replace(/\D/g, '')
 
   if (cleaned.startsWith('05')) {
     cleaned = '972' + cleaned.substring(1)

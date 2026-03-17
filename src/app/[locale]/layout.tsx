@@ -47,10 +47,20 @@ export const metadata: Metadata = {
   },
   description: 'Basketball training management system for managing halls, trainers, classes, and attendance',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
-    title: 'Basketball Manager',
+    statusBarStyle: 'black-translucent',
+    title: 'النادي الرياضي',
   },
 }
 
@@ -60,6 +70,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#0B132B',
 }
 
 export async function generateStaticParams() {

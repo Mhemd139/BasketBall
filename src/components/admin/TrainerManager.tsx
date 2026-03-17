@@ -32,10 +32,11 @@ export default function TrainerManager({ initialTrainers, locale = 'ar' }: { ini
   const [error, setError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Trainer | null>(null)
 
-  const filteredTrainers = trainers.filter(t =>
-    (t.name_ar?.toLowerCase() || t.name_en?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (t.phone || '').includes(searchQuery)
-  )
+  const filteredTrainers = trainers.filter(t => {
+    const q = searchQuery.toLowerCase()
+    const nameMatch = (t.name_ar || '').toLowerCase().includes(q) || (t.name_en || '').toLowerCase().includes(q)
+    return nameMatch || (t.phone || '').includes(searchQuery)
+  })
 
   const handleDelete = async () => {
     if (!deleteTarget) return

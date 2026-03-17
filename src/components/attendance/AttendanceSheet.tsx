@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useCallback } from 'react'
 import { saveAttendance, bulkSaveAttendance } from '@/app/actions'
+import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 import { Check, X, Clock, Users, CheckCheck, XCircle } from 'lucide-react'
 
@@ -59,6 +60,7 @@ const statusConfig = {
 
 export function AttendanceSheet({ eventId, trainees, initialAttendance }: AttendanceSheetProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [showSuccess, setShowSuccess] = useState(false)
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>(() => {
     const map: Record<string, AttendanceStatus> = {}
@@ -81,9 +83,8 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
     const result = await saveAttendance(traineeId, eventId, next)
 
     if (!result.success) {
-      // Revert on error
       setAttendance(prev => ({ ...prev, [traineeId]: current }))
-      console.error('Failed to save attendance:', result.error)
+      toast('فشل حفظ الحضور', 'error')
     }
 
     setSaving(prev => ({ ...prev, [traineeId]: false }))
@@ -106,7 +107,7 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
 
     if (!result.success) {
       setAttendance(prev)
-      console.error('Failed to bulk save:', result.error)
+      toast('فشل حفظ الحضور', 'error')
     }
   }, [attendance, trainees, eventId])
 

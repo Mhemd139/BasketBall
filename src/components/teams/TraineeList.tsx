@@ -154,7 +154,7 @@ export function TraineeList({ trainees, locale, isAdmin, teamName, trainerName, 
                     type="button"
                     disabled={loadingId === trainee.id}
                     onClick={(e) => handleDelete(e, trainee.id, name)}
-                    className="p-2 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-2 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                     aria-label={`حذف ${name}`}
                     title={`حذف ${name}`}
                   >

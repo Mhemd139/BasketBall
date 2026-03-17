@@ -42,6 +42,7 @@ interface ProfileContentProps {
 
 export default function ProfileContent({ locale, role, initialTrainer }: ProfileContentProps) {
     const [trainer, setTrainer] = useState<TrainerProfile | null>(initialTrainer ?? null)
+    const [fetchError, setFetchError] = useState(false)
     const [modalState, setModalState] = useState<{ open: boolean; mode: 'all' | 'personal' | 'schedule' }>({
         open: false,
         mode: 'all',
@@ -56,10 +57,11 @@ export default function ProfileContent({ locale, role, initialTrainer }: Profile
 
         const fetchTrainer = async () => {
             try {
+                setFetchError(false)
                 const data = await getTrainerProfileServer()
                 if (data) setTrainer(data)
             } catch {
-                console.error('Failed to fetch trainer profile')
+                setFetchError(true)
             }
         }
         fetchTrainer()
@@ -79,6 +81,12 @@ export default function ProfileContent({ locale, role, initialTrainer }: Profile
     const openModal = useCallback((mode: 'personal' | 'schedule') => {
         setModalState({ open: true, mode })
     }, [])
+
+    if (fetchError) return (
+        <div className="min-h-screen bg-[#060d1a] text-white flex items-center justify-center" dir="rtl">
+            <p className="text-red-400 font-bold">فشل تحميل الملف الشخصي</p>
+        </div>
+    )
 
     if (!trainer) return null
 

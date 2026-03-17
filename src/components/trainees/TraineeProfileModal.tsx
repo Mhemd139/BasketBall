@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { PaymentModal } from '@/components/payments/PaymentModal'
-import { updateTrainee } from '@/app/actions'
-import { Phone, X, ChevronRight, CreditCard, Edit2, Save, Loader2, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { updateTrainee, deleteTrainee } from '@/app/actions'
+import { Phone, X, ChevronRight, CreditCard, Edit2, Save, Loader2, CheckCircle2, Clock, XCircle, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 import { Portal } from '@/components/ui/Portal'
 
 type AttendanceStats = { total: number; present: number; late: number; absent: number }
@@ -24,9 +25,11 @@ interface TraineeProfileModalProps {
 export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStats, onClose }: TraineeProfileModalProps) {
     const router = useRouter()
     const { toast } = useToast()
+    const { confirm } = useConfirm()
     const [showPayment, setShowPayment] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [deleting, setDeleting] = useState(false)
 
     const [editForm, setEditForm] = useState({
         name_ar: trainee.name_ar || '',
@@ -64,6 +67,28 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
             toast(res.error || 'فشل التحديث', 'error')
         }
         setSaving(false)
+    }
+
+    const handleDelete = async () => {
+        const confirmed = await confirm({
+            title: 'حذف اللاعب',
+            message: `هل أنت متأكد من حذف ${trainee.name_ar}؟`,
+            confirmText: 'حذف',
+            cancelText: 'إلغاء',
+            variant: 'danger',
+        })
+        if (!confirmed) return
+
+        setDeleting(true)
+        const res = await deleteTrainee(trainee.id)
+        setDeleting(false)
+        if (res.success) {
+            toast('تم حذف اللاعب بنجاح', 'success')
+            router.refresh()
+            onClose()
+        } else {
+            toast(res.error || 'فشل الحذف', 'error')
+        }
     }
 
     if (showPayment) {
@@ -263,6 +288,17 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                             <span>إدارة المدفوعات</span>
                                         </div>
                                         <span className="text-white/20 text-sm">←</span>
+                                    </button>
+                                )}
+
+                                {/* ── Delete ─────────────────────── */}
+                                {isAdmin && (
+                                    <button type="button" onClick={handleDelete} disabled={deleting}
+                                        className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-[0.98] bg-red-500/12 hover:bg-red-500/20 text-red-200 ring-1 ring-red-500/20 disabled:opacity-40">
+                                        <div className="flex items-center gap-2.5">
+                                            {deleting ? <Loader2 className="w-4 h-4 animate-spin opacity-70" /> : <Trash2 className="w-4 h-4 opacity-70" />}
+                                            <span>حذف اللاعب</span>
+                                        </div>
                                     </button>
                                 )}
                             </div>

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, UserPlus } from 'lucide-react'
+import { Users, UserPlus, Trash2 } from 'lucide-react'
 import { CreateTeamModal } from '@/components/teams/CreateTeamModal'
-import { CreatePlayerModal } from '@/components/players/CreatePlayerModal'
+import { InteractivePlayerModal } from '@/components/players/InteractivePlayerModal'
+import { DeletePlayerModal } from '@/components/players/DeletePlayerModal'
 
 interface QuickActionsProps {
     locale: string
@@ -13,6 +14,7 @@ interface QuickActionsProps {
 export function QuickActions({ locale, canManage }: QuickActionsProps) {
     const [isTeamModalOpen, setIsTeamModalOpen] = useState(false)
     const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
     if (!canManage) return null
 
@@ -22,21 +24,29 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
                 {'إجراءات سريعة'}
             </h2>
             
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
-                <button 
+            <div className="grid grid-cols-3 gap-2">
+                <button
                     onClick={() => setIsTeamModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-indigo-300 text-sm font-bold whitespace-nowrap hover:bg-white/10 hover:-translate-y-0.5 active:scale-95 transition-all flex-shrink-0"
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-indigo-300 text-xs font-bold hover:bg-white/10 active:scale-95 transition-all"
                 >
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5 shrink-0" />
                     {'إضافة فريق'}
                 </button>
 
-                <button 
+                <button
                     onClick={() => setIsPlayerModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-emerald-300 text-sm font-bold whitespace-nowrap hover:bg-white/10 hover:-translate-y-0.5 active:scale-95 transition-all flex-shrink-0"
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-emerald-300 text-xs font-bold hover:bg-white/10 active:scale-95 transition-all"
                 >
-                    <UserPlus className="w-4 h-4" />
+                    <UserPlus className="w-3.5 h-3.5 shrink-0" />
                     {'إضافة لاعب'}
+                </button>
+
+                <button
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl bg-white/5 backdrop-blur-md border border-red-500/20 shadow-xl text-red-300 text-xs font-bold hover:bg-red-500/10 active:scale-95 transition-all"
+                >
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                    {'حذف لاعب'}
                 </button>
             </div>
 
@@ -45,10 +55,14 @@ export function QuickActions({ locale, canManage }: QuickActionsProps) {
                 onClose={() => setIsTeamModalOpen(false)}
                 locale={locale}
             />
-            <CreatePlayerModal 
+            <InteractivePlayerModal
                 isOpen={isPlayerModalOpen}
                 onClose={() => setIsPlayerModalOpen(false)}
                 locale={locale}
+            />
+            <DeletePlayerModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
             />
         </section>
     )

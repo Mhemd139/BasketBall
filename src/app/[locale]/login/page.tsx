@@ -4,7 +4,6 @@ import { useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { sendOTP, verifyOTP, updateProfile } from '@/app/actions'
-import { normalizePhone } from '@/lib/utils'
 import { Phone, ArrowRight, AlertCircle, Loader2, KeyRound, ArrowLeft, User } from 'lucide-react'
 
 export default function LoginPage() {
@@ -28,15 +27,13 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const cleanPhone = normalizePhone(phone)
-      
-      if (!cleanPhone || cleanPhone.length < 8) {
-        const debugSuffix = ` (${phone})`
-        const msg = 'الرجاء إدخال رقم الهاتف صحيح'
-        throw new Error(msg + debugSuffix)
+      const digits = phone.replace(/\D/g, '')
+
+      if (!digits || digits.length < 8) {
+        throw new Error('الرجاء إدخال رقم الهاتف صحيح')
       }
-      
-      const res = await sendOTP(cleanPhone)
+
+      const res = await sendOTP(phone)
       if (res.success) {
         if ((res as any).hash) {
             setOtpContext((res as any).hash)
@@ -61,25 +58,25 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const cleanPhone = normalizePhone(phone)
-      const result = await verifyOTP(cleanPhone, code, context)
+      const result = await verifyOTP(phone, code, context)
 
       if (result.success) {
+        // Keep verifyingRef locked so no more verify attempts happen
         if ((result as any).isNew) {
           setStep('profile-setup')
         } else {
           router.push(`/${locale}`)
           router.refresh()
         }
+        return
       } else {
         setError(result.error || 'Verification failed')
       }
     } catch (err: any) {
       setError(err.message)
-    } finally {
-      setLoading(false)
-      verifyingRef.current = false
     }
+    setLoading(false)
+    verifyingRef.current = false
   }
 
   const handleVerify = async (e: React.FormEvent) => {

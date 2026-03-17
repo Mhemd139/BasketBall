@@ -52,6 +52,7 @@ export function BottomNav({ locale, role }: BottomNavProps) {
             <Link
               key={item.href || 'home'}
               href={fullHref}
+              aria-current={active ? 'page' : undefined}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 min-h-[48px] min-w-[64px] active:scale-95 transition-all duration-150 relative text-gray-400',
                 active && 'text-white'
@@ -78,6 +79,7 @@ export function BottomNav({ locale, role }: BottomNavProps) {
         {role === 'headcoach' && (
           <Link
             href={`/${locale}/head-coach`}
+            aria-current={isActive('/head-coach') ? 'page' : undefined}
             className={cn(
               'flex flex-col items-center justify-center gap-1 min-h-[48px] min-w-[64px] active:scale-95 transition-all duration-150 relative text-gray-400',
               isActive('/head-coach') && 'text-gold-400'
