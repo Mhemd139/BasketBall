@@ -4,6 +4,6 @@ export { addTrainee, searchTrainees, transferTrainee, updateTrainee, deleteTrain
 export { createTeam, updateTeam, deleteTeam, updateTeamTrainer } from './teams'
 export { upsertEvent, deleteEvent, updateEventTime, getEventRefData, fetchTodaySchedules, getOrCreateEventForSchedule } from './events'
 export { saveAttendance, bulkSaveAttendance, updateAttendance, getEventAttendance, getTraineeAttendanceStats, getClassAttendanceStats, getTeamAttendanceHistory } from './attendance'
-export { fetchHallEvents, fetchHallSchedules, updateHall, updateClassSchedule } from './halls'
+export { fetchHallEvents, fetchHallSchedules, updateHall, updateClassSchedule, addClassSchedule, deleteClassSchedule } from './halls'
 export { updateTraineePayment, toggleTraineePayment } from './payments'
 export { getImportRefData, createTrainersForImport, bulkImportRecords, exportTableData } from './import'

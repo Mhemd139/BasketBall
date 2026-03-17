@@ -57,13 +57,13 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCancel}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 m-auto w-full max-w-sm h-fit p-4 z-[90]"
+              className="fixed inset-0 m-auto w-full max-w-sm h-fit p-4 z-[300]"
             >
               <div className="bg-[#0B132B]/90 backdrop-blur-3xl rounded-3xl shadow-2xl overflow-hidden relative border border-white/10 ring-1 ring-white/5">
                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${

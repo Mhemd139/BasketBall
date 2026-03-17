@@ -135,13 +135,24 @@ export async function fetchTodaySchedules() {
     const todayDow = today.getDay()
     const todayDate = getTodayISO()
 
-    const { data, error } = await (supabase as any).rpc('ensure_events_for_schedules', {
+    let { data, error } = await (supabase as any).rpc('ensure_events_for_schedules', {
         p_day_of_week: todayDow,
         p_date: todayDate,
     })
 
+    // Race condition: concurrent calls may both try to insert the same event.
+    // On duplicate key (23505), retry — the second call finds events already exist.
+    if (error?.code === '23505') {
+        const retry = await (supabase as any).rpc('ensure_events_for_schedules', {
+            p_day_of_week: todayDow,
+            p_date: todayDate,
+        })
+        data = retry.data
+        error = retry.error
+    }
+
     if (error) {
-        console.error('fetchTodaySchedules failed:', error)
+        console.error('fetchTodaySchedules failed:', JSON.stringify(error))
         return { success: false, error: 'حدث خطأ، حاول مرة أخرى', schedules: [] }
     }
 

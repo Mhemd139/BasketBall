@@ -42,6 +42,7 @@ export async function addTrainee({
     return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
   }
 
+  revalidatePath('/[locale]/teams/[classId]', 'page')
   return { success: true, trainee: data }
 }
 

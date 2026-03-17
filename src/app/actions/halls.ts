@@ -74,6 +74,62 @@ export async function updateHall(id: string, name_en: string, name_ar: string, n
     return { success: true, hall: data }
 }
 
+export async function addClassSchedule(classId: string, dayOfWeek: number, hallId: string, startTime: string, endTime: string) {
+    const session = await getSession()
+    if (!session) return { success: false, error: 'Unauthorized' }
+
+    try {
+        const supabase = await createServerSupabaseClient()
+        const { error } = await (supabase as any).rpc('insert_class_schedule', {
+            p_data: {
+                class_id: classId,
+                day_of_week: dayOfWeek,
+                hall_id: hallId,
+                start_time: startTime,
+                end_time: endTime,
+            }
+        })
+
+        if (error) {
+            console.error('addClassSchedule failed:', error)
+            return { success: false, error: 'فشل إضافة الجدول' }
+        }
+
+        revalidatePath('/[locale]/teams/[classId]', 'page')
+        revalidatePath('/[locale]/schedule', 'page')
+        revalidatePath('/[locale]/halls/[id]', 'page')
+        return { success: true }
+    } catch (e: any) {
+        console.error('addClassSchedule:', e)
+        return { success: false, error: 'فشل إضافة الجدول' }
+    }
+}
+
+export async function deleteClassSchedule(scheduleId: string) {
+    const session = await getSession()
+    if (!session) return { success: false, error: 'Unauthorized' }
+
+    try {
+        const supabase = await createServerSupabaseClient()
+        const { error } = await (supabase as any).rpc('delete_class_schedule', {
+            p_id: scheduleId,
+        })
+
+        if (error) {
+            console.error('deleteClassSchedule failed:', error)
+            return { success: false, error: 'فشل حذف الجدول' }
+        }
+
+        revalidatePath('/[locale]/teams/[classId]', 'page')
+        revalidatePath('/[locale]/schedule', 'page')
+        revalidatePath('/[locale]/halls/[id]', 'page')
+        return { success: true }
+    } catch (e: any) {
+        console.error('deleteClassSchedule:', e)
+        return { success: false, error: 'فشل حذف الجدول' }
+    }
+}
+
 export async function updateClassSchedule(scheduleId: string, hallId: string, startTime: string, endTime: string) {
     const session = await getSession()
     if (!session) return { success: false, error: 'Unauthorized' }

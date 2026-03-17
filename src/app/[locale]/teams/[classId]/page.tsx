@@ -3,14 +3,15 @@ import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getLocalizedField } from '@/lib/utils'
+import { getLocalizedField, formatPhoneNumber } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { User, Calendar, Trophy, Plus, Building2, ChevronLeft } from 'lucide-react'
+import { User, Calendar, Trophy, Building2, ChevronLeft } from 'lucide-react'
 import { getSession, getClassAttendanceStats } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
+import { AddPlayerButton } from '@/components/teams/AddPlayerButton'
 import { ScheduleEditor } from '@/components/teams/ScheduleEditor'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
 
@@ -126,7 +127,7 @@ export default async function TeamDetailPage({
                         {teamDetails.trainers ? getLocalizedField(teamDetails.trainers, 'name', locale) : 'غير معين'}
                       </p>
                       {teamDetails.trainers?.phone && (
-                        <p className="text-xs text-white/40 font-medium" dir="ltr">{teamDetails.trainers.phone}</p>
+                        <p className="text-xs text-white/40 font-medium" dir="ltr">{formatPhoneNumber(teamDetails.trainers.phone)}</p>
                       )}
                     </div>
                   </div>
@@ -158,7 +159,7 @@ export default async function TeamDetailPage({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">{'الجدول'}</p>
-                    <ScheduleEditor schedules={schedules} halls={halls} locale={locale} />
+                    <ScheduleEditor schedules={schedules} halls={halls} locale={locale} classId={classId} />
                   </div>
                 </div>
               </div>
@@ -194,13 +195,7 @@ export default async function TeamDetailPage({
                     {trainees.length}
                   </div>
                   {session && (
-                    <Link
-                      href={`/${locale}/teams/${classId}/add`}
-                      className="flex items-center gap-1 bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-indigo-500 transition-colors shadow-sm border border-indigo-500/50"
-                    >
-                      <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
-                      {'إضافة'}
-                    </Link>
+                    <AddPlayerButton classId={classId} locale={locale} />
                   )}
                 </div>
               </div>
