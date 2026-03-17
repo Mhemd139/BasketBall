@@ -32,15 +32,6 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
 
-    const [savingField, setSavingField] = useState<string | null>(null)
-
-    const saveField = async (field: string, value: string | null) => {
-        setSavingField(field)
-        await updateTrainee(trainee.id, { [field]: value })
-        router.refresh()
-        setSavingField(null)
-    }
-
     const [editForm, setEditForm] = useState({
         name_ar: trainee.name_ar || '',
         name_en: trainee.name_en || '',
@@ -141,7 +132,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                 {isFemale ? 'لاعبة' : 'لاعب'}
                             </span>
 
-                            {isAdmin && !isEditing ? (
+                            {!isEditing ? (
                                 <button type="button" onClick={() => setIsEditing(true)} aria-label="تعديل"
                                     className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/50 hover:text-white transition-all">
                                     <Edit2 className="w-4 h-4" />
@@ -252,45 +243,36 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                         ) : (
                             <div className="space-y-3 animate-in fade-in duration-200">
 
-                                {/* ── DOB & School Class (always visible, inline-edit) ── */}
-                                <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4 space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <Cake className="w-4 h-4 text-amber-400 shrink-0" />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider mb-1">تاريخ الميلاد</p>
-                                            <div className="flex items-center gap-2">
-                                                <input type="date" dir="ltr"
-                                                    className="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 outline-none text-white/80 text-sm transition-colors [color-scheme:dark]"
-                                                    defaultValue={trainee.date_of_birth || ''}
-                                                    onChange={e => saveField('date_of_birth', e.target.value || null)} />
-                                                {savingField === 'date_of_birth' && <Loader2 className="w-3.5 h-3.5 text-white/30 animate-spin shrink-0" />}
-                                                {trainee.date_of_birth && (
-                                                    <span className="text-xs text-white/30 font-bold shrink-0">
-                                                        {Math.floor((Date.now() - new Date(trainee.date_of_birth).getTime()) / 31557600000)} سنة
-                                                    </span>
-                                                )}
+                                {/* ── DOB & School Class (read-only display) ── */}
+                                {(trainee.date_of_birth || trainee.school_class) && (
+                                    <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4 flex items-center gap-4">
+                                        {trainee.date_of_birth && (
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Cake className="w-4 h-4 text-amber-400 shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">تاريخ الميلاد</p>
+                                                    <p className="text-sm font-bold text-white/80">
+                                                        {new Date(trainee.date_of_birth).toLocaleDateString('ar', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                        <span className="text-white/30 text-xs mr-1.5">
+                                                            ({Math.floor((Date.now() - new Date(trainee.date_of_birth).getTime()) / 31557600000)} سنة)
+                                                        </span>
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <GraduationCap className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider mb-1.5">الصف الدراسي</p>
-                                            <div className="grid grid-cols-4 gap-1.5">
-                                                {SCHOOL_CLASSES.map(sc => (
-                                                    <button key={sc.value} type="button"
-                                                        disabled={savingField === 'school_class'}
-                                                        onClick={() => saveField('school_class', trainee.school_class === sc.value ? null : sc.value)}
-                                                        className={`py-1.5 px-1 rounded-lg text-[11px] font-bold border transition-all ${trainee.school_class === sc.value
-                                                            ? 'border-electric/50 bg-electric/15 text-electric'
-                                                            : 'border-white/8 bg-white/5 text-white/40 hover:bg-white/10'}`}>
-                                                        {sc.label}
-                                                    </button>
-                                                ))}
+                                        )}
+                                        {trainee.school_class && (
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <GraduationCap className="w-4 h-4 text-blue-400 shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">الصف</p>
+                                                    <p className="text-sm font-bold text-white/80">
+                                                        {SCHOOL_CLASSES.find(sc => sc.value === trainee.school_class)?.label || trainee.school_class}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
-                                </div>
+                                )}
 
                                 {/* ── Attendance ──────────────────── */}
                                 <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4">
