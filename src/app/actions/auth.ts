@@ -6,6 +6,9 @@ import { cookies } from 'next/headers'
 import { sign, verify } from '@/lib/session'
 import { normalizePhone } from '@/lib/utils'
 
+const getSeedHeadcoachNumbers = () =>
+  (process.env.SEED_HEADCOACH_PHONES || '').split(',').map(s => s.trim()).filter(Boolean)
+
 const getTwilioClient = () => {
   const sid = process.env.TWILIO_ACCOUNT_SID
   const token = process.env.TWILIO_AUTH_TOKEN
@@ -40,6 +43,19 @@ export async function sendOTP(phone: string) {
     return { success: true }
   }
 
+  // Check if this phone number is registered before sending SMS
+  const seedNumbers = getSeedHeadcoachNumbers()
+  if (!seedNumbers.includes(phone)) {
+    const supabase = await createServerSupabaseClient()
+    const { count } = await (supabase as any)
+      .from('trainers')
+      .select('id', { count: 'exact', head: true })
+      .eq('phone', phone)
+    if (!count) {
+      return { success: false, error: 'رقم الهاتف غير مسجّل. تواصل مع المدرب الرئيسي لإضافتك.' }
+    }
+  }
+
   const twilio = getTwilioClient()
   const twilioService = process.env.TWILIO_VERIFY_SERVICE_SID
   if (twilio && twilioService) {
@@ -49,7 +65,7 @@ export async function sendOTP(phone: string) {
         return { success: true }
       } catch (e: any) {
         console.error('sendOTP twilio failed:', e)
-        return { success: false, error: 'فشل إرسال الرمز' }
+        return { success: false, error: 'فشل إرسال الرمز. حاول مرة أخرى.' }
       }
   }
 
@@ -102,9 +118,9 @@ export async function sendOTP(phone: string) {
             if (retryData.status === '0') {
                 return { success: true, requestId: retryData.request_id }
             }
-            return { success: false, error: retryData.error_text || 'SMS failed' }
+            return { success: false, error: 'فشل إرسال الرمز. حاول مرة أخرى.' }
         } else {
-            return { success: false, error: data.error_text || 'SMS failed' }
+            return { success: false, error: 'فشل إرسال الرمز. حاول مرة أخرى.' }
         }
     } catch (e: any) {
         console.error('sendOTP vonage failed:', e)
@@ -120,14 +136,14 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
   const cleanPhone = normalizePhone(phone)
 
   if (process.env.NODE_ENV === 'test' && process.env.E2E_MOCK_OTP === 'true') {
-    if (otp !== '1111' && otp !== '1234') return { success: false, error: 'Invalid OTP' }
+    if (otp !== '1111' && otp !== '1234') return { success: false, error: 'الرمز غير صحيح.' }
   } else {
   const twilio = getTwilioClient()
   if (twilio && process.env.TWILIO_VERIFY_SERVICE_SID) {
       try {
         const check = await twilio.verify.v2.services(process.env.TWILIO_VERIFY_SERVICE_SID)
           .verificationChecks.create({ to: cleanPhone, code: otp })
-        if (check.status !== 'approved') return { success: false, error: 'Invalid Code' }
+        if (check.status !== 'approved') return { success: false, error: 'الرمز غير صحيح. حاول مرة أخرى.' }
       } catch (e: any) {
         console.error('verifyOTP twilio failed:', e)
         return { success: false, error: 'فشل التحقق من الرمز' }
@@ -154,7 +170,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
       }
   }
   else {
-    if (otp !== '1111' && otp !== '1234') return { success: false, error: 'Invalid OTP' }
+    if (otp !== '1111' && otp !== '1234') return { success: false, error: 'الرمز غير صحيح.' }
   }
   }
 
@@ -164,8 +180,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
     .eq('phone', cleanPhone)
     .single()
 
-  const SEED_HEADCOACH_NUMBERS = ['972543299106', '972587131002']
-  const isSeedHeadCoach = SEED_HEADCOACH_NUMBERS.includes(cleanPhone)
+  const isSeedHeadCoach = getSeedHeadcoachNumbers().includes(cleanPhone)
 
   if (!trainer) {
       if (isSeedHeadCoach) {
@@ -186,7 +201,7 @@ export async function verifyOTP(phone: string, otp: string, context?: string) {
           }
           trainer = { ...created, role: 'headcoach' }
       } else {
-          return { success: false, error: 'Access Denied: You must be added by the Head Coach.' }
+          return { success: false, error: 'رقم الهاتف غير مسجّل. تواصل مع المدرب الرئيسي لإضافتك.' }
       }
   }
 

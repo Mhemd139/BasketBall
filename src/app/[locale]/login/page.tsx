@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { sendOTP, verifyOTP, updateProfile } from '@/app/actions'
@@ -16,10 +16,49 @@ export default function LoginPage() {
   const [otpContext, setOtpContext] = useState('') // For Vonage Hash or RequestID
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
   const verifyingRef = useRef(false)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const router = useRouter()
   const params = useParams()
   const locale = params.locale as string
+
+  const startCooldown = useCallback(() => {
+    setResendCooldown(60)
+    clearInterval(cooldownRef.current)
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [])
+
+  useEffect(() => {
+    return () => clearInterval(cooldownRef.current)
+  }, [])
+
+  const handleResendOTP = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const res = await sendOTP(phone)
+      if (res.success) {
+        if ((res as any).requestId) setOtpContext((res as any).requestId)
+        startCooldown()
+        setOtp('')
+      } else {
+        setError((res as any).error || 'فشل إرسال الرمز. حاول مرة أخرى.')
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,9 +79,10 @@ export default function LoginPage() {
         } else if ((res as any).requestId) {
             setOtpContext((res as any).requestId)
         }
+        startCooldown()
         setStep('otp')
       } else {
-        setError((res as any).error || 'Failed to send OTP')
+        setError((res as any).error || 'فشل إرسال الرمز. حاول مرة أخرى.')
       }
     } catch (err: any) {
       setError(err.message)
@@ -70,7 +110,7 @@ export default function LoginPage() {
         }
         return
       } else {
-        setError(result.error || 'Verification failed')
+        setError(result.error || 'فشل التحقق. حاول مرة أخرى.')
       }
     } catch (err: any) {
       setError(err.message)
@@ -98,14 +138,14 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-       if (!name.trim()) throw new Error('Name is required')
+       if (!name.trim()) throw new Error('الرجاء إدخال الاسم')
        
        const result = await updateProfile(name, gender, availability)
        if (result.success) {
           router.push(`/${locale}`)
           router.refresh()
        } else {
-          setError(result.error || 'Failed to save profile')
+          setError(result.error || 'فشل حفظ البيانات. حاول مرة أخرى.')
        }
     } catch (err: any) {
        setError(err.message)
@@ -295,13 +335,24 @@ export default function LoginPage() {
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'تحقق'}
                 </button>
                 
-                <button 
-                    type="button" 
-                    onClick={() => setStep('phone')}
-                    className="w-full text-center text-sm text-gray-400 hover:text-indigo-600 transition-colors"
-                >
-                    {'تغيير الرقم؟'}
-                </button>
+                <div className="flex items-center justify-center gap-4 text-sm">
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={loading || resendCooldown > 0}
+                    className={`transition-colors ${resendCooldown > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-indigo-500 hover:text-indigo-700 font-medium'}`}
+                  >
+                    {resendCooldown > 0 ? `إعادة الإرسال (${resendCooldown}ث)` : 'إعادة إرسال الرمز'}
+                  </button>
+                  <span className="text-gray-200">|</span>
+                  <button
+                    type="button"
+                    onClick={() => { setStep('phone'); setOtp(''); setError('') }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {'تغيير الرقم'}
+                  </button>
+                </div>
               </form>
             )}
           </Card>
