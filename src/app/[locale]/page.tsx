@@ -84,7 +84,7 @@ export default async function HomePage({
   })
 
   // Recurring schedules (already have event_id from the batch RPC) — filter out ended
-  const scheduleEvents = (schedulesRes.success ? schedulesRes.schedules : []).filter(ev => {
+  const scheduleEvents = (schedulesRes.success ? schedulesRes.schedules : []).filter((ev: { end_time: string | null }) => {
     if (ev.end_time && ev.end_time < nowTime) return false
     return true
   })
