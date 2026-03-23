@@ -65,9 +65,13 @@ export default async function TeamDetailPage({
   const teamDetails = team as unknown as ClassWithDetails
   const trainees = (roster || []) as Trainee[]
   const schedules = teamDetails.class_schedules || []
-  const hallNames = [...new Set(
-    schedules.filter(s => s.halls).map(s => getLocalizedField(s.halls!, 'name', locale))
-  )] as string[]
+  const hallMap = new Map<string, { id: string; name: string }>()
+  for (const s of schedules) {
+    if (s.halls && s.halls.id) {
+      hallMap.set(s.halls.id, { id: s.halls.id, name: getLocalizedField(s.halls, 'name', locale) })
+    }
+  }
+  const uniqueHalls = [...hallMap.values()]
   const halls = (allHalls || []) as { id: string; name_ar: string; name_he: string; name_en: string }[]
 
   return (
@@ -161,7 +165,12 @@ export default async function TeamDetailPage({
                   <div>
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{'القاعة'}</p>
                     <p className="text-sm font-black text-white leading-tight">
-                      {hallNames.length > 0 ? hallNames.join(' / ') : 'غير محدد'}
+                      {uniqueHalls.length > 0 ? uniqueHalls.map((h, i) => (
+                        <span key={h.id}>
+                          {i > 0 && ' / '}
+                          <Link href={`/${locale}/halls/${h.id}`} className="hover:text-orange-300 transition-colors">{h.name}</Link>
+                        </span>
+                      )) : 'غير محدد'}
                     </p>
                   </div>
                 </div>

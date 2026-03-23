@@ -139,23 +139,29 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
 
                 {/* Name + phone */}
                 <div className="min-w-0">
-                  <p className="font-bold text-white/90 text-sm truncate">
-                    {name}
-                    {(trainee.date_of_birth || trainee.school_class) && (
-                      <span className="font-normal text-white/40 text-xs mr-2">
-                        {trainee.date_of_birth && (() => {
-                          const birth = new Date(trainee.date_of_birth!)
-                          if (Number.isNaN(birth.getTime())) return ''
-                          const today = new Date()
-                          let age = today.getFullYear() - birth.getFullYear()
-                          const hadBirthday = today.getMonth() > birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate())
-                          if (!hadBirthday) age -= 1
-                          return age >= 0 ? ` · ${age} سنة` : ''
-                        })()}
-                        {trainee.school_class && ` · صف ${trainee.school_class}`}
-                      </span>
-                    )}
-                  </p>
+                  <p className="font-bold text-white/90 text-sm truncate">{name}</p>
+                  {(trainee.date_of_birth || trainee.school_class) && (
+                    <div className="text-white/40 text-xs mt-0.5 pb-1 border-b border-white/20">
+                      {trainee.date_of_birth && (() => {
+                        const birth = new Date(trainee.date_of_birth!)
+                        if (Number.isNaN(birth.getTime())) return null
+                        const today = new Date()
+                        let age = today.getFullYear() - birth.getFullYear()
+                        const hadBirthday = today.getMonth() > birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate())
+                        if (!hadBirthday) age -= 1
+                        return age >= 0 ? <span>{age} سنة</span> : null
+                      })()}
+                      {trainee.school_class && <span>{trainee.date_of_birth ? ' · ' : ''}صف {trainee.school_class}</span>}
+                      {trainee.date_of_birth && (() => {
+                        const birth = new Date(trainee.date_of_birth!)
+                        if (Number.isNaN(birth.getTime())) return null
+                        const dd = String(birth.getDate()).padStart(2, '0')
+                        const mm = String(birth.getMonth() + 1).padStart(2, '0')
+                        const yyyy = birth.getFullYear()
+                        return <span className="text-white/40"> · {dd}/{mm}/{yyyy}</span>
+                      })()}
+                    </div>
+                  )}
                   {trainee.phone && (
                     <div className="flex items-center gap-1 text-xs text-white/40 mt-0.5">
                       <Phone className="w-3 h-3" />

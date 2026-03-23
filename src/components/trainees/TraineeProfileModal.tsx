@@ -144,6 +144,51 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
     const [deleting, setDeleting] = useState(false)
 
     useScrollLock()
+
+    const touchStartY = useRef<number | null>(null)
+    const sheetRef = useRef<HTMLDivElement>(null)
+    const isDragging = useRef(false)
+    const [closing, setClosing] = useState(false)
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        const el = sheetRef.current
+        if (!el) return
+        const scrollable = el.querySelector('[data-scrollable]') as HTMLElement | null
+        if (scrollable && scrollable.scrollTop > 0) return
+        touchStartY.current = e.touches[0].clientY
+        isDragging.current = false
+    }, [])
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        if (touchStartY.current === null) return
+        const deltaY = e.touches[0].clientY - touchStartY.current
+        if (deltaY > 0) {
+            isDragging.current = true
+            if (sheetRef.current) {
+                sheetRef.current.style.transform = `translateY(${deltaY}px)`
+                sheetRef.current.style.transition = 'none'
+            }
+        }
+    }, [])
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (touchStartY.current === null) return
+        const deltaY = e.changedTouches[0].clientY - touchStartY.current
+        touchStartY.current = null
+        if (deltaY > 80) {
+            if (sheetRef.current) {
+                sheetRef.current.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out'
+                sheetRef.current.style.transform = 'translateY(100%)'
+                sheetRef.current.style.opacity = '0'
+            }
+            setClosing(true)
+            setTimeout(onClose, 300)
+        } else if (sheetRef.current) {
+            sheetRef.current.style.transition = 'transform 0.25s ease-out'
+            sheetRef.current.style.transform = 'translateY(0)'
+        }
+    }, [onClose])
+
     const initialForm = {
         name_ar: trainee.name_ar || '',
         name_en: trainee.name_en || '',
@@ -239,7 +284,12 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                 className="fixed bottom-0 inset-x-0 z-[201] sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6"
                 dir="rtl"
             >
-                <div className={`bg-[#0B132B] w-full sm:max-w-sm rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-white/10 flex flex-col max-h-[92dvh] sm:max-h-[90vh] animate-in slide-in-from-bottom-8 sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isFemale ? 'border-t-pink-500/70' : 'border-t-indigo-500/70'}`}>
+                <div
+                    ref={sheetRef}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    className={`bg-[#0B132B] w-full sm:max-w-sm rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-white/10 flex flex-col max-h-[92dvh] sm:max-h-[90vh] animate-in slide-in-from-bottom-8 sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isFemale ? 'border-t-pink-500/70' : 'border-t-indigo-500/70'}`}>
 
                     {/* Drag pill */}
                     <div className="flex justify-center pt-2.5 sm:hidden">
@@ -296,7 +346,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                     </div>
 
                     {/* ── BODY ─────────────────────────────────── */}
-                    <div className="px-4 pb-8 space-y-3 overflow-y-auto flex-1">
+                    <div data-scrollable className="px-4 pb-8 space-y-3 overflow-y-auto flex-1">
 
                         {isEditing ? (
                             <div className="space-y-3 pt-1 animate-in fade-in duration-200">
