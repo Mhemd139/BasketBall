@@ -7,10 +7,9 @@ import Link from 'next/link'
 interface TeamCardProps {
     cls: any
     locale: string
-    isEditable: boolean
 }
 
-export function TeamCard({ cls, locale, isEditable }: TeamCardProps) {
+export function TeamCard({ cls, locale }: TeamCardProps) {
     const traineeCount = cls.trainees?.[0]?.count ?? 0
     const categoryName = cls.categories ? getLocalizedField(cls.categories, 'name', locale) : ''
     const isFemale = categoryName.includes('بنات') || categoryName.includes('נערות') || categoryName.includes('ילדות') || categoryName.includes('בוגרות')

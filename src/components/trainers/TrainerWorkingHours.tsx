@@ -39,10 +39,12 @@ export function TrainerWorkingHours({ trainerId }: { trainerId: string }) {
             if (res.success) {
                 setResult({ hours: res.hours ?? 0, minutes: res.minutes ?? 0, totalEvents: res.totalEvents ?? 0 })
             } else {
+                setResult(null)
                 setError(res.error || 'فشل تحميل الساعات')
             }
         } catch {
             if (seq !== requestSeqRef.current) return
+            setResult(null)
             setError('فشل تحميل الساعات')
         } finally {
             if (seq === requestSeqRef.current) setLoading(false)

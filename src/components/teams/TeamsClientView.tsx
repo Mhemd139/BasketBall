@@ -130,7 +130,6 @@ export function TeamsClientView({ classes, locale, canCreate, currentTrainerId, 
                                 key={cls.id}
                                 cls={cls}
                                 locale={locale}
-                                isEditable={canCreate}
                             />
                         ))}
                     </div>
