@@ -177,7 +177,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                         priority
                     />
                 </div>
-                <h1 className="font-black text-base md:text-lg leading-tight text-yellow-600 tracking-tight">
+                <h1 className="font-black text-base md:text-lg leading-tight text-yellow-600 tracking-tight truncate">
                     {title || <>باقة الغربية <span className="text-yellow-600/50 text-sm">·</span> النادي الرياضي</>}
                 </h1>
               </Link>

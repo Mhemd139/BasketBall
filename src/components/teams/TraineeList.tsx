@@ -63,6 +63,7 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
     if (res.success) {
       toast('تم حذف اللاعب بنجاح', 'success')
       setTrainees(prev => prev.filter(t => t.id !== id))
+      router.refresh()
     } else {
       toast('فشل الحذف', 'error')
     }
@@ -143,8 +144,13 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
                     {(trainee.date_of_birth || trainee.school_class) && (
                       <span className="font-normal text-white/40 text-xs mr-2">
                         {trainee.date_of_birth && (() => {
-                          const age = new Date().getFullYear() - new Date(trainee.date_of_birth!).getFullYear()
-                          return ` · ${age} سنة`
+                          const birth = new Date(trainee.date_of_birth!)
+                          if (Number.isNaN(birth.getTime())) return ''
+                          const today = new Date()
+                          let age = today.getFullYear() - birth.getFullYear()
+                          const hadBirthday = today.getMonth() > birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate())
+                          if (!hadBirthday) age -= 1
+                          return age >= 0 ? ` · ${age} سنة` : ''
                         })()}
                         {trainee.school_class && ` · صف ${trainee.school_class}`}
                       </span>

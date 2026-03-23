@@ -33,20 +33,31 @@ export function DeletePlayerModal({ isOpen, onClose }: DeletePlayerModalProps) {
         return () => { document.body.style.overflow = '' }
     }, [isOpen])
 
+    const searchSeqRef = useRef(0)
+
     useEffect(() => {
-        if (query.length < 2) {
+        clearTimeout(debounceRef.current)
+        if (!isOpen || query.length < 2) {
+            setSearching(false)
             setResults([])
             return
         }
-        clearTimeout(debounceRef.current)
+        const seq = ++searchSeqRef.current
         debounceRef.current = setTimeout(async () => {
             setSearching(true)
-            const res = await searchTrainees(query)
-            if (res.success) setResults(res.trainees || [])
-            setSearching(false)
+            try {
+                const res = await searchTrainees(query)
+                if (searchSeqRef.current === seq) {
+                    setResults(res.success ? (res.trainees || []) : [])
+                }
+            } catch {
+                if (searchSeqRef.current === seq) setResults([])
+            } finally {
+                if (searchSeqRef.current === seq) setSearching(false)
+            }
         }, 300)
         return () => clearTimeout(debounceRef.current)
-    }, [query])
+    }, [isOpen, query])
 
     const handleDelete = async (trainee: any) => {
         const confirmed = await confirm({
@@ -59,19 +70,23 @@ export function DeletePlayerModal({ isOpen, onClose }: DeletePlayerModalProps) {
         if (!confirmed) return
 
         setDeletingId(trainee.id)
-        const res = await deleteTrainee(trainee.id)
-        setDeletingId(null)
-
-        if (res.success) {
-            toast('تم حذف اللاعب بنجاح', 'success')
-            setResults(prev => prev.filter(t => t.id !== trainee.id))
-            router.refresh()
-        } else {
-            toast(res.error || 'فشل الحذف', 'error')
+        try {
+            const res = await deleteTrainee(trainee.id)
+            if (res.success) {
+                toast('تم حذف اللاعب بنجاح', 'success')
+                setResults(prev => prev.filter(t => t.id !== trainee.id))
+                router.refresh()
+            } else {
+                toast(res.error || 'فشل الحذف', 'error')
+            }
+        } catch {
+            toast('فشل الحذف', 'error')
+        } finally {
+            setDeletingId(null)
         }
     }
 
-    if (typeof window === 'undefined' || !isOpen) return null
+    if (typeof window === 'undefined') return null
 
     return createPortal(
         <AnimatePresence>

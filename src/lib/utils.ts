@@ -70,7 +70,10 @@ export function normalizePhone(str: string): string {
 
 // Validate Israeli phone number: 10 digits, starts with 05
 export function isValidIsraeliPhone(val: string): boolean {
-  const d = val.replace(/\D/g, '')
+  const d = val
+    .replace(/[٠١٢٣٤٥٦٧٨٩]/g, c => String(c.charCodeAt(0) - 1632))
+    .replace(/[۰۱۲۳۴۵۶۷۸۹]/g, c => String(c.charCodeAt(0) - 1776))
+    .replace(/\D/g, '')
   return d.length === 10 && d.startsWith('05')
 }
 

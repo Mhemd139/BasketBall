@@ -63,7 +63,8 @@ export function TeamsClientView({ classes, locale, canCreate, currentTrainerId, 
         return counts
     }, [classes])
 
-    const showChips = categories.length > 1 || !!currentTrainerId
+    const showMyTeamsChip = isHeadcoach && !!currentTrainerId
+    const showChips = categories.length > 1 || showMyTeamsChip
 
     return (
         <>

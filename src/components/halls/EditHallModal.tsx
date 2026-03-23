@@ -38,7 +38,7 @@ export function EditHallModal({ isOpen, onClose, hall, locale }: EditHallModalPr
         }
         setLoading(true)
         try {
-            const res = await updateHall(hall.id, nameAr, nameAr, nameHe)
+            const res = await updateHall(hall.id, hall?.name_en ?? nameAr, nameAr, nameHe)
             if (res.success) {
                 toast(locale === 'he' ? 'האולם עודכן בהצלחה' : 'تم تحديث القاعة بنجاح', 'success')
                 router.refresh()

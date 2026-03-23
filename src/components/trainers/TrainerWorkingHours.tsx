@@ -27,16 +27,26 @@ export function TrainerWorkingHours({ trainerId }: { trainerId: string }) {
     const [error, setError] = useState('')
     const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
+    const requestSeqRef = useRef(0)
+
     const fetchHours = useCallback(async (start: string, end: string) => {
+        const seq = ++requestSeqRef.current
         setLoading(true)
         setError('')
-        const res = await getTrainerWorkingHours(trainerId, start, end)
-        if (res.success) {
-            setResult({ hours: res.hours ?? 0, minutes: res.minutes ?? 0, totalEvents: res.totalEvents ?? 0 })
-        } else {
-            setError(res.error || 'فشل تحميل الساعات')
+        try {
+            const res = await getTrainerWorkingHours(trainerId, start, end)
+            if (seq !== requestSeqRef.current) return
+            if (res.success) {
+                setResult({ hours: res.hours ?? 0, minutes: res.minutes ?? 0, totalEvents: res.totalEvents ?? 0 })
+            } else {
+                setError(res.error || 'فشل تحميل الساعات')
+            }
+        } catch {
+            if (seq !== requestSeqRef.current) return
+            setError('فشل تحميل الساعات')
+        } finally {
+            if (seq === requestSeqRef.current) setLoading(false)
         }
-        setLoading(false)
     }, [trainerId])
 
     useEffect(() => {
