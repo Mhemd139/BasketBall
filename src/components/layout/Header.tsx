@@ -235,44 +235,46 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 
        {/* Mobile Search Overlay */}
        {searchOpen && (
-        <div ref={mobileSearchRef} className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-xl p-4 animate-in slide-in-from-top-2 z-40 border-b border-gray-100">
+        <div ref={mobileSearchRef} className="md:hidden absolute top-full left-0 w-full bg-[#080e1f]/95 backdrop-blur-2xl border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-3 animate-in slide-in-from-top-2 duration-200 z-40" dir="rtl">
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
                 <input
                     autoFocus
                     type="text"
                     placeholder="بحث عن لاعبين، مدربين..."
-                    className="w-full bg-gray-100 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400"
+                    className="w-full bg-white/[0.07] border border-white/10 rounded-2xl pr-10 pl-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-colors"
                     value={query}
                     onChange={(e) => handleSearch(e.target.value)}
                 />
-                <button 
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-gray-200 rounded-full"
-                    onClick={() => setSearchOpen(false)}
-                >
-                    <span className="block w-3 h-3 text-[10px] leading-3 text-center text-gray-600">&times;</span>
-                </button>
             </div>
-            <div className="mt-2 max-h-60 overflow-y-auto">
-                 {results.map((result) => (
-                    <Link
-                        key={`${result.type}-${result.id}`}
-                        href={result.href}
-                        className="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0 active:bg-gray-50"
-                        onClick={() => setSearchOpen(false)}
-                    >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            result.type === 'trainee' ? 'bg-indigo-100 text-indigo-700' : 'bg-gold-100 text-gold-700'
-                        }`}>
-                            {result.type === 'trainee' ? 'لا' : 'مد'}
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold text-gray-800">{result.name}</p>
-                            {result.subtitle && <p className="text-[10px] text-gray-500">{result.subtitle}</p>}
-                        </div>
-                    </Link>
-                ))}
-            </div>
+            {(loading || results.length > 0 || (query.length > 1 && !loading)) && (
+                <div className="mt-2 space-y-1 max-h-56 overflow-y-auto">
+                    {loading && (
+                        <p className="text-center text-xs text-white/30 py-4">{'جاري البحث...'}</p>
+                    )}
+                    {!loading && query.length > 1 && results.length === 0 && (
+                        <p className="text-center text-xs text-white/30 py-4">{'لا توجد نتائج'}</p>
+                    )}
+                    {results.map((result) => (
+                        <Link
+                            key={`${result.type}-${result.id}`}
+                            href={result.href}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors"
+                            onClick={() => setSearchOpen(false)}
+                        >
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                result.type === 'trainee' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/20 text-emerald-300'
+                            }`}>
+                                {result.type === 'trainee' ? 'لا' : 'مد'}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-white truncate">{result.name}</p>
+                                {result.subtitle && <p className="text-[10px] text-white/40 truncate" dir="ltr">{result.subtitle}</p>}
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
        )}
     </header>

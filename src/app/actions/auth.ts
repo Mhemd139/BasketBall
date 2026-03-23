@@ -7,7 +7,7 @@ import { sign, verify } from '@/lib/session'
 import { normalizePhone } from '@/lib/utils'
 
 const getSeedHeadcoachNumbers = () =>
-  (process.env.SEED_HEADCOACH_PHONES || '').split(',').map(s => s.trim()).filter(Boolean)
+  (process.env.SEED_HEADCOACH_PHONES || '').split(',').map(s => normalizePhone(s.trim())).filter(Boolean)
 
 const getTwilioClient = () => {
   const sid = process.env.TWILIO_ACCOUNT_SID
@@ -47,10 +47,14 @@ export async function sendOTP(phone: string) {
   const seedNumbers = getSeedHeadcoachNumbers()
   if (!seedNumbers.includes(phone)) {
     const supabase = await createServerSupabaseClient()
-    const { count } = await (supabase as any)
+    const { count, error: lookupError } = await (supabase as any)
       .from('trainers')
       .select('id', { count: 'exact', head: true })
       .eq('phone', phone)
+    if (lookupError) {
+      console.error('sendOTP trainer lookup failed:', lookupError)
+      return { success: false, error: 'تعذر التحقق من رقم الهاتف. حاول مرة أخرى.' }
+    }
     if (!count) {
       return { success: false, error: 'رقم الهاتف غير مسجّل. تواصل مع المدرب الرئيسي لإضافتك.' }
     }

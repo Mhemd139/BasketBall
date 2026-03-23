@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteTrainee, toggleTraineePayment } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
@@ -39,6 +39,7 @@ interface TraineeListProps {
 
 export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamName, trainerName, attendanceStatsMap }: TraineeListProps) {
   const [trainees, setTrainees] = useState(initialTrainees)
+  useEffect(() => { setTrainees(initialTrainees) }, [initialTrainees])
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [selectedTrainee, setSelectedTrainee] = useState<Trainee | null>(null)
   const router = useRouter()
@@ -61,6 +62,7 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
     setLoadingId(null)
     if (res.success) {
       toast('تم حذف اللاعب بنجاح', 'success')
+      setTrainees(prev => prev.filter(t => t.id !== id))
       router.refresh()
     } else {
       toast('فشل الحذف', 'error')

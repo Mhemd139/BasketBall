@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, Save, Loader2, Plus } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
@@ -48,7 +48,7 @@ export function PaymentModal({ trainee, onClose, onSave }: PaymentModalProps) {
         if (res.success) {
             toast('تم تحديث الدفع بنجاح', 'success')
             onSave?.(amount, comment)
-            router.refresh()
+            startTransition(() => router.refresh())
             onClose()
         } else {
             toast('حدث خطأ أثناء التحديث', 'error')

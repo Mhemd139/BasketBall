@@ -348,7 +348,8 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => { setStep('phone'); setOtp(''); setError('') }}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    disabled={loading}
+                    className={`transition-colors ${loading ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     {'تغيير الرقم'}
                   </button>
