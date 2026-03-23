@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { X, Search, Loader2, Check, UserRound } from 'lucide-react'
 import { updateTeamTrainer } from '@/app/actions'
