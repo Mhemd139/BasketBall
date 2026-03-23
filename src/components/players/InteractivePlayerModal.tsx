@@ -472,12 +472,12 @@ export function InteractivePlayerModal({ isOpen, onClose, locale, classId }: Int
                         </div>
 
                         {/* Sticky Footer */}
-                        <div className="p-5 pb-8 sm:p-6 bg-[#0B132B] border-t border-white/10 shrink-0 flex items-center justify-between z-20">
+                        <div className="p-5 bg-[#0B132B] border-t border-white/10 shrink-0 flex items-center justify-between z-20" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))' }}>
                             {step !== 'choice' && step !== 'success' && step !== 'search' ? (
                                 <motion.button whileTap={{ scale: 0.95 }} onClick={handleBack} className="flex hidden items-center justify-center w-14 h-14 rounded-2xl border-2 border-white/10 text-white/50 hover:bg-white/10 sm:flex shrink-0">
                                     <ArrowRight className="w-6 h-6" />
                                 </motion.button>
-                            ) : <div className="w-14" />}
+                            ) : step === 'success' ? null : <div className="w-14" />}
 
                             {step !== 'success' && step !== 'search' && (
                                 <motion.button

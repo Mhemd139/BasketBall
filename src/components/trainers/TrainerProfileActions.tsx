@@ -14,12 +14,12 @@ export function TrainerProfileActions({ trainer, locale }: TrainerProfileActions
 
     return (
         <>
-            <button 
+            <button
                 onClick={() => setIsEditOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-95 font-bold"
+                className="p-2 rounded-xl bg-white/10 border border-white/10 text-white/50 hover:text-white hover:bg-white/15 transition-all active:scale-95"
+                aria-label="تعديل"
             >
                 <Pencil className="w-4 h-4" />
-                {'تعديل'}
             </button>
 
             <EditTrainerProfileModal 

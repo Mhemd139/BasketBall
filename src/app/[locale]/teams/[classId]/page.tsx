@@ -7,7 +7,7 @@ import { getLocalizedField, formatPhoneNumber } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { User, Calendar, Trophy, Building2, ChevronLeft } from 'lucide-react'
+import { User, Calendar, Trophy, Building2, ChevronLeft, Phone } from 'lucide-react'
 import { getSession, getClassAttendanceStats } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
@@ -51,7 +51,7 @@ export default async function TeamDetailPage({
     attendanceStatsMap
   ] = await Promise.all([
     supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, trainers(id, name_ar, name_he, name_en, phone, gender), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
-    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en, date_of_birth, school_class').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).limit(200),
+    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en, date_of_birth, school_class').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).order('name_ar', { ascending: true }).limit(200),
     supabase.from('halls').select('id, name_ar, name_he, name_en').order('name_ar').limit(50),
     getClassAttendanceStats(classId),
   ])
@@ -84,11 +84,11 @@ export default async function TeamDetailPage({
           />
         </div>
 
-        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full overflow-x-hidden">
+        <main className="flex-1 pt-[72px] pb-nav md:pb-8 px-3 md:px-5 w-full overflow-x-hidden">
           <div className="max-w-4xl mx-auto w-full">
 
             {/* Team Hero */}
-            <section className="py-4">
+            <section className="pb-4 mb-2">
               <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 to-indigo-700 p-6 text-white shadow-xl shadow-purple-900/30 mb-4">
                 <div className="absolute top-0 right-0 -mt-6 -mr-6 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
                 <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-28 h-28 bg-black/20 rounded-full blur-xl" />
@@ -138,7 +138,10 @@ export default async function TeamDetailPage({
                         {teamDetails.trainers ? getLocalizedField(teamDetails.trainers, 'name', locale) : 'غير معين'}
                       </p>
                       {teamDetails.trainers?.phone && (
-                        <p className="text-xs text-white/40 font-medium" dir="ltr">{formatPhoneNumber(teamDetails.trainers.phone)}</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Phone className="w-3 h-3 text-white/30" />
+                          <p className="text-xs text-white/60 font-medium tracking-wide" dir="ltr">{formatPhoneNumber(teamDetails.trainers.phone)}</p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -196,7 +199,7 @@ export default async function TeamDetailPage({
             </section>
 
             {/* Roster Section */}
-            <section>
+            <section className="pt-2">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-black text-white drop-shadow-md">
                   {'قائمة اللاعبين'}

@@ -68,6 +68,15 @@ export function normalizePhone(str: string): string {
   return cleaned
 }
 
+// Validate Israeli phone number: 10 digits, starts with 05
+export function isValidIsraeliPhone(val: string): boolean {
+  const d = val
+    .replace(/[٠١٢٣٤٥٦٧٨٩]/g, c => String(c.charCodeAt(0) - 1632))
+    .replace(/[۰۱۲۳۴۵۶۷۸۹]/g, c => String(c.charCodeAt(0) - 1776))
+    .replace(/\D/g, '')
+  return d.length === 10 && d.startsWith('05')
+}
+
 // School class grades (1-12) with Arabic labels
 export const SCHOOL_CLASSES = [
   { value: '1', label: 'صف أول' },

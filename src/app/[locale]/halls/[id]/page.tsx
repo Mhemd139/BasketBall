@@ -4,13 +4,12 @@ import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Card, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getLocalizedField, formatDate, formatTime, getNowInIsrael } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Building2, Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { HallSchedule } from '@/components/halls/HallSchedule'
 import { HallManagementActions } from '@/components/halls/HallManagementActions'
 import { getSession, fetchHallSchedules } from '@/app/actions'
@@ -60,36 +59,26 @@ export default async function HallDetailPage({
           <Header locale={locale} showBack backHref={`/${locale}/halls`} />
         </div>
 
-        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-[80px] pb-nav md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto w-full">
             {/* Hall Hero */}
-            <section className="py-4 mb-2">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-lg shadow-orange-200">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
-                
+            <section className="mb-4">
+              <Card className="bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl overflow-hidden relative border-r-2 border-r-orange-400">
                 {isEditable && (
-                  <div className="absolute top-4 right-4 z-20">
+                  <div className="absolute top-3 left-3 z-20">
                     <HallManagementActions hall={hallData} locale={locale} />
                   </div>
                 )}
 
-                <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="mb-3 p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                    <Building2 className="w-8 h-8 text-white" strokeWidth={2.5} />
-                  </div>
-                  
-                  <h1 className="heading-lg text-white mb-2 drop-shadow-sm">
+                <div className="flex flex-col items-center gap-2 py-6 px-5">
+                  <h1 className="text-2xl font-black text-white text-center drop-shadow-sm">
                     {getLocalizedField(hallData, 'name', locale)}
                   </h1>
-                  
-                  <p className="text-orange-50 max-w-md mx-auto font-medium opacity-90">
-                    {getLocalizedField(hallData, 'description', locale) || (
-                      locale === 'he' ? 'אולם כדורסל' : 'قاعة كرة السلة'
-                    )}
-                  </p>
+                  <span className="text-[10px] font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-md border border-orange-500/20">
+                    {getLocalizedField(hallData, 'description', locale) || 'قاعة تدريب'}
+                  </span>
                 </div>
-              </div>
+              </Card>
             </section>
 
             {/* Hall Schedule Timeline */}

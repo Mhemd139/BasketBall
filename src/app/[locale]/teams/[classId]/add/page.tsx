@@ -76,8 +76,8 @@ export default function AddTraineePage() {
     const res = await transferTrainee(trainee.id, classId)
     if (res.success) {
       toast('تم نقل اللاعب بنجاح', 'success')
-      router.push(`/${locale}/teams/${classId}`)
       router.refresh()
+      router.push(`/${locale}/teams/${classId}`)
     } else {
       setError(res.error || 'فشل نقل اللاعب')
       setLoading(false)
@@ -99,8 +99,8 @@ export default function AddTraineePage() {
       })
 
       if (result.success) {
-        router.push(`/${locale}/teams/${classId}`)
         router.refresh()
+        router.push(`/${locale}/teams/${classId}`)
       } else {
         setError(result.error || 'Failed to add trainee')
       }

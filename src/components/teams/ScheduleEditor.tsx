@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Pencil, Check, X, Clock, MapPin, Plus, Trash2, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { updateClassSchedule, addClassSchedule, deleteClassSchedule } from '@/app/actions'
@@ -48,6 +48,13 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
     const { toast } = useToast()
     const { confirm } = useConfirm()
     const router = useRouter()
+    const isModalOpen = !!(editingSchedule || isAdding)
+
+    useEffect(() => {
+        if (!isModalOpen) return
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = '' }
+    }, [isModalOpen])
 
     const getLocName = (obj: { name_ar: string; name_he: string; name_en: string }) => {
         const key = `name_${locale}` as keyof typeof obj
@@ -160,7 +167,7 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
                         >
                             <Pencil className="w-3 h-3 text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
                             <span className="font-bold text-white">{dayLabels[s.day_of_week]}</span>
-                            <span dir="ltr" className="text-white/50 font-medium text-xs">
+                            <span className="text-white/50 font-medium text-xs tabular-nums" dir="rtl">
                                 {s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}
                             </span>
                             {s.halls && (
@@ -294,7 +301,7 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
                                         <Clock className="w-3.5 h-3.5 text-blue-400" />
                                         الوقت
                                     </label>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3" dir="rtl">
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] text-white/30 font-bold text-center">من</p>
                                             <input

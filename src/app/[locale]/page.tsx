@@ -72,15 +72,22 @@ export default async function HomePage({
   ])
   const canManage = !!session
 
-  // One-time events (games, manually created) — filter out auto-created from schedules
+  // Current time as HH:MM:SS for filtering out ended events
+  const nowTime = new Date().toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Asia/Jerusalem' })
+
+  // One-time events (games, manually created) — filter out auto-created from schedules AND ended events
   const manualEvents = ((events || []) as unknown as EventWithHall[]).filter(ev => {
     if (ev.schedule_id) return false // Has proper schedule_id column
+    if (ev.end_time && ev.end_time < nowTime) return false // Already ended
     if (!ev.notes_en) return true
     try { return !JSON.parse(ev.notes_en).schedule_id } catch { return true }
   })
 
-  // Recurring schedules (already have event_id from the batch RPC)
-  const scheduleEvents = schedulesRes.success ? schedulesRes.schedules : []
+  // Recurring schedules (already have event_id from the batch RPC) — filter out ended
+  const scheduleEvents = (schedulesRes.success ? schedulesRes.schedules : []).filter((ev: { end_time: string | null }) => {
+    if (ev.end_time && ev.end_time < nowTime) return false
+    return true
+  })
   const hasContent = manualEvents.length > 0 || scheduleEvents.length > 0
 
   return (
