@@ -146,7 +146,7 @@ function PaymentRow({ trainee, locale }: { trainee: Trainee, locale: string }) {
 
     const handleSave = async () => {
         setLoading(true)
-        const res = await updateTraineePayment(trainee.id, amount, comment)
+        const res = await updateTraineePayment(trainee.id, amount - (trainee.amount_paid || 0), comment)
         if (res.success) {
             toast('تم تحديث الدفع بنجاح', 'success')
             savedAmount.current = amount
