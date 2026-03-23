@@ -36,38 +36,26 @@ export default async function HallsPage({
           <Header locale={locale} title={'القاعات'} />
         </div>
 
-        <main className="flex-1 pt-20 pb-nav md:pb-8 px-3 md:px-5 w-full">
+        <main className="flex-1 pt-[80px] pb-nav md:pb-8 px-3 md:px-5 w-full">
           <div className="max-w-4xl mx-auto w-full">
-
-
             {/* Halls List */}
             <section>
               {halls && halls.length > 0 ? (
                 <div className="space-y-3">
-                  {halls.map((hall, index) => (
-                    <Link key={hall.id} href={`/${locale}/halls/${hall.id}`} className="block">
-                      <Card 
-                        interactive 
-                        className={`animate-fade-in-up stagger-${Math.min(index + 1, 4)} accent-hall-orange bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl overflow-hidden relative group hover:-translate-y-1 transition-all`}
+                  {halls.map((hall) => (
+                    <Link key={hall.id} href={`/${locale}/halls/${hall.id}`} className="block group">
+                      <Card
+                        interactive
+                        className="bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl overflow-hidden relative transition-all hover:-translate-y-1 hover:bg-white/10 border-r-2 border-r-orange-400"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-3 relative z-10">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-orange-500/20 border border-orange-500/30">
-                            <Building2 className="w-5 h-5" strokeWidth={2.5} />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0 flex justify-between items-center">
-                            <div>
-                              <h3 className="text-sm font-bold text-white mb-0.5 truncate drop-shadow-md">
-                                {getLocalizedField(hall, 'name', locale)}
-                              </h3>
-                              <p className="text-xs text-indigo-100/70 truncate font-medium">
-                                {getLocalizedField(hall, 'description', locale) || (
-                                  'لا تدريبات اليوم'
-                                )}
-                              </p>
-                            </div>
-                          </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex flex-col items-center gap-1.5 relative z-10 py-4 px-5">
+                          <h3 className="text-base font-bold text-white truncate drop-shadow-md max-w-full">
+                            {getLocalizedField(hall, 'name', locale)}
+                          </h3>
+                          <span className="text-[10px] font-bold text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-md border border-orange-500/20">
+                            {getLocalizedField(hall, 'description', locale) || 'قاعة تدريب'}
+                          </span>
                         </div>
                       </Card>
                     </Link>

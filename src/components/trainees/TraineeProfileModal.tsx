@@ -412,7 +412,6 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                             ? 'bg-white/[0.07] ring-1 ring-white/10 hover:bg-white/[0.10]'
                                             : 'bg-white/[0.03] border border-dashed border-white/15 hover:border-white/25 hover:bg-white/[0.05]'
                                     }`}>
-                                    <Edit2 className="absolute top-3 left-3 w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors" />
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
                                             <Cake className="w-3.5 h-3.5 text-amber-400" />

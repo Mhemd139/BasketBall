@@ -16,7 +16,7 @@ export function HallManagementActions({ hall, locale }: HallManagementActionsPro
         <>
             <button 
                 onClick={() => setIsOpen(true)}
-                className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all backdrop-blur-sm"
+                className="p-2 rounded-xl bg-white/10 border border-white/10 text-white/50 hover:text-white hover:bg-white/15 transition-all active:scale-95"
                 title={'تعديل القاعة'}
             >
                 <Pencil className="w-5 h-5" />

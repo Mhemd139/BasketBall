@@ -15,19 +15,25 @@ export default async function TeamsPage({
   const { locale } = await params
   const supabase = await createServerSupabaseClient()
 
-  const [session, { data: classes, error: classesError }] = await Promise.all([
-    getSession(),
-    supabase
-      .from('classes')
-      .select('id, name_ar, name_he, name_en, trainer_id, hall_id, category_id, trainees(count), categories(name_ar, name_he, name_en)')
-      .order('name_ar', { ascending: true })
-      .limit(50),
-  ])
+  const session = await getSession()
+  const isHeadcoach = session?.role === 'headcoach'
+
+  let query = supabase
+    .from('classes')
+    .select('id, name_ar, name_he, name_en, trainer_id, hall_id, category_id, trainees(count), categories(name_ar, name_he, name_en)')
+    .order('name_ar', { ascending: true })
+    .limit(50)
+
+  if (!isHeadcoach && session?.id) {
+    query = query.eq('trainer_id', session.id)
+  }
+
+  const { data: classes, error: classesError } = await query
 
   if (classesError) {
     console.error('Failed to fetch classes:', classesError.message)
   }
-  const canCreate = !!session
+  const canCreate = isHeadcoach
 
   return (
     <AnimatedMeshBackground className="min-h-screen flex text-white" suppressHydrationWarning>
@@ -45,6 +51,7 @@ export default async function TeamsPage({
               locale={locale}
               canCreate={canCreate}
               currentTrainerId={session?.id ?? null}
+              isHeadcoach={isHeadcoach}
             />
           </div>
         </main>

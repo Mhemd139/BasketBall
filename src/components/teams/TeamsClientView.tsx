@@ -11,9 +11,10 @@ interface TeamsClientViewProps {
     locale: string
     canCreate: boolean
     currentTrainerId?: string | null
+    isHeadcoach?: boolean
 }
 
-export function TeamsClientView({ classes, locale, canCreate, currentTrainerId }: TeamsClientViewProps) {
+export function TeamsClientView({ classes, locale, canCreate, currentTrainerId, isHeadcoach }: TeamsClientViewProps) {
     const [activeCategory, setActiveCategory] = useState<string | null>(null)
     const [myTeamsOnly, setMyTeamsOnly] = useState(false)
 
@@ -72,8 +73,8 @@ export function TeamsClientView({ classes, locale, canCreate, currentTrainerId }
             {/* Filter chips */}
             {showChips && (
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide" dir="rtl">
-                    {/* My Teams chip — only when logged in */}
-                    {currentTrainerId && (
+                    {/* My Teams chip — headcoach only */}
+                    {isHeadcoach && currentTrainerId && (
                         <button
                             type="button"
                             onClick={() => setMyTeamsOnly(v => !v)}
@@ -138,9 +139,14 @@ export function TeamsClientView({ classes, locale, canCreate, currentTrainerId }
                             <Users className="w-8 h-8 text-white" />
                         </div>
                         <h3 className="text-lg font-black text-white mb-1 drop-shadow-md">
-                            {myTeamsOnly ? 'لا توجد فرق مسندة إليك' : activeCategory ? 'لا توجد فرق في هذه الفئة' : 'لا توجد فرق بعد'}
+                            {!isHeadcoach ? 'لم يتم تعيين فريق لك بعد' : myTeamsOnly ? 'لا توجد فرق مسندة إليك' : activeCategory ? 'لا توجد فرق في هذه الفئة' : 'لا توجد فرق بعد'}
                         </h3>
-                        {!activeCategory && !myTeamsOnly && (
+                        {!isHeadcoach && (
+                            <p className="text-sm font-bold text-indigo-100/70 drop-shadow-sm">
+                                {'تواصل مع المدرب الرئيسي'}
+                            </p>
+                        )}
+                        {isHeadcoach && !activeCategory && !myTeamsOnly && (
                             <>
                                 <p className="text-sm font-bold text-indigo-100/70 mb-6 drop-shadow-sm">
                                     {'ابدأ بإنشاء أول فريق لإدارة اللاعبين والتدريبات'}

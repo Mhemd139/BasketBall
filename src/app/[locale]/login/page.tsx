@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { sendOTP, verifyOTP, updateProfile } from '@/app/actions'
+import { isValidIsraeliPhone } from '@/lib/utils'
 import { Phone, ArrowRight, AlertCircle, Loader2, KeyRound, ArrowLeft, User } from 'lucide-react'
 
 export default function LoginPage() {
@@ -66,10 +67,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const digits = phone.replace(/\D/g, '')
-
-      if (!digits || digits.length < 8) {
-        throw new Error('الرجاء إدخال رقم الهاتف صحيح')
+      if (!isValidIsraeliPhone(phone)) {
+        throw new Error('رقم الهاتف غير صحيح — يجب أن يكون 10 أرقام ويبدأ بـ 05')
       }
 
       const res = await sendOTP(phone)

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Check, AlertCircle, Trash2, Phone, User, Calendar, X } from 'lucide-react'
 import { updateTrainerDetails, deleteAccount } from '@/app/actions'
-import { formatPhoneNumber, cn } from '@/lib/utils'
+import { formatPhoneNumber, cn, isValidIsraeliPhone } from '@/lib/utils'
 import { Portal } from '@/components/ui/Portal'
 
 interface EditTrainerProfileModalProps {
@@ -33,8 +33,9 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
 
     useEffect(() => {
         if (isOpen) {
+            document.body.style.overflow = 'hidden'
             setName(trainer.name_ar || '')
-            setPhone(trainer.phone || '')
+            setPhone(formatPhoneNumber(trainer.phone || ''))
             setGender(trainer.gender || 'male')
             setSchedule(
                 trainer.availability_schedule ||
@@ -43,6 +44,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
             setError('')
             setConfirmDelete(false)
         }
+        return () => { document.body.style.overflow = '' }
     }, [isOpen, trainer, locale])
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +53,12 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
         setError('')
 
         try {
+            if (phone && !isValidIsraeliPhone(phone)) {
+                setError('رقم الهاتف غير صحيح — يجب أن يكون 10 أرقام ويبدأ بـ 05')
+                setLoading(false)
+                return
+            }
+
             const updateData: any = {}
 
             if (mode === 'all' || mode === 'personal') {
@@ -143,7 +151,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
         <Portal>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-[200] backdrop-blur-sm bg-[#060d1a]/60 animate-in fade-in duration-300"
+                className="fixed inset-0 z-[200] backdrop-blur-sm bg-[#060d1a]/60 animate-in fade-in duration-300 touch-none"
                 onClick={onClose}
             />
 
@@ -190,7 +198,7 @@ export function EditTrainerProfileModal({ isOpen, onClose, trainer, locale, mode
                     </div>
 
                     {/* Scrollable content */}
-                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col">
+                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto overscroll-contain touch-auto flex flex-col">
                         <div className="px-4 py-4 space-y-4 flex-1">
 
                             {/* Personal Info Fields */}

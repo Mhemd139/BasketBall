@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, Users, User, GraduationCap } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface HeaderProps {
@@ -18,7 +18,7 @@ interface HeaderProps {
 interface SearchResult {
   id: string;
   name: string;
-  type: 'trainee' | 'trainer';
+  type: 'trainee' | 'trainer' | 'team';
   subtitle?: string;
   href: string;
 }
@@ -63,7 +63,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
         const supabase = createClient();
         const escaped = term.replace(/[%_\\]/g, c => `\\${c}`);
 
-        const [traineeRes, trainerRes] = await Promise.all([
+        const [traineeRes, trainerRes, teamRes] = await Promise.all([
           (supabase as any)
             .from('trainees')
             .select('id, name_en, name_ar, name_he, class_id, phone')
@@ -74,9 +74,27 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
             .select('id, name_en, name_ar, name_he, phone')
             .or(`name_en.ilike.%${escaped}%,name_ar.ilike.%${escaped}%,name_he.ilike.%${escaped}%,phone.ilike.%${escaped}%`)
             .limit(5),
+          (supabase as any)
+            .from('classes')
+            .select('id, name_en, name_ar, name_he, trainees(count)')
+            .or(`name_en.ilike.%${escaped}%,name_ar.ilike.%${escaped}%,name_he.ilike.%${escaped}%`)
+            .limit(5),
         ]);
 
         const mapped: SearchResult[] = [];
+
+        if (teamRes.data) {
+          for (const t of teamRes.data) {
+            const count = t.trainees?.[0]?.count ?? 0
+            mapped.push({
+              id: t.id,
+              name: t[nameField] || t.name_he,
+              type: 'team',
+              subtitle: `${count} لاعب`,
+              href: `/${locale}/teams/${t.id}`,
+            });
+          }
+        }
 
         if (traineeRes.data) {
           for (const t of traineeRes.data) {
@@ -135,7 +153,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
   return (
     <header className="sticky top-0 z-50 w-full bg-[#080e1f]/80 backdrop-blur-2xl border-b border-white/8 shadow-[0_1px_24px_0_rgba(0,0,0,0.4)] transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 md:h-16 gap-4">
+        <div className="flex items-center justify-between h-[72px] md:h-20 gap-4">
 
             {/* Left: Logo & Back */}
             <div className={`flex items-center gap-2 relative z-10`}>
@@ -150,23 +168,18 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
               )}
 
               <Link href={`/${locale}`} className="flex items-center gap-2.5 group">
-                <div className="relative w-9 h-9 md:w-10 md:h-10 overflow-hidden rounded-xl ring-1 ring-white/10 shadow-md transition-transform duration-200 group-hover:scale-105">
+                <div className="relative w-14 h-14 md:w-16 md:h-16 overflow-hidden rounded-xl ring-2 ring-yellow-600/40 shadow-[0_0_16px_rgba(202,138,4,0.3)] transition-transform duration-200 group-hover:scale-105 shrink-0">
                     <Image
                         src="/images/logo.jpg"
                         alt="Logo"
                         fill
-                        className="object-contain"
+                        className="object-cover"
                         priority
                     />
                 </div>
-                <div className="flex flex-col gap-0.5">
-                    <h1 className="font-bold text-base md:text-lg leading-none text-white tracking-tight">
-                        {title || 'باقة الغربية'}
-                    </h1>
-                    <p className="text-[9px] text-gold-400/80 font-semibold tracking-widest uppercase leading-none">
-                        {'النادي الرياضي'}
-                    </p>
-                </div>
+                <h1 className="font-black text-base md:text-lg leading-tight text-yellow-600 tracking-tight">
+                    {title || <>باقة الغربية <span className="text-yellow-600/50 text-sm">·</span> النادي الرياضي</>}
+                </h1>
               </Link>
             </div>
 
@@ -203,7 +216,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                                         result.type === 'trainee' ? 'bg-indigo-100 text-indigo-700' : 'bg-gold-100 text-gold-700'
                                     }`}>
-                                        {result.type === 'trainee' ? 'لا' : 'مد'}
+                                        {result.type === 'team' ? <Users className="w-4 h-4" /> : result.type === 'trainee' ? <User className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-bold text-navy-900 truncate">{result.name}</p>
@@ -241,7 +254,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                 <input
                     autoFocus
                     type="text"
-                    placeholder="بحث عن لاعبين، مدربين..."
+                    placeholder="بحث عن فرق، لاعبين، مدربين..."
                     className="w-full bg-white/[0.07] border border-white/10 rounded-2xl pr-10 pl-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-colors"
                     value={query}
                     onChange={(e) => handleSearch(e.target.value)}
@@ -263,9 +276,9 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                             onClick={() => setSearchOpen(false)}
                         >
                             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                                result.type === 'trainee' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/20 text-emerald-300'
+                                result.type === 'team' ? 'bg-purple-500/20 text-purple-300' : result.type === 'trainee' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/20 text-emerald-300'
                             }`}>
-                                {result.type === 'trainee' ? 'لا' : 'مد'}
+                                {result.type === 'team' ? <Users className="w-4 h-4" /> : result.type === 'trainee' ? <User className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
                             </div>
                             <div className="min-w-0">
                                 <p className="text-sm font-bold text-white truncate">{result.name}</p>

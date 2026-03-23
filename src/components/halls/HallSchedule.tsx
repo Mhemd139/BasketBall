@@ -409,7 +409,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                         </div>
 
                                         <div
-                                            className={`relative flex-1 rounded-2xl p-3 border-l-4 shadow-sm transition-all ${cardBg} ${isCurrent ? `ring-2 ${ringColor} ring-offset-0` : ''} ${isPastOrToday ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''} ${isLoading ? 'opacity-70' : ''}`}
+                                            className={`relative flex-1 rounded-2xl p-3 border-s-4 shadow-sm transition-all ${cardBg} ${isCurrent ? `ring-2 ${ringColor} ring-offset-0` : ''} ${isPastOrToday ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''} ${isLoading ? 'opacity-70' : ''}`}
                                             onClick={() => isPastOrToday && handleScheduleClick(schedule)}
                                         >
                                             {isLoading && (
@@ -428,11 +428,32 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                                         </span>
                                                     )}
                                                 </div>
-                                                {isCurrent && (
-                                                    <span className={`${isGame ? 'bg-orange-500' : 'bg-green-500'} text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse shrink-0`}>
-                                                        NOW
-                                                    </span>
-                                                )}
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    {isCurrent && (
+                                                        <span className={`${isGame ? 'bg-orange-500' : 'bg-green-500'} text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse`}>
+                                                            NOW
+                                                        </span>
+                                                    )}
+                                                    {isEditable && schedule.event && (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                className="p-1 px-2 bg-white/10 backdrop-blur-md rounded-md text-xs font-bold text-white/80 shadow-sm border border-white/10 active:bg-white/20"
+                                                                onClick={(e) => { e.stopPropagation(); handleEditEvent(schedule.event!) }}
+                                                            >
+                                                                {'تعديل'}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="p-1.5 bg-red-500/20 backdrop-blur-md rounded-md text-red-400 shadow-sm border border-red-500/20 active:bg-red-500/40"
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteClick(schedule.event!) }}
+                                                                aria-label="حذف الحدث"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-white/50">
                                                 {trainerName && (
@@ -448,25 +469,6 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             </div>
                                             {schedule.notes && (
                                                 <p className="text-[10px] text-white/30 mt-1">{schedule.notes}</p>
-                                            )}
-                                            {isEditable && schedule.event && (
-                                                <div className="absolute top-2 end-2 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                                    <button
-                                                        type="button"
-                                                        className="p-1 px-2 bg-white/10 backdrop-blur-md rounded-md text-xs font-bold text-white/80 shadow-sm border border-white/10 active:bg-white/20"
-                                                        onClick={() => handleEditEvent(schedule.event!)}
-                                                    >
-                                                        {'تعديل'}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="p-1.5 bg-red-500/20 backdrop-blur-md rounded-md text-red-400 shadow-sm border border-red-500/20 active:bg-red-500/40"
-                                                        onClick={() => handleDeleteClick(schedule.event!)}
-                                                        aria-label="حذف الحدث"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
                                             )}
                                         </div>
 
@@ -491,7 +493,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                             <span className="text-white/40 font-normal">{formatTimeStr(event.end_time)}</span>
                                         </div>
 
-                                        <div className={`flex-1 rounded-2xl p-3 border-l-4 shadow-sm transition-all hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
+                                        <div className={`flex-1 rounded-2xl p-3 border-s-4 shadow-sm transition-all hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
                                             event.type === 'game'
                                                 ? 'bg-orange-500/10 border-orange-400'
                                                 : 'bg-blue-500/10 border-blue-400'

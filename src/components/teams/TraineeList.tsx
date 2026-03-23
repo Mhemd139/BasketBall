@@ -63,7 +63,6 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
     if (res.success) {
       toast('تم حذف اللاعب بنجاح', 'success')
       setTrainees(prev => prev.filter(t => t.id !== id))
-      router.refresh()
     } else {
       toast('فشل الحذف', 'error')
     }
@@ -101,9 +100,9 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
             <div
               key={trainee.id}
               onClick={() => setSelectedTrainee(trainee)}
-              className={`group flex items-center justify-between gap-3 px-4 py-3.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10 hover:border-white/20 active:scale-[0.99] transition-all touch-manipulation border-r-2 ${isFemale ? 'border-r-pink-400' : 'border-r-indigo-400'}`}
+              className={`group flex items-center justify-between gap-3 px-4 py-3.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10 hover:border-white/20 active:scale-[0.99] transition-all touch-manipulation shadow-[0_4px_16px_rgba(0,0,0,0.25)] border-r-2 ${isFemale ? 'border-r-pink-400' : 'border-r-indigo-400'}`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 {/* Jersey number — always shown, gender-colored */}
                 <div className="relative flex-shrink-0">
                   <JerseyNumber number={trainee.jersey_number} gender={trainee.gender} className="w-12 h-12 text-base" />
@@ -138,8 +137,19 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
                 </div>
 
                 {/* Name + phone */}
-                <div>
-                  <p className="font-bold text-white text-sm">{name}</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-white/90 text-sm truncate">
+                    {name}
+                    {(trainee.date_of_birth || trainee.school_class) && (
+                      <span className="font-normal text-white/40 text-xs mr-2">
+                        {trainee.date_of_birth && (() => {
+                          const age = new Date().getFullYear() - new Date(trainee.date_of_birth!).getFullYear()
+                          return ` · ${age} سنة`
+                        })()}
+                        {trainee.school_class && ` · صف ${trainee.school_class}`}
+                      </span>
+                    )}
+                  </p>
                   {trainee.phone && (
                     <div className="flex items-center gap-1 text-xs text-white/40 mt-0.5">
                       <Phone className="w-3 h-3" />

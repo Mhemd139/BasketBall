@@ -28,15 +28,13 @@ export function TrainerWorkingHours({ trainerId }: { trainerId: string }) {
     const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
     const fetchHours = useCallback(async (start: string, end: string) => {
-        if (!start || !end) return
         setLoading(true)
         setError('')
         const res = await getTrainerWorkingHours(trainerId, start, end)
         if (res.success) {
             setResult({ hours: res.hours ?? 0, minutes: res.minutes ?? 0, totalEvents: res.totalEvents ?? 0 })
         } else {
-            setError(res.error || 'خطأ غير متوقع')
-            setResult(null)
+            setError(res.error || 'فشل تحميل الساعات')
         }
         setLoading(false)
     }, [trainerId])
@@ -48,90 +46,89 @@ export function TrainerWorkingHours({ trainerId }: { trainerId: string }) {
         } else if (period === 'last') {
             const { start, end } = getMonthRange(-1)
             fetchHours(start, end)
+        } else if (period === 'custom' && customStart && customEnd) {
+            clearTimeout(debounceRef.current)
+            debounceRef.current = setTimeout(() => fetchHours(customStart, customEnd), 500)
+            return () => clearTimeout(debounceRef.current)
         }
-    }, [period, fetchHours])
-
-    useEffect(() => {
-        if (period !== 'custom' || !customStart || !customEnd) return
-        clearTimeout(debounceRef.current)
-        debounceRef.current = setTimeout(() => {
-            fetchHours(customStart, customEnd)
-        }, 300)
-        return () => clearTimeout(debounceRef.current)
     }, [period, customStart, customEnd, fetchHours])
 
     const chips: { key: Period; label: string }[] = [
-        { key: 'current', label: 'هذا الشهر' },
+        { key: 'current', label: 'الشهر الحالي' },
         { key: 'last', label: 'الشهر الماضي' },
         { key: 'custom', label: 'مخصص' },
     ]
 
     return (
-        <section className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-indigo-500" />
-                ساعات العمل
-            </h2>
-
-            <div className="bg-white/70 backdrop-blur-xl rounded-xl border border-white/40 shadow-sm p-5 space-y-4">
-                {/* Period chips */}
-                <div className="flex gap-2 flex-wrap">
-                    {chips.map(chip => (
-                        <button
-                            key={chip.key}
-                            onClick={() => setPeriod(chip.key)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
-                                period === chip.key
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100'
-                            }`}
-                        >
-                            {chip.label}
-                        </button>
-                    ))}
+        <section>
+            <div className="bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 overflow-hidden">
+                <div className="px-4 py-3 border-b border-white/8">
+                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5" />
+                        ساعات التدريب المجدولة
+                    </h3>
                 </div>
 
-                {/* Custom date inputs */}
-                {period === 'custom' && (
-                    <div className="flex items-center gap-3" dir="ltr">
-                        <input
-                            type="date"
-                            value={customStart}
-                            onChange={e => setCustomStart(e.target.value)}
-                            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white"
-                        />
-                        <span className="text-gray-400">—</span>
-                        <input
-                            type="date"
-                            value={customEnd}
-                            onChange={e => setCustomEnd(e.target.value)}
-                            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white"
-                        />
+                <div className="p-4 space-y-4">
+                    {/* Period chips */}
+                    <div className="flex gap-2 flex-wrap">
+                        {chips.map(chip => (
+                            <button
+                                key={chip.key}
+                                onClick={() => setPeriod(chip.key)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 border ${
+                                    period === chip.key
+                                        ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                                        : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+                                }`}
+                            >
+                                {chip.label}
+                            </button>
+                        ))}
                     </div>
-                )}
 
-                {/* Result display */}
-                {loading ? (
-                    <div className="flex justify-center py-4">
-                        <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-                    </div>
-                ) : error ? (
-                    <p className="text-red-500 text-sm font-medium">{error}</p>
-                ) : result && (
-                    <div className="text-center py-2">
-                        <div className="text-3xl font-black text-gray-900">
-                            {result.hours} <span className="text-lg font-bold text-gray-500">ساعة</span>
-                            {result.minutes > 0 && (
-                                <>
-                                    {' '}{result.minutes} <span className="text-lg font-bold text-gray-500">دقيقة</span>
-                                </>
-                            )}
+                    {/* Custom date inputs */}
+                    {period === 'custom' && (
+                        <div className="flex items-center gap-3" dir="ltr">
+                            <input
+                                type="date"
+                                value={customStart}
+                                onChange={e => setCustomStart(e.target.value)}
+                                className="flex-1 px-3 py-1.5 rounded-xl border border-white/10 text-sm text-white/80 bg-white/[0.07] outline-none focus:border-white/25 transition-all"
+                            />
+                            <span className="text-white/30">—</span>
+                            <input
+                                type="date"
+                                value={customEnd}
+                                onChange={e => setCustomEnd(e.target.value)}
+                                className="flex-1 px-3 py-1.5 rounded-xl border border-white/10 text-sm text-white/80 bg-white/[0.07] outline-none focus:border-white/25 transition-all"
+                            />
                         </div>
-                        <p className="text-sm text-gray-400 mt-1 font-medium">
-                            {result.totalEvents} تدريبات
-                        </p>
-                    </div>
-                )}
+                    )}
+
+                    {/* Result display */}
+                    {loading ? (
+                        <div className="flex justify-center py-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-indigo-400/60" />
+                        </div>
+                    ) : error ? (
+                        <p className="text-red-400 text-sm font-medium text-center">{error}</p>
+                    ) : result && (
+                        <div className="text-center py-2">
+                            <div className="text-3xl font-black text-white">
+                                {result.hours} <span className="text-lg font-bold text-white/40">ساعة</span>
+                                {result.minutes > 0 && (
+                                    <>
+                                        {' '}{result.minutes} <span className="text-lg font-bold text-white/40">دقيقة</span>
+                                    </>
+                                )}
+                            </div>
+                            <p className="text-sm text-white/50 mt-1 font-bold">
+                                {result.totalEvents} تدريبات
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
         </section>
     )
