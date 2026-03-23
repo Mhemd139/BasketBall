@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useScrollLock } from '@/hooks/useScrollLock'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { PaymentModal } from '@/components/payments/PaymentModal'
 import { updateTrainee, deleteTrainee } from '@/app/actions'
@@ -141,6 +142,8 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
+
+    useScrollLock()
     const initialForm = {
         name_ar: trainee.name_ar || '',
         name_en: trainee.name_en || '',
