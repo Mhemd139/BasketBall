@@ -181,17 +181,26 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
         if (!isOpen) return
         setStep(1)
         setShowDeleteConfirm(false)
+        setRefData({ trainers: [], halls: [] })
+        const localeName = locale === 'he'
+            ? (initialData?.name_he || initialData?.name_ar || '')
+            : (initialData?.name_ar || initialData?.name_he || '')
         setFormData({
-            name: initialData?.name_ar || initialData?.name_he || '',
+            name: localeName,
             trainer_id: initialData?.trainer_id || '',
             hall_id: initialData?.hall_id || '',
         })
         getEventRefData().then(res => {
-            if (res.success) setRefData({ trainers: res.trainers || [], halls: res.halls || [] })
+            if (res.success) {
+                setRefData({ trainers: res.trainers || [], halls: res.halls || [] })
+            } else {
+                toast(res.error || (locale === 'he' ? 'טעינת הנתונים נכשלה' : 'فشل تحميل البيانات'), 'error')
+            }
         })
-    }, [isOpen, initialData])
+    }, [isOpen, initialData, locale]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSubmit = async () => {
+        if (loading || deleting) return
         if (!formData.name.trim()) {
             toast(locale === 'he' ? 'נא להזין שם לקבוצה' : 'يرجى إدخال اسم الفريق', 'warning')
             return
@@ -200,9 +209,9 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
         const name = formData.name.trim()
         const res = isEdit && initialData?.id
             ? await updateTeam(initialData.id, {
-                name_ar: name,
-                name_he: initialData.name_he && initialData.name_he !== initialData.name_ar ? initialData.name_he : name,
-                name_en: initialData.name_en && initialData.name_en !== initialData.name_ar ? initialData.name_en : name,
+                name_ar: locale === 'he' ? (initialData.name_ar || name) : name,
+                name_he: locale === 'he' ? name : (initialData.name_he || name),
+                name_en: initialData.name_en || name,
                 trainer_id: formData.trainer_id || null,
             })
             : await createTeam({
@@ -219,7 +228,7 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
     }
 
     const handleDelete = async () => {
-        if (!initialData?.id) return
+        if (!initialData?.id || loading || deleting) return
         setDeleting(true)
         const res = await deleteTeam(initialData.id)
         if (res.success) {
@@ -392,7 +401,8 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
                                         <motion.button
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => setShowDeleteConfirm(true)}
-                                            className="w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/25 text-red-400 transition-all hover:bg-red-500/20"
+                                            disabled={loading}
+                                            className="w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/25 text-red-400 transition-all hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                             {locale === 'he' ? 'מחק קבוצה' : 'حذف الفريق'}
