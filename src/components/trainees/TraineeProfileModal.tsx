@@ -141,6 +141,11 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = '' }
+    }, [])
     const initialForm = {
         name_ar: trainee.name_ar || '',
         name_en: trainee.name_en || '',

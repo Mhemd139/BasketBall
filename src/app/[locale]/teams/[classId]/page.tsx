@@ -11,6 +11,7 @@ import { User, Calendar, Trophy, Building2, ChevronLeft } from 'lucide-react'
 import { getSession, getClassAttendanceStats } from '@/app/actions'
 import { TraineeList } from '@/components/teams/TraineeList'
 import { TrainerReassignButton } from '@/components/teams/TrainerReassignButton'
+import { TeamEditButton } from '@/components/teams/TeamEditButton'
 import { AddPlayerButton } from '@/components/teams/AddPlayerButton'
 import { ScheduleEditor } from '@/components/teams/ScheduleEditor'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
@@ -95,7 +96,7 @@ export default async function TeamDetailPage({
                   <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner flex-shrink-0">
                     <Trophy className="w-8 h-8 text-white" strokeWidth={1.5} />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h1 className="text-2xl font-black text-white drop-shadow-sm mb-0.5">
                       {getLocalizedField(teamDetails, 'name', locale)}
                     </h1>
@@ -110,6 +111,16 @@ export default async function TeamDetailPage({
                       )}
                     </div>
                   </div>
+                  <TeamEditButton
+                    classId={classId}
+                    name_ar={teamDetails.name_ar || ''}
+                    name_he={teamDetails.name_he || ''}
+                    name_en={teamDetails.name_en || ''}
+                    trainer_id={teamDetails.trainer_id}
+                    hall_id={null}
+                    locale={locale}
+                    isAdmin={!!session}
+                  />
                 </div>
               </div>
 

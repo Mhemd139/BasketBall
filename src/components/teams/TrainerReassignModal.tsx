@@ -41,6 +41,11 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
     const isRTL = locale === 'ar' || locale === 'he'
 
     useEffect(() => {
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = '' }
+    }, [])
+
+    useEffect(() => {
         async function fetchTrainers() {
             const supabase = createClient()
             const { data, error } = await supabase
