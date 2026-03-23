@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useScrollLock } from '@/hooks/useScrollLock'
 import { X, Search, Loader2, Check, UserRound } from 'lucide-react'
 import { updateTeamTrainer } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
@@ -40,10 +41,7 @@ export function TrainerReassignModal({ classId, currentTrainerId, locale, onClos
     const { toast } = useToast()
     const isRTL = locale === 'ar' || locale === 'he'
 
-    useEffect(() => {
-        document.body.style.overflow = 'hidden'
-        return () => { document.body.style.overflow = '' }
-    }, [])
+    useScrollLock()
 
     useEffect(() => {
         async function fetchTrainers() {

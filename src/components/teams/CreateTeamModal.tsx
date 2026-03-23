@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, Loader2, Trash2, ChevronRight, Check, Search, MapPin } from 'lucide-react'
+import { X, Save, Loader2, Trash2, ChevronRight, Check, Search } from 'lucide-react'
 import { getEventRefData, createTeam, updateTeam, deleteTeam } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { Portal } from '@/components/ui/Portal'
@@ -116,48 +116,6 @@ function TrainerGrid({ trainers, selectedId, onSelect, locale }: {
     )
 }
 
-function HallList({ halls, selectedId, onSelect, locale }: {
-    halls: any[]
-    selectedId: string
-    onSelect: (id: string) => void
-    locale: string
-}) {
-    return (
-        <div className="flex flex-col gap-2.5">
-            {halls.map(hall => {
-                const isSelected = selectedId === hall.id
-                return (
-                    <motion.button
-                        key={hall.id}
-                        onClick={() => onSelect(hall.id)}
-                        whileTap={{ scale: 0.98 }}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-right ${
-                            isSelected
-                                ? 'border-emerald-400/40 bg-emerald-500/10 shadow-[0_0_20px_rgba(52,211,153,0.08)]'
-                                : 'border-white/8 bg-white/[0.04] active:bg-white/10'
-                        }`}
-                    >
-                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? 'bg-emerald-500/25' : 'bg-white/8'}`}>
-                            <MapPin className={`w-5 h-5 transition-colors ${isSelected ? 'text-emerald-400' : 'text-white/30'}`} />
-                        </div>
-                        <span className={`font-bold text-base flex-1 transition-colors ${isSelected ? 'text-white' : 'text-white/50'}`}>
-                            {getName(hall, locale)}
-                        </span>
-                        <AnimatePresence>
-                            {isSelected && (
-                                <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}>
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                                        <Check className="w-3.5 h-3.5 text-emerald-400" strokeWidth={3} />
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.button>
-                )
-            })}
-        </div>
-    )
-}
 
 export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }: CreateTeamModalProps) {
     const { toast } = useToast()
@@ -199,11 +157,12 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
         if (!isOpen || !window.visualViewport) return
         const vv = window.visualViewport
 
+        const sheet = sheetRef.current
         const reposition = () => {
-            if (!sheetRef.current) return
+            if (!sheet) return
             const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop
-            sheetRef.current.style.bottom = `${keyboardHeight}px`
-            sheetRef.current.style.maxHeight = `${vv.height - 16}px`
+            sheet.style.bottom = `${keyboardHeight}px`
+            sheet.style.maxHeight = `${vv.height - 16}px`
         }
 
         vv.addEventListener('resize', reposition)
@@ -211,9 +170,9 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
         return () => {
             vv.removeEventListener('resize', reposition)
             vv.removeEventListener('scroll', reposition)
-            if (sheetRef.current) {
-                sheetRef.current.style.bottom = '0px'
-                sheetRef.current.style.maxHeight = ''
+            if (sheet) {
+                sheet.style.bottom = '0px'
+                sheet.style.maxHeight = ''
             }
         }
     }, [isOpen])
@@ -238,11 +197,18 @@ export function CreateTeamModal({ isOpen, onClose, locale, isEdit, initialData }
             return
         }
         setLoading(true)
-        const payload = {
-            name_en: formData.name, name_ar: formData.name, name_he: formData.name,
-            trainer_id: formData.trainer_id || null, hall_id: formData.hall_id || null,
-        }
-        const res = isEdit && initialData?.id ? await updateTeam(initialData.id, payload) : await createTeam(payload)
+        const name = formData.name.trim()
+        const res = isEdit && initialData?.id
+            ? await updateTeam(initialData.id, {
+                name_ar: name,
+                name_he: initialData.name_he && initialData.name_he !== initialData.name_ar ? initialData.name_he : name,
+                name_en: initialData.name_en && initialData.name_en !== initialData.name_ar ? initialData.name_en : name,
+                trainer_id: formData.trainer_id || null,
+            })
+            : await createTeam({
+                name_ar: name, name_he: name, name_en: name,
+                trainer_id: formData.trainer_id || null, hall_id: null,
+            })
         if (res.success) {
             toast(isEdit ? (locale === 'he' ? 'הקבוצה עודכנה' : 'تم تحديث الفريق') : (locale === 'he' ? 'הקבוצה נוצרה' : 'تم إنشاء الفريق'), 'success')
             onClose()
