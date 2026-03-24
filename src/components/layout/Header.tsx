@@ -151,7 +151,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
 // Language switcher logic removed
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#080e1f]/80 backdrop-blur-2xl border-b border-white/8 shadow-[0_1px_24px_0_rgba(0,0,0,0.4)] transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full bg-[#080e1f]/80 backdrop-blur-2xl border-b border-white/8 shadow-[0_1px_24px_0_rgba(0,0,0,0.4)] transition-all duration-300" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[72px] md:h-20 gap-4">
 
