@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { deleteTrainee, toggleTraineePayment } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmModal'
-import { Trash2, Shield, Phone } from 'lucide-react'
+import { Trash2, Shield } from 'lucide-react'
 import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { TraineeProfileModal } from '@/components/trainees/TraineeProfileModal'
 
@@ -137,11 +137,11 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
                   )}
                 </div>
 
-                {/* Name + phone */}
+                {/* Name + info */}
                 <div className="min-w-0">
                   <p className="font-bold text-white/90 text-sm truncate">{name}</p>
                   {(trainee.date_of_birth || trainee.school_class) && (
-                    <div className="text-white/40 text-xs mt-0.5 pb-1 border-b border-white/20">
+                    <div className="text-white/40 text-xs mt-0.5">
                       {trainee.date_of_birth && (() => {
                         const birth = new Date(trainee.date_of_birth!)
                         if (Number.isNaN(birth.getTime())) return null
@@ -152,22 +152,16 @@ export function TraineeList({ trainees: initialTrainees, locale, isAdmin, teamNa
                         return age >= 0 ? <span>{age} سنة</span> : null
                       })()}
                       {trainee.school_class && <span>{trainee.date_of_birth ? ' · ' : ''}صف {trainee.school_class}</span>}
-                      {trainee.date_of_birth && (() => {
-                        const birth = new Date(trainee.date_of_birth!)
-                        if (Number.isNaN(birth.getTime())) return null
-                        const dd = String(birth.getDate()).padStart(2, '0')
-                        const mm = String(birth.getMonth() + 1).padStart(2, '0')
-                        const yyyy = birth.getFullYear()
-                        return <span className="text-white/40"> · {dd}/{mm}/{yyyy}</span>
-                      })()}
                     </div>
                   )}
-                  {trainee.phone && (
-                    <div className="flex items-center gap-1 text-xs text-white/40 mt-0.5">
-                      <Phone className="w-3 h-3" />
-                      <span dir="ltr">{trainee.phone}</span>
-                    </div>
-                  )}
+                  {trainee.date_of_birth && (() => {
+                    const birth = new Date(trainee.date_of_birth!)
+                    if (Number.isNaN(birth.getTime())) return null
+                    const dd = String(birth.getDate()).padStart(2, '0')
+                    const mm = String(birth.getMonth() + 1).padStart(2, '0')
+                    const yyyy = birth.getFullYear()
+                    return <p className="text-[11px] text-white/30 mt-0.5">{dd}/{mm}/{yyyy}</p>
+                  })()}
                 </div>
               </div>
 
