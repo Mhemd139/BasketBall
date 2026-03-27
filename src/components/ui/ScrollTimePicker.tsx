@@ -96,15 +96,17 @@ function ScrollColumn({ items, value, onChange, ariaLabel, accent = 'text-royal'
             <div ref={ref} className="scroll-col">
                 <div className="scroll-col-pad" />
                 {items.map((item) => (
-                    <div
+                    <button
                         key={item}
+                        type="button"
                         onClick={() => handleTap(item)}
-                        className={`scroll-col-item font-space font-black transition-colors duration-100 cursor-pointer ${
+                        aria-pressed={item === value}
+                        className={`scroll-col-item w-full bg-transparent border-0 p-0 font-space font-black transition-colors duration-100 cursor-pointer ${
                             item === value ? `text-4xl ${accent}` : `text-2xl ${inactiveText}`
                         }`}
                     >
                         {item}
-                    </div>
+                    </button>
                 ))}
                 <div className="scroll-col-pad" />
             </div>

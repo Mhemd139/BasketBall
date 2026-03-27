@@ -139,9 +139,9 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
             const newStartMin = parseInt(hh) * 60 + parseInt(mm)
             const endMin = endHH * 60 + endMM
             if (endMin <= newStartMin) {
-                const bumped = newStartMin + 60
-                const nh = Math.min(23, Math.floor(bumped / 60))
-                const nm = bumped % 60 - (bumped % 60 % 5)
+                const bumpedMin = Math.min(newStartMin + 60, 23 * 60 + 55)
+                const nh = Math.floor(bumpedMin / 60)
+                const nm = bumpedMin % 60 - (bumpedMin % 60 % 5)
                 setEndTime(`${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`)
             }
         } else {
@@ -645,9 +645,12 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                                 whileTap={{ scale: 0.96 }}
                                                 onClick={async () => {
                                                     setLoading(true);
-                                                    if (initialEvent && onDelete) await onDelete(initialEvent.id);
-                                                    setLoading(false);
-                                                    onClose();
+                                                    try {
+                                                        if (initialEvent && onDelete) await onDelete(initialEvent.id);
+                                                        onClose();
+                                                    } finally {
+                                                        setLoading(false);
+                                                    }
                                                 }}
                                                 className="w-full py-4 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-500/30 flex items-center justify-center"
                                             >
