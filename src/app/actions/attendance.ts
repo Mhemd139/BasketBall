@@ -211,7 +211,7 @@ export async function getTeamAttendanceHistory(classId: string) {
 
     const { data: attendance } = await (supabase as any)
         .from('attendance')
-        .select('event_id, trainee_id, status')
+        .select('event_id, trainee_id, status, absence_reason')
         .in('event_id', candidateEventIds)
         .in('trainee_id', traineeIds)
         .limit(5000)
@@ -220,8 +220,11 @@ export async function getTeamAttendanceHistory(classId: string) {
     const relevantEvents = candidateEvents.filter((e: any) => relevantEventIds.has(e.id))
 
     const attendanceMap: Record<string, string> = {}
+    const reasonMap: Record<string, string> = {}
     attendance?.forEach((record: any) => {
-        attendanceMap[`${record.event_id}_${record.trainee_id}`] = record.status
+        const key = `${record.event_id}_${record.trainee_id}`
+        attendanceMap[key] = record.status
+        if (record.absence_reason) reasonMap[key] = record.absence_reason
     })
 
     return {
@@ -229,7 +232,8 @@ export async function getTeamAttendanceHistory(classId: string) {
         data: {
             trainees,
             events: relevantEvents,
-            attendanceMap
+            attendanceMap,
+            reasonMap
         }
     }
 }

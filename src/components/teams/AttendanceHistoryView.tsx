@@ -1,20 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ar, he } from 'date-fns/locale'
+import { createPortal } from 'react-dom'
+import { BouncingBasketballLoader } from '@/components/ui/BouncingBasketballLoader'
 
 interface AttendanceHistoryViewProps {
     data: {
         trainees: { id: string; name_ar: string; name_en: string }[]
         events: { id: string; event_date: string; type: string; title_ar: string; title_en: string; title_he: string; start_time: string }[]
         attendanceMap: Record<string, string>
+        reasonMap?: Record<string, string>
     }
     locale: string
 }
 
-function formatDate(dateString: string, formatStr: string, locale: string) {
+function fmtDate(dateString: string, formatStr: string, locale: string) {
     try {
         return format(parseISO(dateString), formatStr, { locale: locale === 'he' ? he : ar })
     } catch {
@@ -23,15 +27,23 @@ function formatDate(dateString: string, formatStr: string, locale: string) {
 }
 
 export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewProps) {
+    const router = useRouter()
     const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
-    const { trainees, events, attendanceMap } = data
+    const [navigating, setNavigating] = useState(false)
+    const { trainees, events, attendanceMap, reasonMap = {} } = data
 
-    // Summary stats — missing records count as absent
     const totalSlots = trainees.length * events.length
     const presentCount = Object.values(attendanceMap).filter(s => s === 'present').length
     const lateCount = Object.values(attendanceMap).filter(s => s === 'late').length
     const absentCount = totalSlots - presentCount - lateCount
     const attendanceRate = totalSlots > 0 ? Math.round((presentCount / totalSlots) * 100) : 0
+
+    useEffect(() => { setNavigating(false) }, [data])
+
+    const handleEdit = (eventId: string) => {
+        setNavigating(true)
+        router.push(`/${locale}/attendance/${eventId}`)
+    }
 
     if (events.length === 0) {
         return (
@@ -43,6 +55,14 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
 
     return (
         <div className="space-y-4" dir="rtl">
+            {/* Navigation overlay — app-wide basketball loader */}
+            {navigating && typeof window !== 'undefined' && createPortal(
+                <div className="fixed inset-0 bg-[#0B132B]/90 backdrop-blur-3xl flex flex-col items-center justify-center z-[200]">
+                    <BouncingBasketballLoader />
+                </div>,
+                document.body
+            )}
+
             {/* Summary card */}
             <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4">
                 <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">الإحصائيات العامة</p>
@@ -71,76 +91,108 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                 {events.map(event => {
                     const isExpanded = expandedEventId === event.id
 
-                    // Per-event counts
                     let evPresent = 0, evLate = 0, evAbsent = 0
                     trainees.forEach(t => {
                         const s = attendanceMap[`${event.id}_${t.id}`]
                         if (s === 'present') evPresent++
                         else if (s === 'late') evLate++
-                        else evAbsent++ // no record = absent
+                        else evAbsent++
                     })
 
                     return (
                         <div key={event.id} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-                            {/* Card header — tap to expand */}
-                            <button
-                                type="button"
+                            {/* Card header row */}
+                            <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                                className="w-full flex items-center justify-between px-4 py-3.5 text-right transition-colors hover:bg-white/5 active:bg-white/10 touch-manipulation min-h-[56px]"
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedEventId(isExpanded ? null : event.id) } }}
+                                aria-expanded={isExpanded}
+                                className="flex items-center min-h-[56px] px-4 py-3.5 cursor-pointer transition-colors hover:bg-white/5 active:bg-white/10 touch-manipulation"
                             >
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-sm font-black text-white">
-                                            {formatDate(event.event_date, 'd MMMM', locale)}
-                                        </span>
-                                        <span className="text-[11px] text-white/40">
-                                            {formatDate(event.event_date, 'EEEE', locale)}
-                                        </span>
-                                        <span dir="ltr" className="text-[11px] text-white/30 font-mono">
-                                            {event.start_time?.slice(0, 5)}
-                                        </span>
+                                <div className="flex-1 flex items-center justify-between text-right">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-sm font-black text-white">
+                                                {fmtDate(event.event_date, 'd MMMM', locale)}
+                                            </span>
+                                            <span className="text-[11px] text-white/40">
+                                                {fmtDate(event.event_date, 'EEEE', locale)}
+                                            </span>
+                                            <span dir="ltr" className="text-[11px] text-white/30 font-mono">
+                                                {event.start_time?.slice(0, 5)}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-white/40 mt-0.5 truncate">
+                                            {locale === 'he' ? (event.title_he || event.title_ar) : event.title_ar}
+                                        </p>
                                     </div>
-                                    <p className="text-xs text-white/40 mt-0.5 truncate">
-                                        {locale === 'he' ? (event.title_he || event.title_ar) : event.title_ar}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-3 flex-shrink-0 mr-3">
-                                    {/* Attendance badges */}
-                                    <div className="flex items-center gap-1.5">
-                                        {evPresent > 0 && (
-                                            <span className="flex items-center gap-0.5 text-[11px] font-black text-green-400">
-                                                <CheckCircle2 className="w-3 h-3" />{evPresent}
-                                            </span>
-                                        )}
-                                        {evLate > 0 && (
-                                            <span className="flex items-center gap-0.5 text-[11px] font-black text-amber-400">
-                                                <Clock className="w-3 h-3" />{evLate}
-                                            </span>
-                                        )}
-                                        {evAbsent > 0 && (
-                                            <span className="flex items-center gap-0.5 text-[11px] font-black text-red-400">
-                                                <XCircle className="w-3 h-3" />{evAbsent}
-                                            </span>
-                                        )}
+                                    <div className="flex items-center gap-3 flex-shrink-0 mr-3">
+                                        <div className="flex items-center gap-1.5">
+                                            {evPresent > 0 && (
+                                                <span className="flex items-center gap-0.5 text-[11px] font-black text-green-400">
+                                                    <CheckCircle2 className="w-3 h-3" />{evPresent}
+                                                </span>
+                                            )}
+                                            {evLate > 0 && (
+                                                <span className="flex items-center gap-0.5 text-[11px] font-black text-amber-400">
+                                                    <Clock className="w-3 h-3" />{evLate}
+                                                </span>
+                                            )}
+                                            {evAbsent > 0 && (
+                                                <span className="flex items-center gap-0.5 text-[11px] font-black text-red-400">
+                                                    <XCircle className="w-3 h-3" />{evAbsent}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {isExpanded
+                                            ? <ChevronUp className="w-4 h-4 text-white/30" />
+                                            : <ChevronDown className="w-4 h-4 text-white/30" />
+                                        }
                                     </div>
-                                    {isExpanded
-                                        ? <ChevronUp className="w-4 h-4 text-white/30" />
-                                        : <ChevronDown className="w-4 h-4 text-white/30" />
-                                    }
                                 </div>
-                            </button>
+
+                                {/* Edit button */}
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleEdit(event.id) }}
+                                    className="px-3 py-2 rounded-xl text-[10px] font-black bg-electric/15 text-electric border border-electric/30 hover:bg-electric/25 hover:text-white active:scale-95 transition-all shrink-0"
+                                >
+                                    تعديل الحضور
+                                </button>
+                            </div>
 
                             {/* Expanded trainee list */}
                             {isExpanded && (
-                                <div className="border-t border-white/8 px-4 py-2 space-y-1 animate-in fade-in duration-200">
+                                <div className="border-t border-white/8 px-4 py-1.5 space-y-0.5 animate-in fade-in duration-200">
                                     {trainees.map(trainee => {
-                                        const status = attendanceMap[`${event.id}_${trainee.id}`]
+                                        const key = `${event.id}_${trainee.id}`
+                                        const status = attendanceMap[key]
+                                        const reason = reasonMap[key]
+                                        const isAbsent = !status || status === 'absent'
+                                        const isLate = status === 'late'
+
                                         return (
-                                            <div key={trainee.id} className="flex items-center justify-between py-1.5">
-                                                <span className="text-sm text-white/80">{trainee.name_ar}</span>
-                                                {status === 'present' && <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />}
-                                                {status === 'late' && <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />}
-                                                {(!status || status === 'absent') && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                                            <div key={trainee.id} className="flex items-center justify-between py-1.5 gap-2">
+                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                    <span className="text-sm text-white/80 truncate">{trainee.name_ar}</span>
+                                                    {reason && (
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full truncate max-w-[120px] shrink ${
+                                                            isAbsent
+                                                                ? 'bg-red-500/15 text-red-300 border border-red-500/20'
+                                                                : isLate
+                                                                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20'
+                                                                    : 'bg-white/10 text-white/40'
+                                                        }`}>
+                                                            {reason}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex-shrink-0">
+                                                    {status === 'present' && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+                                                    {isLate && <Clock className="w-4 h-4 text-amber-400" />}
+                                                    {isAbsent && <XCircle className="w-4 h-4 text-red-400" />}
+                                                </div>
                                             </div>
                                         )
                                     })}
