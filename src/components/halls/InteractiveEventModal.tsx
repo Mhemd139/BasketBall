@@ -133,13 +133,17 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
     const diff = (endHH * 60 + endMM) - (startHH * 60 + startMM)
 
     const setTime = (hh: string, mm: string) => {
-        const newTime = `${hh}:${mm}`
         if (editing === 'start') {
+            // Cap start at 23:50 so there's always a valid end (23:55)
+            let startMin = parseInt(hh) * 60 + parseInt(mm)
+            if (startMin > 23 * 60 + 50) startMin = 23 * 60 + 50
+            const sh = Math.floor(startMin / 60)
+            const sm = startMin % 60
+            const newTime = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`
             setStartTime(newTime)
-            const newStartMin = parseInt(hh) * 60 + parseInt(mm)
             const endMin = endHH * 60 + endMM
-            if (endMin <= newStartMin) {
-                const bumpedMin = Math.min(newStartMin + 60, 23 * 60 + 55)
+            if (endMin <= startMin) {
+                const bumpedMin = Math.min(startMin + 60, 23 * 60 + 55)
                 const nh = Math.floor(bumpedMin / 60)
                 const nm = bumpedMin % 60 - (bumpedMin % 60 % 5)
                 setEndTime(`${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`)
@@ -148,7 +152,7 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
             const endMin = parseInt(hh) * 60 + parseInt(mm)
             const startMin = startHH * 60 + startMM
             if (endMin <= startMin) return
-            setEndTime(newTime)
+            setEndTime(`${hh}:${mm}`)
         }
     }
 
@@ -305,6 +309,23 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     useEffect(() => {
         if (isOpen) {
             setStep(initialStep);
+            setType(initialEvent?.type || 'training');
+            setSelectedTrainer(initialEvent?.trainer_id || '');
+            setSelectedClass(() => {
+                if (initialEvent?.class_id) return initialEvent.class_id;
+                if (initialEvent?.notes_en) { try { return JSON.parse(initialEvent.notes_en).class_id || ''; } catch { return ''; } }
+                return '';
+            });
+            setHomeTeam(() => {
+                if (initialEvent?.notes_en) { try { return JSON.parse(initialEvent.notes_en).homeBtn || ''; } catch { return ''; } }
+                return '';
+            });
+            setAwayTeamName(() => {
+                if (initialEvent?.notes_en) { try { return JSON.parse(initialEvent.notes_en).awayName || ''; } catch { return ''; } }
+                return '';
+            });
+            setStartTime(initialEvent?.start_time || '16:00');
+            setEndTime(initialEvent?.end_time || '18:00');
             loadRefData();
             document.body.style.overflow = 'hidden';
         } else {
