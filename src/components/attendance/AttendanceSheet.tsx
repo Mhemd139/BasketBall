@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { saveAttendance, bulkSaveAttendance } from '@/app/actions'
 import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,7 @@ interface Trainee {
 interface AttendanceRecord {
   trainee_id: string
   status: AttendanceStatus
+  absence_reason?: string
 }
 
 interface AttendanceSheetProps {
@@ -68,27 +70,28 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
     initialAttendance.forEach(a => { map[a.trainee_id] = a.status })
     return map
   })
-  const [saving, setSaving] = useState<Record<string, boolean>>({})
+  const [absenceReasons, setAbsenceReasons] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {}
+    initialAttendance.forEach(a => {
+      if (a.absence_reason) map[a.trainee_id] = a.absence_reason
+    })
+    return map
+  })
 
-  const toggleStatus = useCallback(async (traineeId: string) => {
+  const toggleStatus = useCallback((traineeId: string) => {
     const current = attendance[traineeId] || 'absent'
-    const currentIndex = statusCycle.indexOf(current)
-    const next = statusCycle[(currentIndex + 1) % statusCycle.length]
+    const next = statusCycle[(statusCycle.indexOf(current) + 1) % statusCycle.length]
 
-    // Optimistic update
     setAttendance(prev => ({ ...prev, [traineeId]: next }))
-    setSaving(prev => ({ ...prev, [traineeId]: true }))
 
-    // Use Server Action
-    const result = await saveAttendance(traineeId, eventId, next)
-
-    if (!result.success) {
-      setAttendance(prev => ({ ...prev, [traineeId]: current }))
-      toast('فشل حفظ الحضور', 'error')
-    }
-
-    setSaving(prev => ({ ...prev, [traineeId]: false }))
-  }, [attendance, eventId])
+    const reason = (next === 'absent' || next === 'late') ? absenceReasons[traineeId] : undefined
+    saveAttendance(traineeId, eventId, next, reason).then(result => {
+      if (!result.success) {
+        setAttendance(prev => ({ ...prev, [traineeId]: current }))
+        toast('فشل حفظ الحضور', 'error')
+      }
+    })
+  }, [attendance, absenceReasons, eventId])
 
   const markAll = useCallback(async (status: AttendanceStatus) => {
     const prev = { ...attendance }
@@ -139,8 +142,8 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
       </div>
 
       {/* Success Overlay */}
-      {showSuccess && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+      {showSuccess && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl p-8 flex flex-col items-center shadow-2xl animate-in zoom-in-95 duration-300 scale-105">
             <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4 animate-bounce">
               <CheckCheck className="w-10 h-10 text-green-600" strokeWidth={3} />
@@ -152,7 +155,8 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
               {'جاري العودة...'}
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Trainee List */}
@@ -161,42 +165,58 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
           const status = attendance[trainee.id] || 'absent'
           const config = statusConfig[status]
           const StatusIcon = config.icon
-          const isSaving = saving[trainee.id]
 
           return (
-            <button
-              key={trainee.id}
-              onClick={() => toggleStatus(trainee.id)}
-              disabled={isSaving}
-              className={cn(
-                'w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-[0.98]',
-                config.bg, config.border,
-                isSaving && 'opacity-60'
+            <div key={trainee.id}>
+              <button
+                onClick={() => toggleStatus(trainee.id)}
+                className={cn(
+                  'w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-[0.98]',
+                  config.bg, config.border,
+                )}
+              >
+                {/* Jersey Number */}
+                <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0">
+                  #{trainee.jersey_number ?? '—'}
+                </div>
+
+                {/* Name */}
+                <div className="flex-1 text-start min-w-0">
+                  <p className="font-semibold text-white truncate">
+                    {trainee.name_ar}
+                  </p>
+                  <p className={cn('text-xs font-medium', config.text)}>
+                    {config.label}
+                  </p>
+                </div>
+
+                {/* Status Icon */}
+                <div className={cn(
+                  'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform',
+                  config.iconBg,
+                )}>
+                  <StatusIcon className="w-5 h-5 text-white" strokeWidth={3} />
+                </div>
+              </button>
+
+              {(status === 'absent' || status === 'late') && (
+                <input
+                  type="text"
+                  placeholder={status === 'absent' ? 'سبب الغياب (اختياري)' : 'سبب التأخير (اختياري)'}
+                  value={absenceReasons[trainee.id] || ''}
+                  onChange={e => setAbsenceReasons(prev => ({ ...prev, [trainee.id]: e.target.value }))}
+                  onBlur={() => {
+                    saveAttendance(trainee.id, eventId, status, absenceReasons[trainee.id] ?? '')
+                  }}
+                  onClick={e => e.stopPropagation()}
+                  className={cn(
+                    'w-full mt-1 rounded-xl px-3 py-2 text-xs text-white/70 outline-none placeholder:text-white/20 bg-white/5',
+                    status === 'absent' ? 'border border-red-400/20 focus:border-red-400/40' : 'border border-amber-400/20 focus:border-amber-400/40'
+                  )}
+                  dir="rtl"
+                />
               )}
-            >
-              {/* Jersey Number */}
-              <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0">
-                #{trainee.jersey_number ?? '—'}
-              </div>
-
-              {/* Name */}
-              <div className="flex-1 text-start min-w-0">
-                <p className="font-semibold text-white truncate">
-                  {trainee.name_ar}
-                </p>
-                <p className={cn('text-xs font-medium', config.text)}>
-                  {config.label}
-                </p>
-              </div>
-
-              {/* Status Icon */}
-              <div className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform',
-                config.iconBg,
-              )}>
-                <StatusIcon className="w-5 h-5 text-white" strokeWidth={3} />
-              </div>
-            </button>
+            </div>
           )
         })}
       </div>
@@ -206,10 +226,8 @@ export function AttendanceSheet({ eventId, trainees, initialAttendance }: Attend
         <div className="flex items-center justify-between bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 shadow-lg gap-3">
           <button
             onClick={() => {
-              setShowSuccess(true);
-              setTimeout(() => {
-                router.back();
-              }, 1500);
+              setShowSuccess(true)
+              setTimeout(() => { router.back() }, 1500)
             }}
             className="btn btn-primary shadow-lg shadow-indigo-200 text-sm py-2.5 px-4 flex-shrink-0"
           >

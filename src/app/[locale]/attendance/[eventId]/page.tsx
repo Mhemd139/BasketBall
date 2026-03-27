@@ -38,7 +38,7 @@ export default async function AttendancePage({
   ] = await Promise.all([
     getSession(),
     (supabase as any).from('events').select('id, type, event_date, class_id, trainer_id, hall_id, title_ar, title_he, title_en, start_time, end_time, notes_en, halls(id, name_ar, name_he, name_en)').eq('id', eventId).single(),
-    (supabase as any).from('attendance').select('trainee_id, status').eq('event_id', eventId),
+    (supabase as any).from('attendance').select('trainee_id, status, absence_reason').eq('event_id', eventId),
   ])
 
   if (eventError || !event) {
@@ -122,7 +122,7 @@ export default async function AttendancePage({
                 <AttendanceSheet
                   eventId={eventId}
                   trainees={trainees}
-                  initialAttendance={(attendanceRecords || []) as { trainee_id: string; status: 'present' | 'absent' | 'late' }[]}
+                  initialAttendance={(attendanceRecords || []) as { trainee_id: string; status: 'present' | 'absent' | 'late'; absence_reason?: string }[]}
                 />
               ) : (
                 <div className="text-center py-12 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl animate-fade-in-up">

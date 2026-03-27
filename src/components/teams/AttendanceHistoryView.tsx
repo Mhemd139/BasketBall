@@ -26,12 +26,12 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
     const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
     const { trainees, events, attendanceMap } = data
 
-    // Summary stats
-    const totalRecords = Object.keys(attendanceMap).length
+    // Summary stats — missing records count as absent
+    const totalSlots = trainees.length * events.length
     const presentCount = Object.values(attendanceMap).filter(s => s === 'present').length
     const lateCount = Object.values(attendanceMap).filter(s => s === 'late').length
-    const absentCount = Object.values(attendanceMap).filter(s => s === 'absent').length
-    const attendanceRate = totalRecords > 0 ? Math.round((presentCount / totalRecords) * 100) : 0
+    const absentCount = totalSlots - presentCount - lateCount
+    const attendanceRate = totalSlots > 0 ? Math.round((presentCount / totalSlots) * 100) : 0
 
     if (events.length === 0) {
         return (
@@ -77,7 +77,7 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                         const s = attendanceMap[`${event.id}_${t.id}`]
                         if (s === 'present') evPresent++
                         else if (s === 'late') evLate++
-                        else if (s === 'absent') evAbsent++
+                        else evAbsent++ // no record = absent
                     })
 
                     return (
@@ -140,8 +140,7 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                                                 <span className="text-sm text-white/80">{trainee.name_ar}</span>
                                                 {status === 'present' && <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />}
                                                 {status === 'late' && <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />}
-                                                {status === 'absent' && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
-                                                {!status && <span className="text-white/20 text-xs">—</span>}
+                                                {(!status || status === 'absent') && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
                                             </div>
                                         )
                                     })}

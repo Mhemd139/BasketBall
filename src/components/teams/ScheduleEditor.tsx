@@ -36,6 +36,61 @@ const dayLabels: Record<number, string> = {
     4: 'الخميس', 5: 'الجمعة', 6: 'السبت',
 }
 
+const SCHED_HOURS = Array.from({ length: 18 }, (_, i) => String(i + 6).padStart(2, '0'))
+const SCHED_MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']
+
+function TimeTapPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const [open, setOpen] = useState(false)
+    const [hh, mm] = value.split(':')
+
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className={`w-full bg-white/10 border rounded-xl px-3 py-2.5 text-sm font-bold text-white/90 text-center transition-colors ${open ? 'border-electric/40' : 'border-white/10'}`}
+                dir="ltr"
+            >
+                {value}
+            </button>
+            {open && (
+                <div className="absolute top-full mt-1 inset-x-0 z-50 bg-[#0B132B] border border-white/10 rounded-xl p-2 shadow-xl space-y-2">
+                    <div className="grid grid-cols-6 gap-1">
+                        {SCHED_HOURS.map(h => (
+                            <button
+                                key={h}
+                                type="button"
+                                onClick={() => { onChange(`${h}:${mm}`); }}
+                                className={`py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                                    h === hh ? 'bg-electric text-white' : 'text-white/50 hover:bg-white/10 active:scale-95'
+                                }`}
+                            >
+                                {h}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="border-t border-white/10 pt-1.5">
+                        <div className="grid grid-cols-6 gap-1">
+                            {SCHED_MINUTES.map(m => (
+                                <button
+                                    key={m}
+                                    type="button"
+                                    onClick={() => { onChange(`${hh}:${m}`); setOpen(false); }}
+                                    className={`py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                                        m === mm ? 'bg-electric text-white' : 'text-white/50 hover:bg-white/10 active:scale-95'
+                                    }`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
 export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEditorProps) {
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
     const [isAdding, setIsAdding] = useState(false)
@@ -304,26 +359,12 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
                                     <div className="flex items-center gap-3" dir="rtl">
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] text-white/30 font-bold text-center">من</p>
-                                            <input
-                                                type="time"
-                                                value={startTime}
-                                                onChange={e => setStartTime(e.target.value)}
-                                                aria-label="وقت البداية"
-                                                dir="ltr"
-                                                className="w-full bg-white/10 border border-white/10 focus:border-white/30 rounded-xl px-3 py-2.5 text-sm font-bold text-white/90 text-center outline-none transition-colors"
-                                            />
+                                            <TimeTapPicker value={startTime} onChange={setStartTime} />
                                         </div>
                                         <span className="text-white/30 font-bold mt-4">—</span>
                                         <div className="flex-1 space-y-1">
                                             <p className="text-[10px] text-white/30 font-bold text-center">إلى</p>
-                                            <input
-                                                type="time"
-                                                value={endTime}
-                                                onChange={e => setEndTime(e.target.value)}
-                                                aria-label="وقت النهاية"
-                                                dir="ltr"
-                                                className="w-full bg-white/10 border border-white/10 focus:border-white/30 rounded-xl px-3 py-2.5 text-sm font-bold text-white/90 text-center outline-none transition-colors"
-                                            />
+                                            <TimeTapPicker value={endTime} onChange={setEndTime} />
                                         </div>
                                     </div>
                                 </div>
