@@ -669,6 +669,8 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                                     try {
                                                         if (initialEvent && onDelete) await onDelete(initialEvent.id);
                                                         onClose();
+                                                    } catch {
+                                                        toast('فشل حذف الفعالية', 'error');
                                                     } finally {
                                                         setLoading(false);
                                                     }
