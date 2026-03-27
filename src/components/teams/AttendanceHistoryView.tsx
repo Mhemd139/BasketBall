@@ -32,11 +32,16 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
     const [navigating, setNavigating] = useState(false)
     const { trainees, events, attendanceMap, reasonMap = {} } = data
 
+<<<<<<< HEAD
+=======
+    // Summary stats — missing records count as absent
+>>>>>>> origin/main
     const totalSlots = trainees.length * events.length
     const presentCount = Object.values(attendanceMap).filter(s => s === 'present').length
     const lateCount = Object.values(attendanceMap).filter(s => s === 'late').length
     const absentCount = totalSlots - presentCount - lateCount
     const attendanceRate = totalSlots > 0 ? Math.round((presentCount / totalSlots) * 100) : 0
+<<<<<<< HEAD
 
     useEffect(() => { setNavigating(false) }, [data])
 
@@ -44,6 +49,8 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
         setNavigating(true)
         router.push(`/${locale}/attendance/${eventId}`)
     }
+=======
+>>>>>>> origin/main
 
     if (events.length === 0) {
         return (
@@ -96,7 +103,11 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                         const s = attendanceMap[`${event.id}_${t.id}`]
                         if (s === 'present') evPresent++
                         else if (s === 'late') evLate++
+<<<<<<< HEAD
                         else evAbsent++
+=======
+                        else evAbsent++ // no record = absent
+>>>>>>> origin/main
                     })
 
                     return (
@@ -173,6 +184,7 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                                         const isLate = status === 'late'
 
                                         return (
+<<<<<<< HEAD
                                             <div key={trainee.id} className="flex items-center justify-between py-1.5 gap-2">
                                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                                     <span className="text-sm text-white/80 truncate">{trainee.name_ar}</span>
@@ -193,6 +205,13 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                                                     {isLate && <Clock className="w-4 h-4 text-amber-400" />}
                                                     {isAbsent && <XCircle className="w-4 h-4 text-red-400" />}
                                                 </div>
+=======
+                                            <div key={trainee.id} className="flex items-center justify-between py-1.5">
+                                                <span className="text-sm text-white/80">{trainee.name_ar}</span>
+                                                {status === 'present' && <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />}
+                                                {status === 'late' && <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />}
+                                                {(!status || status === 'absent') && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+>>>>>>> origin/main
                                             </div>
                                         )
                                     })}
