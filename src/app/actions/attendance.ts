@@ -7,7 +7,7 @@ import { getSession } from './auth'
 
 type AttendanceStatus = 'present' | 'absent' | 'late'
 
-export async function saveAttendance(traineeId: string, eventId: string, status: AttendanceStatus) {
+export async function saveAttendance(traineeId: string, eventId: string, status: AttendanceStatus, absenceReason?: string) {
   const session = await getSession()
   if (!session) return { success: false, error: 'Unauthorized' }
 
@@ -16,7 +16,8 @@ export async function saveAttendance(traineeId: string, eventId: string, status:
   const { error } = await (supabase as any).rpc('upsert_attendance', {
       p_trainee_id: traineeId,
       p_event_id: eventId,
-      p_status: status
+      p_status: status,
+      p_absence_reason: (status === 'absent' || status === 'late') ? (absenceReason ?? null) : null
   })
 
   if (error) {
@@ -24,7 +25,6 @@ export async function saveAttendance(traineeId: string, eventId: string, status:
     return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
   }
 
-  revalidatePath('/[locale]/attendance', 'page')
   return { success: true }
 }
 
@@ -45,7 +45,6 @@ export async function bulkSaveAttendance(
     return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
   }
 
-  revalidatePath('/[locale]/attendance', 'page')
   return { success: true }
 }
 
@@ -87,7 +86,7 @@ export async function getEventAttendance(eventId: string, classId?: string | nul
     { data: attendance, error: attendanceError }
   ] = await Promise.all([
     traineeQuery.order('name_ar', { ascending: true }).limit(200),
-    (supabase as any).from('attendance').select('id, trainee_id, event_id, status, marked_by, created_at').eq('event_id', eventId).limit(1000),
+    (supabase as any).from('attendance').select('id, trainee_id, event_id, status, marked_by, created_at, absence_reason').eq('event_id', eventId).limit(1000),
   ])
 
   if (traineesError) {

@@ -728,6 +728,10 @@ body[class*="font-arabic"] * {
   -ms-overflow-style: none;
   scrollbar-width: none;
   scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   height: 260px; /* 5 × 52px */
 }
 .scroll-col::-webkit-scrollbar { display: none; }
@@ -762,6 +766,12 @@ body[class*="font-arabic"] * {
   background: #e2e8f0;
   z-index: 20;
   pointer-events: none;
+}
+
+/* Dark variant */
+.dark-picker .scroll-sel-top,
+.dark-picker .scroll-sel-bottom {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .backdrop-blur-portal {
