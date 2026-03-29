@@ -49,7 +49,7 @@ export function EventInfoCards({ event, trainerName, className, hallName, locale
         setIsOpen(true)
     }
 
-    const handleSave = async (eventData: Record<string, unknown>) => {
+    const handleSave = async (eventData: Parameters<typeof upsertEvent>[0]) => {
         const res = await upsertEvent({ ...eventData, id: event.id })
         if (res.success) {
             setIsOpen(false)
