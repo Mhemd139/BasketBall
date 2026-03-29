@@ -196,7 +196,7 @@ export async function getTeamAttendanceHistory(classId: string, eventType?: 'bas
 
     let eventsQuery = (supabase as any)
         .from('events')
-        .select('id, event_date, type, title_ar, title_en, title_he, start_time')
+        .select('id, class_id, event_date, type, title_ar, title_en, title_he, start_time')
         .eq('trainer_id', targetTrainerId)
         .gte('event_date', startDate.toISOString())
         .lte('event_date', endDate.toISOString())
@@ -210,7 +210,11 @@ export async function getTeamAttendanceHistory(classId: string, eventType?: 'bas
         eventsQuery = eventsQuery.in('type', ['training', 'game'])
     }
 
-    const { data: candidateEvents } = await eventsQuery
+    const { data: candidateEvents, error: eventsError } = await eventsQuery
+    if (eventsError) {
+        console.error('getTeamAttendanceHistory events failed:', eventsError)
+        return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
+    }
 
     if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {}, reasonMap: {} } }
 
@@ -220,15 +224,20 @@ export async function getTeamAttendanceHistory(classId: string, eventType?: 'bas
 
     const candidateEventIds = candidateEvents.map((e: any) => e.id)
 
-    const { data: attendance } = await (supabase as any)
+    const { data: attendance, error: attendanceError } = await (supabase as any)
         .from('attendance')
         .select('event_id, trainee_id, status, absence_reason')
         .in('event_id', candidateEventIds)
         .in('trainee_id', traineeIds)
         .limit(5000)
 
+    if (attendanceError) {
+        console.error('getTeamAttendanceHistory attendance failed:', attendanceError)
+        return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
+    }
+
     const relevantEventIds = new Set(attendance?.map((a: any) => a.event_id))
-    const relevantEvents = candidateEvents.filter((e: any) => relevantEventIds.has(e.id))
+    const relevantEvents = candidateEvents.filter((e: any) => e.class_id === classId || relevantEventIds.has(e.id))
 
     const attendanceMap: Record<string, string> = {}
     const reasonMap: Record<string, string> = {}
