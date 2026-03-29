@@ -26,6 +26,7 @@ interface ClassSchedule {
   start_time: string
   end_time: string
   notes: string | null
+  session_type?: string
   halls: { id: string; name_he: string; name_ar: string; name_en: string } | null
 }
 
@@ -50,8 +51,8 @@ export default async function TeamDetailPage({
     { data: allHalls, error: hallsError },
     attendanceStatsMap
   ] = await Promise.all([
-    supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, trainers:trainers!classes_trainer_id_fkey(id, name_ar, name_he, name_en, phone, gender), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
-    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en, date_of_birth, school_class').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).order('name_ar', { ascending: true }).limit(200),
+    supabase.from('classes').select('id, name_ar, name_he, name_en, trainer_id, gym_trainer_id, trainers:trainers!classes_trainer_id_fkey(id, name_ar, name_he, name_en, phone, gender), categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, notes, session_type, halls(id, name_he, name_ar, name_en))').eq('id', classId).single(),
+    supabase.from('trainees').select('id, name_ar, name_he, name_en, phone, jersey_number, class_id, gender, is_paid, amount_paid, payment_comment_ar, payment_comment_he, payment_comment_en, date_of_birth, school_class, notes').eq('class_id', classId).order('jersey_number', { ascending: true, nullsFirst: false }).order('name_ar', { ascending: true }).limit(200),
     supabase.from('halls').select('id, name_ar, name_he, name_en').order('name_ar').limit(50),
     getClassAttendanceStats(classId),
   ])
@@ -182,7 +183,7 @@ export default async function TeamDetailPage({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">{'الجدول'}</p>
-                    <ScheduleEditor schedules={schedules} halls={halls} locale={locale} classId={classId} />
+                    <ScheduleEditor schedules={schedules} halls={halls} locale={locale} classId={classId} hasGymTrainer={!!teamDetails.gym_trainer_id} />
                   </div>
                 </div>
               </div>

@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { getTrainerProfile, getSession } from '@/app/actions'
 import { getLocalizedField, formatPhoneNumber } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
-import { Phone, Calendar, Clock, Shield, Building2 } from 'lucide-react'
+import { Phone, Calendar, Clock, Shield, Building2, Dumbbell } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { TrainerProfileActions } from '@/components/trainers/TrainerProfileActions'
@@ -32,6 +32,7 @@ export default async function TrainerProfilePage({
     }
     const trainer = res.trainer as TrainerWithSchedule
     const { teams } = res
+    const gymTeams = 'gymTeams' in res ? (res.gymTeams || []) : []
     const isFemale = trainer.gender === 'female'
 
     const daysMap: Record<string, string> = {
@@ -75,11 +76,24 @@ export default async function TrainerProfilePage({
                                         {getLocalizedField(trainer, 'name', locale)}
                                     </h1>
 
-                                    {/* Role badge */}
-                                    <span className={`text-[11px] font-bold px-3 py-1 rounded-lg border ${isFemale ? 'text-pink-300 bg-pink-500/15 border-pink-500/20' : 'text-indigo-300 bg-indigo-500/15 border-indigo-500/20'}`}>
-                                        <Shield className="w-3 h-3 inline-block ml-1.5" />
-                                        {trainer.role === 'admin' ? 'رئيس المدربين' : 'مدرب'}
-                                    </span>
+                                    {/* Role badges */}
+                                    <div className="flex items-center gap-2 flex-wrap justify-center">
+                                        <span className={`text-[11px] font-bold px-3 py-1 rounded-lg border ${isFemale ? 'text-pink-300 bg-pink-500/15 border-pink-500/20' : 'text-indigo-300 bg-indigo-500/15 border-indigo-500/20'}`}>
+                                            <Shield className="w-3 h-3 inline-block ml-1.5" />
+                                            {trainer.role === 'headcoach' ? 'رئيس المدربين' : 'مدرب'}
+                                        </span>
+                                        {gymTeams.length > 0 && (
+                                            <span className="text-[11px] font-bold px-3 py-1 rounded-lg border text-purple-300 bg-purple-500/15 border-purple-500/20">
+                                                <Dumbbell className="w-3 h-3 inline-block ml-1.5" />
+                                                مدرب لياقة
+                                            </span>
+                                        )}
+                                        {teams.length > 0 && (
+                                            <span className="text-[11px] font-bold px-3 py-1 rounded-lg border text-green-300 bg-green-500/15 border-green-500/20">
+                                                مدرب كرة سلة
+                                            </span>
+                                        )}
+                                    </div>
 
                                     {/* Info pills */}
                                     <div className="flex items-center gap-2 flex-wrap justify-center">
@@ -93,7 +107,7 @@ export default async function TrainerProfilePage({
                                             {isFemale ? 'أنثى' : 'ذكر'}
                                         </span>
                                         <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/15">
-                                            {teams.length} فرق
+                                            {new Set([...teams, ...gymTeams].map((team: any) => team.id)).size} فرق
                                         </span>
                                     </div>
                                 </div>
@@ -136,7 +150,7 @@ export default async function TrainerProfilePage({
                         </section>
 
                         {/* Working Hours */}
-                        <TrainerWorkingHours trainerId={id} />
+                        <TrainerWorkingHours trainerId={id} locale={locale} />
 
                         {/* Teams Section */}
                         <section className="space-y-3">
@@ -146,7 +160,7 @@ export default async function TrainerProfilePage({
 
                             <div className="space-y-2">
                                 {teams.map((team: any) => {
-                                    const schedules = team.class_schedules || []
+                                    const schedules = (team.class_schedules || []).filter((s: any) => s.session_type !== 'gym')
                                     const hallNames = [...new Set(
                                         schedules
                                             .filter((s: any) => s.halls)
@@ -204,6 +218,67 @@ export default async function TrainerProfilePage({
                                 )}
                             </div>
                         </section>
+
+                        {/* Gym Teams Section */}
+                        {gymTeams.length > 0 && (
+                            <section className="space-y-3">
+                                <h2 className="text-xs font-bold text-purple-300/70 uppercase tracking-wider flex items-center gap-2 px-1">
+                                    <Dumbbell className="w-3.5 h-3.5" />
+                                    فرق لياقة بدنية
+                                </h2>
+
+                                <div className="space-y-2">
+                                    {gymTeams.map((team: any) => {
+                                        const schedules = (team.class_schedules || []).filter((s: any) => s.session_type === 'gym')
+                                        const hallNames = [...new Set(
+                                            schedules
+                                                .filter((s: any) => s.halls)
+                                                .map((s: any) => getLocalizedField(s.halls, 'name', locale))
+                                        )] as string[]
+
+                                        return (
+                                            <Link key={team.id} href={`/${locale}/teams/${team.id}`} className="block group">
+                                                <Card
+                                                    interactive
+                                                    className="bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl overflow-hidden relative transition-all hover:-translate-y-1 hover:bg-white/10 border-r-2 border-r-purple-400"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div className="flex flex-col items-center gap-1.5 relative z-10 py-4 px-5">
+                                                        <h3 className="text-base font-bold text-white truncate drop-shadow-md max-w-full">
+                                                            {getLocalizedField(team, 'name', locale)}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                                                            <span className="text-[10px] font-bold text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded-md border border-purple-500/20">
+                                                                لياقة
+                                                            </span>
+                                                            {hallNames.length > 0 && (
+                                                                <span className="text-[10px] font-bold text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-md border border-orange-500/20">
+                                                                    {hallNames.join(' / ')}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {schedules.length > 0 && (
+                                                            <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center mt-1">
+                                                                {schedules
+                                                                    .filter((s: any) => s.start_time !== '00:00:00')
+                                                                    .sort((a: any, b: any) => a.day_of_week - b.day_of_week)
+                                                                    .map((s: any) => (
+                                                                        <span key={s.id} className="text-[11px] text-white/35 flex items-center gap-1">
+                                                                            <Clock className="w-3 h-3" />
+                                                                            {dayNumMap[s.day_of_week]}
+                                                                            <span dir="ltr">{s.start_time?.slice(0, 5)}-{s.end_time?.slice(0, 5)}</span>
+                                                                        </span>
+                                                                    ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </Card>
+                                            </Link>
+                                        )
+                                    })}
+                                </div>
+                            </section>
+                        )}
 
                     </div>
                 </main>

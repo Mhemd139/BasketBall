@@ -34,7 +34,8 @@ export function InteractivePlayerModal({ isOpen, onClose, locale, classId }: Int
         phone: '',
         jerseyNumber: '',
         gender: 'male' as 'male' | 'female',
-        classId: classId || ''
+        classId: classId || '',
+        notes: ''
     })
 
     const [searchQuery, setSearchQuery] = useState('')
@@ -51,7 +52,7 @@ export function InteractivePlayerModal({ isOpen, onClose, locale, classId }: Int
         if (isOpen) {
             setStep('choice')
             setMode('new')
-            setFormData({ name: '', phone: '', jerseyNumber: '', gender: 'male', classId: classId || '' })
+            setFormData({ name: '', phone: '', jerseyNumber: '', gender: 'male', classId: classId || '', notes: '' })
             setSearchQuery('')
             setSearchResults([])
             setSuccessMessage('')
@@ -124,6 +125,7 @@ export function InteractivePlayerModal({ isOpen, onClose, locale, classId }: Int
             phone: formData.phone || undefined,
             jerseyNumber: formData.jerseyNumber ? (Number(formData.jerseyNumber) || null) : null,
             gender: formData.gender,
+            notes: formData.notes.trim() || undefined,
         })
         setLoading(false)
         if (res.success) {
@@ -350,6 +352,17 @@ export function InteractivePlayerModal({ isOpen, onClose, locale, classId }: Int
                                                     أنثى
                                                 </button>
                                             </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5 mr-1">ملاحظات (اختياري)</label>
+                                            <textarea
+                                                rows={3}
+                                                className="w-full bg-white/10 border border-white/10 rounded-2xl px-5 py-4 font-outfit text-base text-white/90 outline-none focus:border-white/30 transition-all placeholder:text-white/20 resize-none"
+                                                placeholder="ملاحظات (اختياري)"
+                                                value={formData.notes}
+                                                onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
+                                            />
                                         </div>
                                     </motion.div>
                                 )}

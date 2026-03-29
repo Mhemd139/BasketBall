@@ -107,11 +107,15 @@ export async function getTrainerProfile(trainerId: string) {
 
     const supabase = await createServerSupabaseClient()
 
-    const [{ data: trainer, error: trainerError }, { data: teams, error: teamsError }] = await Promise.all([
+    const [{ data: trainer, error: trainerError }, { data: teams, error: teamsError }, { data: gymTeams, error: gymTeamsError }] = await Promise.all([
         (supabase as any).from('trainers').select('id, name_ar, name_he, name_en, phone, gender, role, availability, availability_schedule').eq('id', trainerId).single(),
         (supabase as any).from('classes')
-            .select('id, name_ar, name_he, name_en, categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, halls(id, name_he, name_ar, name_en))')
+            .select('id, name_ar, name_he, name_en, categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, session_type, halls(id, name_he, name_ar, name_en))')
             .eq('trainer_id', trainerId)
+            .limit(50),
+        (supabase as any).from('classes')
+            .select('id, name_ar, name_he, name_en, categories(name_he, name_ar, name_en), class_schedules(id, day_of_week, start_time, end_time, session_type, halls(id, name_he, name_ar, name_en))')
+            .eq('gym_trainer_id', trainerId)
             .limit(50),
     ])
 
@@ -123,8 +127,11 @@ export async function getTrainerProfile(trainerId: string) {
         console.error('getTrainerProfile teams failed:', teamsError)
         return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
     }
+    if (gymTeamsError) {
+        console.error('getTrainerProfile gymTeams failed:', gymTeamsError)
+    }
 
-    return { success: true, trainer, teams }
+    return { success: true, trainer, teams, gymTeams: gymTeams || [] }
 }
 
 export async function getTrainerProfileServer() {
@@ -214,5 +221,65 @@ export async function getTrainerWorkingHours(trainerId: string, startDate: strin
         hours: Math.floor(totalMinutes / 60),
         minutes: totalMinutes % 60,
         totalEvents: (events || []).length,
+    }
+}
+
+export async function getTrainerWorkingHoursDetailed(trainerId: string, startDate: string, endDate: string) {
+    const session = await getSession()
+    if (!session) return { success: false, error: 'Unauthorized' }
+
+    const supabase = await createServerSupabaseClient()
+
+    const { data: events, error } = await (supabase as any)
+        .from('events')
+        .select('id, event_date, start_time, end_time, type, title_ar, title_he, title_en, class_id, classes(name_ar, name_he, name_en)')
+        .eq('trainer_id', trainerId)
+        .gte('event_date', startDate)
+        .lte('event_date', endDate)
+        .order('event_date', { ascending: false })
+        .limit(500)
+
+    if (error) {
+        console.error('getTrainerWorkingHoursDetailed error:', error)
+        return { success: false, error: 'فشل تحميل ساعات العمل' }
+    }
+
+    let totalMinutes = 0
+    const detailedEvents = []
+
+    for (const event of events || []) {
+        let duration = 0
+        if (event.start_time && event.end_time) {
+            const [sh, sm] = event.start_time.split(':').map(Number)
+            const [eh, em] = event.end_time.split(':').map(Number)
+            const diff = (eh * 60 + em) - (sh * 60 + sm)
+            if (diff > 0) {
+                duration = diff
+                totalMinutes += diff
+            }
+        }
+
+        detailedEvents.push({
+            id: event.id,
+            eventDate: event.event_date,
+            startTime: event.start_time,
+            endTime: event.end_time,
+            type: event.type || 'training',
+            titleAr: event.title_ar,
+            titleHe: event.title_he,
+            titleEn: event.title_en,
+            teamNameAr: event.classes?.name_ar || '',
+            teamNameHe: event.classes?.name_he || '',
+            teamNameEn: event.classes?.name_en || '',
+            duration,
+        })
+    }
+
+    return {
+        success: true,
+        hours: Math.floor(totalMinutes / 60),
+        minutes: totalMinutes % 60,
+        totalEvents: detailedEvents.length,
+        events: detailedEvents,
     }
 }

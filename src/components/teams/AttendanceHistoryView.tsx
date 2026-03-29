@@ -16,6 +16,9 @@ interface AttendanceHistoryViewProps {
         reasonMap?: Record<string, string>
     }
     locale: string
+    classId?: string
+    hasGymTrainer?: boolean
+    onTabChange?: (tab: 'basketball' | 'gym') => void
 }
 
 function fmtDate(dateString: string, formatStr: string, locale: string) {
@@ -26,15 +29,25 @@ function fmtDate(dateString: string, formatStr: string, locale: string) {
     }
 }
 
-export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewProps) {
+export function AttendanceHistoryView({ data, locale, hasGymTrainer, onTabChange }: AttendanceHistoryViewProps) {
     const router = useRouter()
     const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
     const [navigating, setNavigating] = useState(false)
-    const { trainees, events, attendanceMap, reasonMap = {} } = data
+    const [activeTab, setActiveTab] = useState<'basketball' | 'gym'>('basketball')
+    const { trainees, events: allEvents, attendanceMap, reasonMap = {} } = data
+
+    const events = allEvents.filter(event =>
+        activeTab === 'gym' ? event.type === 'gym' : event.type !== 'gym'
+    )
+
+    const visibleEventIds = new Set(events.map(e => e.id))
+    const visibleAttendanceEntries = Object.entries(attendanceMap).filter(([key]) =>
+        visibleEventIds.has(key.split('_')[0])
+    )
 
     const totalSlots = trainees.length * events.length
-    const presentCount = Object.values(attendanceMap).filter(s => s === 'present').length
-    const lateCount = Object.values(attendanceMap).filter(s => s === 'late').length
+    const presentCount = visibleAttendanceEntries.filter(([, s]) => s === 'present').length
+    const lateCount = visibleAttendanceEntries.filter(([, s]) => s === 'late').length
     const absentCount = totalSlots - presentCount - lateCount
     const attendanceRate = totalSlots > 0 ? Math.round((presentCount / totalSlots) * 100) : 0
 
@@ -45,7 +58,7 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
         router.push(`/${locale}/attendance/${eventId}`)
     }
 
-    if (events.length === 0) {
+    if (allEvents.length === 0) {
         return (
             <div className="text-center py-16">
                 <p className="text-white/30 font-medium text-sm">لا توجد سجلات حضور في آخر 30 يوم</p>
@@ -53,8 +66,48 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
         )
     }
 
+    const handleTabSwitch = (tab: 'basketball' | 'gym') => {
+        setActiveTab(tab)
+        onTabChange?.(tab)
+    }
+
     return (
         <div className="space-y-4" dir="rtl">
+            {/* Basketball/Gym filter tabs */}
+            {hasGymTrainer && (
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => handleTabSwitch('basketball')}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            activeTab === 'basketball'
+                                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                        }`}
+                    >
+                        كرة سلة
+                    </button>
+                    <button
+                        onClick={() => handleTabSwitch('gym')}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            activeTab === 'gym'
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                        }`}
+                    >
+                        لياقة بدنية
+                    </button>
+                </div>
+            )}
+
+            {/* Tab-specific empty state */}
+            {events.length === 0 && (
+                <div className="text-center py-8">
+                    <p className="text-white/30 font-medium text-sm">
+                        {activeTab === 'gym' ? 'لا توجد سجلات لياقة بدنية' : 'لا توجد سجلات كرة سلة'}
+                    </p>
+                </div>
+            )}
+
             {/* Navigation overlay — app-wide basketball loader */}
             {navigating && typeof window !== 'undefined' && createPortal(
                 <div className="fixed inset-0 bg-[#0B132B]/90 backdrop-blur-3xl flex flex-col items-center justify-center z-[200]">
@@ -63,7 +116,8 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                 document.body
             )}
 
-            {/* Summary card */}
+            {/* Summary card + event cards — only when tab has events */}
+            {events.length > 0 && <>
             <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4">
                 <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">الإحصائيات العامة</p>
                 <div className="grid grid-cols-4 gap-2">
@@ -202,6 +256,7 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
                     )
                 })}
             </div>
+            </>}
         </div>
     )
 }

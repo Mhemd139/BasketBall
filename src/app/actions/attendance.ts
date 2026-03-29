@@ -166,7 +166,7 @@ export async function getClassAttendanceStats(classId: string) {
   return statsMap
 }
 
-export async function getTeamAttendanceHistory(classId: string) {
+export async function getTeamAttendanceHistory(classId: string, eventType?: 'basketball' | 'gym') {
     const session = await getSession()
     if (!session) return { success: false, error: 'Unauthorized' }
 
@@ -179,7 +179,7 @@ export async function getTeamAttendanceHistory(classId: string) {
     const [{ data: team }, { data: trainees }] = await Promise.all([
         (supabase as any)
             .from('classes')
-            .select('trainer_id')
+            .select('trainer_id, gym_trainer_id')
             .eq('id', classId)
             .single(),
         (supabase as any)
@@ -191,33 +191,53 @@ export async function getTeamAttendanceHistory(classId: string) {
 
     if (!team) return { success: false, error: 'Team not found' }
 
-    const { data: candidateEvents } = await (supabase as any)
+    const targetTrainerId = eventType === 'gym' ? team.gym_trainer_id : team.trainer_id
+    if (!targetTrainerId) return { success: true, data: { trainees: trainees || [], events: [], attendanceMap: {}, reasonMap: {} } }
+
+    let eventsQuery = (supabase as any)
         .from('events')
-        .select('id, event_date, type, title_ar, title_en, title_he, start_time')
-        .eq('trainer_id', team.trainer_id)
+        .select('id, class_id, event_date, type, title_ar, title_en, title_he, start_time')
+        .eq('trainer_id', targetTrainerId)
         .gte('event_date', startDate.toISOString())
         .lte('event_date', endDate.toISOString())
         .order('event_date', { ascending: false })
         .order('start_time', { ascending: false })
         .limit(60)
 
-    if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {} } }
+    if (eventType === 'gym') {
+        eventsQuery = eventsQuery.eq('type', 'gym')
+    } else if (eventType === 'basketball') {
+        eventsQuery = eventsQuery.in('type', ['training', 'game'])
+    }
+
+    const { data: candidateEvents, error: eventsError } = await eventsQuery
+    if (eventsError) {
+        console.error('getTeamAttendanceHistory events failed:', eventsError)
+        return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
+    }
+
+    if (!trainees || trainees.length === 0) return { success: true, data: { trainees: [], events: [], attendanceMap: {}, reasonMap: {} } }
 
     const traineeIds = trainees.map((t: any) => t.id)
 
-    if (!candidateEvents || candidateEvents.length === 0) return { success: true, data: { trainees, events: [], attendanceMap: {} } }
+    if (!candidateEvents || candidateEvents.length === 0) return { success: true, data: { trainees, events: [], attendanceMap: {}, reasonMap: {} } }
 
     const candidateEventIds = candidateEvents.map((e: any) => e.id)
 
-    const { data: attendance } = await (supabase as any)
+    const { data: attendance, error: attendanceError } = await (supabase as any)
         .from('attendance')
         .select('event_id, trainee_id, status, absence_reason')
         .in('event_id', candidateEventIds)
         .in('trainee_id', traineeIds)
         .limit(5000)
 
+    if (attendanceError) {
+        console.error('getTeamAttendanceHistory attendance failed:', attendanceError)
+        return { success: false, error: 'حدث خطأ، حاول مرة أخرى' }
+    }
+
     const relevantEventIds = new Set(attendance?.map((a: any) => a.event_id))
-    const relevantEvents = candidateEvents.filter((e: any) => relevantEventIds.has(e.id))
+    const relevantEvents = candidateEvents.filter((e: any) => e.class_id === classId || relevantEventIds.has(e.id))
 
     const attendanceMap: Record<string, string> = {}
     const reasonMap: Record<string, string> = {}

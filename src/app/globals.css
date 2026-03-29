@@ -538,6 +538,11 @@ body[class*="font-arabic"] * {
   color: #dc2626;
 }
 
+.badge-purple {
+  background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);
+  color: #7c3aed;
+}
+
 /* ========================
    Section Headers
 ======================== */

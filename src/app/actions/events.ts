@@ -115,7 +115,7 @@ export async function getEventRefData() {
       { data: halls, error: hallsError }
     ] = await Promise.all([
       (supabase as any).from('trainers').select('id, name_en, name_ar, name_he, availability').order('name_ar').limit(100),
-      (supabase as any).from('classes').select('id, name_en, name_ar, name_he, categories(name_he, name_ar, name_en)').order('name_ar').limit(100),
+      (supabase as any).from('classes').select('id, name_en, name_ar, name_he, gym_trainer_id, categories(name_he, name_ar, name_en)').order('name_ar').limit(100),
       (supabase as any).from('halls').select('id, name_en, name_ar, name_he').order('name_ar').limit(50),
     ])
 
@@ -193,7 +193,7 @@ export async function getOrCreateEventForSchedule(scheduleId: string, date: stri
     const [{ data: schedule, error: schedError }, { data: existing }] = await Promise.all([
         (supabase as any)
             .from('class_schedules')
-            .select('*, classes(id, name_he, name_ar, name_en, trainer_id), halls(id, name_he, name_ar, name_en)')
+            .select('*, classes(id, name_he, name_ar, name_en, trainer_id, gym_trainer_id), halls(id, name_he, name_ar, name_en)')
             .eq('id', scheduleId)
             .single(),
         (supabase as any)
@@ -212,13 +212,20 @@ export async function getOrCreateEventForSchedule(scheduleId: string, date: stri
         return { success: true, eventId: existing[0].id }
     }
 
+    const isGym = schedule.session_type === 'gym'
+    const trainerId = isGym ? schedule.classes?.gym_trainer_id : schedule.classes?.trainer_id
+
+    if (isGym && !trainerId) {
+        return { success: false, error: 'لا يوجد مدرب لياقة لهذا الفريق' }
+    }
+
     const teamName = schedule.classes?.name_he || schedule.classes?.name_ar || 'تدريب'
 
     const { data: newEvent, error: createError } = await (supabase as any).rpc('upsert_event', {
         p_data: {
             hall_id: schedule.hall_id,
-            trainer_id: schedule.classes?.trainer_id,
-            type: 'training',
+            trainer_id: trainerId,
+            type: isGym ? 'gym' : 'training',
             title_he: teamName,
             title_ar: teamName,
             title_en: teamName,

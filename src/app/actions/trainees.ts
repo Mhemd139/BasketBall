@@ -9,13 +9,15 @@ export async function addTrainee({
   name,
   phone,
   jerseyNumber,
-  gender
+  gender,
+  notes
 }: {
   classId: string
   name: string
   phone?: string
   jerseyNumber?: number | null
   gender?: 'male' | 'female'
+  notes?: string
 }) {
   const supabase = await createServerSupabaseClient()
 
@@ -33,7 +35,8 @@ export async function addTrainee({
         phone: phone || null,
         jersey_number: jerseyNumber,
         is_paid: false,
-        gender: gender || 'male'
+        gender: gender || 'male',
+        notes: notes || null
       }
   })
 
@@ -99,6 +102,7 @@ interface TraineeUpdateData {
   amount_paid?: number
   date_of_birth?: string | null
   school_class?: string | null
+  notes?: string | null
 }
 
 export async function updateTrainee(traineeId: string, updateData: TraineeUpdateData) {

@@ -6,7 +6,7 @@ import { JerseyNumber } from '@/components/ui/JerseyNumber'
 import { PaymentModal } from '@/components/payments/PaymentModal'
 import { updateTrainee, deleteTrainee } from '@/app/actions'
 import { SCHOOL_CLASSES } from '@/lib/utils'
-import { Phone, X, ChevronRight, CreditCard, Edit2, Save, Loader2, CheckCircle2, Clock, XCircle, Trash2, Cake, GraduationCap } from 'lucide-react'
+import { Phone, X, ChevronRight, CreditCard, Edit2, Save, Loader2, CheckCircle2, Clock, XCircle, Trash2, Cake, GraduationCap, StickyNote } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmModal'
@@ -131,7 +131,7 @@ interface TraineeProfileModalProps {
     isAdmin?: boolean
     attendanceStats?: AttendanceStats
     onClose: () => void
-    onSave?: (updated: { name_ar: string; phone: string; jersey_number: number | null; gender: string; date_of_birth: string; school_class: string }) => void
+    onSave?: (updated: { name_ar: string; phone: string; jersey_number: number | null; gender: string; date_of_birth: string; school_class: string; notes: string }) => void
 }
 
 export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStats, onClose, onSave }: TraineeProfileModalProps) {
@@ -198,9 +198,15 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
         gender: trainee.gender || 'male',
         date_of_birth: trainee.date_of_birth || '',
         school_class: trainee.school_class || '',
+        notes: trainee.notes || '',
     }
     const savedForm = useRef(initialForm)
     const [editForm, setEditForm] = useState(initialForm)
+
+    useEffect(() => {
+        setEditForm(initialForm)
+        savedForm.current = initialForm
+    }, [trainee.id, trainee.notes])
 
     const isFemale = editForm.gender === 'female'
     const [amountPaid, setAmountPaid] = useState(trainee.amount_paid ?? 0)
@@ -223,6 +229,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
             jersey_number: editForm.jersey_number !== '' ? parseInt(String(editForm.jersey_number)) : null,
             date_of_birth: editForm.date_of_birth || null,
             school_class: editForm.school_class || null,
+            notes: editForm.notes || null,
         })
         if (res.success) {
             toast('تم تحديث البيانات', 'success')
@@ -234,6 +241,7 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                 gender: editForm.gender,
                 date_of_birth: editForm.date_of_birth,
                 school_class: editForm.school_class,
+                notes: editForm.notes,
             })
             setIsEditing(false)
             router.refresh()
@@ -440,6 +448,16 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                         ))}
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-1.5">ملاحظات</label>
+                                    <textarea
+                                        placeholder="ملاحظات شخصية..."
+                                        rows={3}
+                                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 outline-none text-white/80 text-sm transition-colors placeholder:text-white/20 resize-none"
+                                        value={editForm.notes}
+                                        onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))}
+                                    />
+                                </div>
                                 <div className="flex gap-2 pt-1">
                                     <button type="button" onClick={handleSave} disabled={saving}
                                         className="flex-[2] py-3 rounded-xl bg-white text-[#0f1623] font-black text-sm flex items-center justify-center gap-2 hover:bg-white/90 disabled:opacity-40 active:scale-[0.98] transition-all">
@@ -496,6 +514,19 @@ export function TraineeProfileModal({ trainee, teamName, isAdmin, attendanceStat
                                         </div>
                                     </div>
                                 </button>
+
+                                {/* ── Notes ───────────────────────── */}
+                                {editForm.notes && (
+                                    <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4">
+                                        <div className="flex items-center gap-2.5 mb-2">
+                                            <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
+                                                <StickyNote className="w-3.5 h-3.5 text-purple-400" />
+                                            </div>
+                                            <span className="text-[10px] text-white/30 font-bold uppercase tracking-wider">ملاحظات</span>
+                                        </div>
+                                        <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{editForm.notes}</p>
+                                    </div>
+                                )}
 
                                 {/* ── Attendance ──────────────────── */}
                                 <div className="rounded-2xl bg-white/[0.07] ring-1 ring-white/10 p-4">
