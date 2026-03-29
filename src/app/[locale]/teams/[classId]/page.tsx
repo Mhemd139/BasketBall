@@ -183,7 +183,7 @@ export default async function TeamDetailPage({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">{'الجدول'}</p>
-                    <ScheduleEditor schedules={schedules} halls={halls} locale={locale} classId={classId} />
+                    <ScheduleEditor schedules={schedules} halls={halls} locale={locale} classId={classId} hasGymTrainer={!!teamDetails.gym_trainer_id} />
                   </div>
                 </div>
               </div>

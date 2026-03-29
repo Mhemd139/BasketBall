@@ -122,6 +122,12 @@ export function TrainerWorkingHours({ trainerId, locale = 'ar' }: { trainerId: s
         return acc
     }, {})
 
+    if (groupedEvents) {
+        for (const date in groupedEvents) {
+            groupedEvents[date].sort((a, b) => a.startTime.localeCompare(b.startTime))
+        }
+    }
+
     const sortedDates = groupedEvents ? Object.keys(groupedEvents).sort((a, b) => b.localeCompare(a)) : []
 
     return (

@@ -420,6 +420,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
 
             await onSave({
                 type,
+                class_id: (type === 'training' || type === 'gym') ? (selectedClass || null) : (homeTeam || null),
                 title_en: title,
                 title_ar: title,
                 title_he: title,

@@ -107,7 +107,7 @@ export default async function TrainerProfilePage({
                                             {isFemale ? 'أنثى' : 'ذكر'}
                                         </span>
                                         <span className="text-xs font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/15">
-                                            {teams.length + gymTeams.length} فرق
+                                            {new Set([...teams, ...gymTeams].map((team: any) => team.id)).size} فرق
                                         </span>
                                     </div>
                                 </div>

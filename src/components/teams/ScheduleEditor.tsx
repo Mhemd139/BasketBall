@@ -30,6 +30,7 @@ interface ScheduleEditorProps {
     halls: Hall[]
     locale: string
     classId?: string
+    hasGymTrainer?: boolean
 }
 
 const dayLabels: Record<number, string> = {
@@ -92,14 +93,14 @@ function TimeTapPicker({ value, onChange }: { value: string; onChange: (v: strin
     )
 }
 
-export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEditorProps) {
+export function ScheduleEditor({ schedules, halls, locale, classId, hasGymTrainer }: ScheduleEditorProps) {
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
     const [isAdding, setIsAdding] = useState(false)
     const [dayOfWeek, setDayOfWeek] = useState(0)
     const [hallId, setHallId] = useState('')
     const [startTime, setStartTime] = useState('')
     const [endTime, setEndTime] = useState('')
-    const [newSessionType, setNewSessionType] = useState<string>('basketball')
+    const [newSessionType, setNewSessionType] = useState<'basketball' | 'gym'>('basketball')
     const [isPending, startTransition] = useTransition()
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const { toast } = useToast()
@@ -133,6 +134,7 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
         setHallId(halls[0]?.id || '')
         setStartTime('16:00')
         setEndTime('17:30')
+        setNewSessionType('basketball')
     }
 
     const handleClose = () => {
@@ -352,10 +354,13 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
                                             <button
                                                 type="button"
                                                 onClick={() => setNewSessionType('gym')}
+                                                disabled={!hasGymTrainer}
                                                 className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
                                                     newSessionType === 'gym'
                                                         ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                                        : 'bg-white/5 text-white/40 border border-white/10'
+                                                        : !hasGymTrainer
+                                                            ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
+                                                            : 'bg-white/5 text-white/40 border border-white/10'
                                                 }`}
                                             >
                                                 لياقة بدنية

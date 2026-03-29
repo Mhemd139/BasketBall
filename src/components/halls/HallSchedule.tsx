@@ -22,7 +22,7 @@ interface Event {
     start_time: string;
     end_time: string;
     event_date: string;
-    type: 'game' | 'training';
+    type: 'game' | 'training' | 'gym';
     description?: string;
     schedule_id?: string | null;
     class_id?: string | null;
@@ -167,7 +167,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                     start_time: e.start_time,
                     end_time: e.end_time,
                     notes: schedule?.notes ?? null,
-                    session_type: schedule?.session_type ?? ((e.type as string) === 'gym' ? 'gym' : 'basketball'),
+                    session_type: schedule?.session_type ?? (e.type === 'gym' ? 'gym' : 'basketball'),
                     classes: schedule?.classes ?? null,
                     event: e,
                 };
