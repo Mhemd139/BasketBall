@@ -153,7 +153,7 @@ export function EventInfoCards({ event, trainerName, className, hallName, locale
                 onSave={handleSave}
                 onDelete={handleDelete}
                 initialEvent={event}
-                initialDate={new Date(event.event_date)}
+                initialDate={(() => { const [y, m, d] = event.event_date.split('-').map(Number); return new Date(y, m - 1, d) })()}
                 locale={locale}
                 initialStep={initialStep}
             />

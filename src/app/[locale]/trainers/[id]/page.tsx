@@ -160,7 +160,7 @@ export default async function TrainerProfilePage({
 
                             <div className="space-y-2">
                                 {teams.map((team: any) => {
-                                    const schedules = team.class_schedules || []
+                                    const schedules = (team.class_schedules || []).filter((s: any) => s.session_type !== 'gym')
                                     const hallNames = [...new Set(
                                         schedules
                                             .filter((s: any) => s.halls)

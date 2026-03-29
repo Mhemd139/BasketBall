@@ -243,7 +243,7 @@ export function TrainerWorkingHours({ trainerId, locale = 'ar' }: { trainerId: s
                                                             <div className="flex items-center gap-3 flex-1 min-w-0 px-3 py-3">
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-2 mb-0.5">
-                                                                        <span className="text-[13px] font-bold text-white/80 group-hover:text-white transition-colors truncate">{ev.teamNameAr || ev.titleAr || '—'}</span>
+                                                                        <span className="text-[13px] font-bold text-white/80 group-hover:text-white transition-colors truncate">{locale === 'he' ? (ev.teamNameHe || ev.titleHe || '—') : locale === 'en' ? (ev.teamNameEn || ev.titleEn || '—') : (ev.teamNameAr || ev.titleAr || '—')}</span>
                                                                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${badge.classes}`}>{badge.label}</span>
                                                                     </div>
                                                                     <div className="flex items-center gap-3 mt-0.5">
