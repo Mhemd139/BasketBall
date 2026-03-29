@@ -24,6 +24,7 @@ interface Trainee {
   gender?: string | null
   date_of_birth?: string | null
   school_class?: string | null
+  notes?: string | null
 }
 
 type AttendanceStats = { total: number; present: number; late: number; absent: number }

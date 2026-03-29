@@ -9,6 +9,7 @@ export async function createTeam(teamData: {
     name_he: string,
     name_en: string,
     trainer_id: string | null,
+    gym_trainer_id?: string | null,
     hall_id: string | null
 }) {
     const session = await getSession()
@@ -33,6 +34,7 @@ interface TeamUpdateData {
   name_he?: string
   name_en?: string
   trainer_id?: string | null
+  gym_trainer_id?: string | null
   hall_id?: string | null
   category_id?: string | null
 }

@@ -1,5 +1,5 @@
 export { getSession, logout, sendOTP, verifyOTP, updateProfile, deleteAccount } from './auth'
-export { getTrainers, upsertTrainer, deleteTrainer, getTrainerProfile, getTrainerProfileServer, updateTrainerDetails, getTrainerWorkingHours } from './trainers'
+export { getTrainers, upsertTrainer, deleteTrainer, getTrainerProfile, getTrainerProfileServer, updateTrainerDetails, getTrainerWorkingHours, getTrainerWorkingHoursDetailed } from './trainers'
 export { addTrainee, searchTrainees, transferTrainee, updateTrainee, deleteTrainee, quickRegisterAndAssign, assignTraineeToTeam } from './trainees'
 export { createTeam, updateTeam, deleteTeam, updateTeamTrainer } from './teams'
 export { upsertEvent, deleteEvent, updateEventTime, getEventRefData, fetchTodaySchedules, getOrCreateEventForSchedule } from './events'

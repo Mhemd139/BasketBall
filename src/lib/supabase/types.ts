@@ -96,6 +96,7 @@ export type Database = {
           hall_id: string | null
           id: string
           notes: string | null
+          session_type: string
           start_time: string
         }
         Insert: {
@@ -106,6 +107,7 @@ export type Database = {
           hall_id?: string | null
           id?: string
           notes?: string | null
+          session_type?: string
           start_time: string
         }
         Update: {
@@ -116,6 +118,7 @@ export type Database = {
           hall_id?: string | null
           id?: string
           notes?: string | null
+          session_type?: string
           start_time?: string
         }
         Relationships: [
@@ -139,6 +142,7 @@ export type Database = {
         Row: {
           category_id: string | null
           created_at: string | null
+          gym_trainer_id: string | null
           hall_id: string | null
           id: string
           name_ar: string
@@ -151,6 +155,7 @@ export type Database = {
         Insert: {
           category_id?: string | null
           created_at?: string | null
+          gym_trainer_id?: string | null
           hall_id?: string | null
           id?: string
           name_ar: string
@@ -163,6 +168,7 @@ export type Database = {
         Update: {
           category_id?: string | null
           created_at?: string | null
+          gym_trainer_id?: string | null
           hall_id?: string | null
           id?: string
           name_ar?: string
@@ -178,6 +184,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_gym_trainer_id_fkey"
+            columns: ["gym_trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
             referencedColumns: ["id"]
           },
           {
@@ -375,6 +388,7 @@ export type Database = {
           name_ar: string
           name_en: string
           name_he: string
+          notes: string | null
           payment_comment_ar: string | null
           payment_comment_en: string | null
           payment_comment_he: string | null
@@ -395,6 +409,7 @@ export type Database = {
           name_ar: string
           name_en: string
           name_he: string
+          notes?: string | null
           payment_comment_ar?: string | null
           payment_comment_en?: string | null
           payment_comment_he?: string | null
@@ -415,6 +430,7 @@ export type Database = {
           name_ar?: string
           name_en?: string
           name_he?: string
+          notes?: string | null
           payment_comment_ar?: string | null
           payment_comment_en?: string | null
           payment_comment_he?: string | null

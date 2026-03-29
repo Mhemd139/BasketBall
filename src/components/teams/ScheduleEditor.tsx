@@ -14,6 +14,7 @@ interface Schedule {
     day_of_week: number
     start_time: string
     end_time: string
+    session_type?: string
     halls: { id: string; name_he: string; name_ar: string; name_en: string } | null
 }
 
@@ -98,6 +99,7 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
     const [hallId, setHallId] = useState('')
     const [startTime, setStartTime] = useState('')
     const [endTime, setEndTime] = useState('')
+    const [newSessionType, setNewSessionType] = useState<string>('basketball')
     const [isPending, startTransition] = useTransition()
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const { toast } = useToast()
@@ -173,7 +175,7 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
     const handleSaveNew = () => {
         if (!classId || !hallId || !validateTime()) return
         startTransition(async () => {
-            const res = await addClassSchedule(classId, dayOfWeek, hallId, startTime + ':00', endTime + ':00')
+            const res = await addClassSchedule(classId, dayOfWeek, hallId, startTime + ':00', endTime + ':00', newSessionType)
             if (res.success) {
                 toast('تمت إضافة الموعد', 'success')
                 handleClose()
@@ -222,6 +224,9 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
                         >
                             <Pencil className="w-3 h-3 text-white/30 group-hover:text-white/60 shrink-0 transition-colors" />
                             <span className="font-bold text-white">{dayLabels[s.day_of_week]}</span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${s.session_type === 'gym' ? 'bg-purple-500/20 text-purple-300' : 'bg-green-500/20 text-green-300'}`}>
+                                {s.session_type === 'gym' ? 'لياقة' : 'سلة'}
+                            </span>
                             <span className="text-white/50 font-medium text-xs tabular-nums" dir="rtl">
                                 {s.start_time.slice(0, 5)} - {s.end_time.slice(0, 5)}
                             </span>
@@ -322,6 +327,39 @@ export function ScheduleEditor({ schedules, halls, locale, classId }: ScheduleEd
                                                     {dayLabels[d]}
                                                 </button>
                                             ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Session type toggle (only for new) */}
+                                {isAdding && (
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-1.5 text-xs font-bold text-white/40 uppercase tracking-wider">
+                                            نوع التدريب
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewSessionType('basketball')}
+                                                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                                                    newSessionType === 'basketball'
+                                                        ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                                        : 'bg-white/5 text-white/40 border border-white/10'
+                                                }`}
+                                            >
+                                                كرة سلة
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewSessionType('gym')}
+                                                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                                                    newSessionType === 'gym'
+                                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                                        : 'bg-white/5 text-white/40 border border-white/10'
+                                                }`}
+                                            >
+                                                لياقة بدنية
+                                            </button>
                                         </div>
                                     </div>
                                 )}

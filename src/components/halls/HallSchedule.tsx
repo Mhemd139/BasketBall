@@ -36,13 +36,20 @@ interface WeeklySchedule {
     start_time: string;
     end_time: string;
     notes: string | null;
+    session_type?: string;
     classes: {
         id: string;
         name_he: string;
         name_ar: string;
         name_en: string;
         trainer_id: string;
+        gym_trainer_id?: string | null;
         trainers: {
+            name_he: string;
+            name_ar: string;
+            name_en: string;
+        } | null;
+        gym_trainer?: {
             name_he: string;
             name_ar: string;
             name_en: string;
@@ -160,6 +167,7 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                     start_time: e.start_time,
                     end_time: e.end_time,
                     notes: schedule?.notes ?? null,
+                    session_type: schedule?.session_type ?? ((e.type as string) === 'gym' ? 'gym' : 'basketball'),
                     classes: schedule?.classes ?? null,
                     event: e,
                 };
@@ -388,17 +396,20 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                 const isCurrent = isToday && schedule.start_time <= currentTime && schedule.end_time >= currentTime;
                                 const locKey = `name_${locale}` as 'name_ar' | 'name_he' | 'name_en';
                                 const teamName = schedule.classes ? (schedule.classes[locKey] || schedule.classes.name_ar) : '';
-                                const trainerName = schedule.classes?.trainers ? (schedule.classes.trainers[locKey] || schedule.classes.trainers.name_ar) : '';
+                                const trainerData = schedule.event?.trainers || (schedule.session_type === 'gym' ? (schedule.classes?.gym_trainer || schedule.classes?.trainers) : schedule.classes?.trainers);
+                                const trainerName = trainerData ? (trainerData[locKey] || trainerData.name_ar) : '';
                                 const categoryName = schedule.classes?.categories ? (schedule.classes.categories[locKey] || schedule.classes.categories.name_ar) : null;
                                 const isLoading = loadingScheduleId === schedule.id;
                                 const isPastOrToday = !isBefore(startOfDay(new Date()), startOfDay(selectedDate));
-                                const eventType = schedule.event?.type ?? 'training';
+                                const isGymSchedule = schedule.session_type === 'gym';
+                                const eventType = schedule.event?.type ?? (isGymSchedule ? 'gym' : 'training');
                                 const isGame = eventType === 'game';
-                                const cardBg = isGame ? 'bg-orange-500/10 border-orange-400' : 'bg-green-500/10 border-green-400';
-                                const titleColor = isGame ? 'text-orange-300' : 'text-green-300';
-                                const dotColor = isGame ? 'bg-orange-500' : 'bg-green-500';
-                                const ringColor = isGame ? 'ring-orange-400' : 'ring-green-400';
-                                const timeLineColor = isGame ? 'bg-orange-400' : 'bg-green-400';
+                                const isGym = eventType === 'gym' || isGymSchedule;
+                                const cardBg = isGame ? 'bg-orange-500/10 border-orange-400' : isGym ? 'bg-purple-500/10 border-purple-400' : 'bg-green-500/10 border-green-400';
+                                const titleColor = isGame ? 'text-orange-300' : isGym ? 'text-purple-300' : 'text-green-300';
+                                const dotColor = isGame ? 'bg-orange-500' : isGym ? 'bg-purple-500' : 'bg-green-500';
+                                const ringColor = isGame ? 'ring-orange-400' : isGym ? 'ring-purple-400' : 'ring-green-400';
+                                const timeLineColor = isGame ? 'bg-orange-400' : isGym ? 'bg-purple-400' : 'bg-green-400';
 
                                 return (
                                     <div key={schedule.id} className="relative flex items-start gap-3">
@@ -423,14 +434,14 @@ export function HallSchedule({ hallId, events: initialEvents, weeklySchedules, l
                                                         {schedule.event?.[`title_${locale}` as 'title_ar' | 'title_he' | 'title_en'] || schedule.event?.title_ar || teamName}
                                                     </h4>
                                                     {categoryName && (
-                                                        <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${isGame ? 'bg-orange-500/20 text-orange-300' : 'bg-green-500/20 text-green-300'}`}>
+                                                        <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${isGame ? 'bg-orange-500/20 text-orange-300' : isGym ? 'bg-purple-500/20 text-purple-300' : 'bg-green-500/20 text-green-300'}`}>
                                                             {categoryName}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-1.5 shrink-0">
                                                     {isCurrent && (
-                                                        <span className={`${isGame ? 'bg-orange-500' : 'bg-green-500'} text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse`}>
+                                                        <span className={`${isGame ? 'bg-orange-500' : isGym ? 'bg-purple-500' : 'bg-green-500'} text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse`}>
                                                             NOW
                                                         </span>
                                                     )}

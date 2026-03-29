@@ -121,12 +121,13 @@ const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50
 function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, slideVariants }: {
     startTime: string; endTime: string;
     setStartTime: (v: string) => void; setEndTime: (v: string) => void;
-    type: 'training' | 'game'; slideVariants: any;
+    type: 'training' | 'game' | 'gym'; slideVariants: any;
 }) {
     const [editing, setEditing] = useState<'start' | 'end'>('start')
     const activeTime = editing === 'start' ? startTime : endTime
     const [activeHH, activeMM] = activeTime.split(':')
     const isGame = type === 'game'
+    const isGym = type === 'gym'
 
     const [startHH, startMM] = startTime.split(':').map(Number)
     const [endHH, endMM] = endTime.split(':').map(Number)
@@ -184,7 +185,7 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
                     onClick={() => setEditing('start')}
                     className={`flex-1 py-2.5 rounded-xl text-center transition-all border ${
                         editing === 'start'
-                            ? isGame ? 'bg-neon/15 border-neon/40 ring-2 ring-neon/20' : 'bg-electric/15 border-electric/40 ring-2 ring-electric/20'
+                            ? isGame ? 'bg-neon/15 border-neon/40 ring-2 ring-neon/20' : isGym ? 'bg-purple-500/15 border-purple-500/40 ring-2 ring-purple-500/20' : 'bg-electric/15 border-electric/40 ring-2 ring-electric/20'
                             : 'bg-white/5 border-white/10'
                     }`}
                 >
@@ -198,7 +199,7 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
                     onClick={() => setEditing('end')}
                     className={`flex-1 py-2.5 rounded-xl text-center transition-all border ${
                         editing === 'end'
-                            ? isGame ? 'bg-neon/15 border-neon/40 ring-2 ring-neon/20' : 'bg-electric/15 border-electric/40 ring-2 ring-electric/20'
+                            ? isGame ? 'bg-neon/15 border-neon/40 ring-2 ring-neon/20' : isGym ? 'bg-purple-500/15 border-purple-500/40 ring-2 ring-purple-500/20' : 'bg-electric/15 border-electric/40 ring-2 ring-electric/20'
                             : 'bg-white/5 border-white/10'
                     }`}
                 >
@@ -211,7 +212,7 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
             {durationLabel && (
                 <div className="flex justify-center">
                     <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
-                        isGame ? 'bg-neon/10 text-neon/80 border-neon/20' : 'bg-electric/10 text-electric/80 border-electric/20'
+                        isGame ? 'bg-neon/10 text-neon/80 border-neon/20' : isGym ? 'bg-purple-500/10 text-purple-400/80 border-purple-500/20' : 'bg-electric/10 text-electric/80 border-electric/20'
                     }`}>
                         <Clock className="w-3 h-3" />
                         {durationLabel}
@@ -233,7 +234,7 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
                                 disabled={disabled}
                                 className={`py-2 rounded-lg text-xs font-bold transition-all ${
                                     selected
-                                        ? isGame ? 'bg-neon text-white shadow-lg shadow-neon/30' : 'bg-electric text-white shadow-lg shadow-electric/30'
+                                        ? isGame ? 'bg-neon text-white shadow-lg shadow-neon/30' : isGym ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30' : 'bg-electric text-white shadow-lg shadow-electric/30'
                                         : disabled
                                             ? 'bg-white/[0.02] text-white/10'
                                             : 'bg-white/5 text-white/60 hover:bg-white/10 active:scale-95'
@@ -258,7 +259,7 @@ function TimeStepContent({ startTime, endTime, setStartTime, setEndTime, type, s
                                 onClick={() => pickMinute(m)}
                                 className={`py-2 rounded-lg text-xs font-bold transition-all ${
                                     selected
-                                        ? isGame ? 'bg-neon text-white shadow-lg shadow-neon/30' : 'bg-electric text-white shadow-lg shadow-electric/30'
+                                        ? isGame ? 'bg-neon text-white shadow-lg shadow-neon/30' : isGym ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30' : 'bg-electric text-white shadow-lg shadow-electric/30'
                                         : 'bg-white/5 text-white/60 hover:bg-white/10 active:scale-95'
                                 }`}
                             >
@@ -277,7 +278,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
     const [step, setStep] = useState<Step>(initialStep);
     const [refData, setRefData] = useState<{ trainers: any[], classes: any[] }>({ trainers: [], classes: [] });
 
-    const [type, setType] = useState<'training' | 'game'>(initialEvent?.type || 'training');
+    const [type, setType] = useState<'training' | 'game' | 'gym'>(initialEvent?.type as 'training' | 'game' | 'gym' || 'training');
 
     const [selectedTrainer, setSelectedTrainer] = useState<string>(initialEvent?.trainer_id || '');
     const [selectedClass, setSelectedClass] = useState<string>(() => {
@@ -380,6 +381,9 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
         if (type === 'training') {
             const cls = refData.classes.find(c => c.id === selectedClass);
             return cls ? `تدريب - ${cls.name_ar}` : 'تدريب جديد';
+        } else if (type === 'gym') {
+            const cls = refData.classes.find(c => c.id === selectedClass);
+            return cls ? `لياقة - ${cls.name_ar}` : 'لياقة بدنية';
         } else {
             const home = refData.classes.find(c => c.id === homeTeam);
             return `${home ? home.name_ar : 'مضيف'} vs ${awayTeamName || 'ضيف'}`;
@@ -401,7 +405,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
 
             const notes = {
                 ...existingNotes,
-                class_id: type === 'training' ? selectedClass : homeTeam,
+                class_id: (type === 'training' || type === 'gym') ? selectedClass : homeTeam,
                 homeBtn: homeTeam,
                 awayName: awayTeamName
             };
@@ -524,6 +528,22 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
 
                                         <motion.button
                                             whileTap={{ scale: 0.97 }}
+                                            onClick={() => setType('gym')}
+                                            className={`relative w-full h-32 rounded-[2rem] overflow-hidden p-5 flex flex-col justify-end transition-all ${
+                                                type === 'gym'
+                                                    ? 'ring-4 ring-purple-500 shadow-lg shadow-purple-500/20'
+                                                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            <div className={`absolute inset-0 ${type === 'gym' ? 'bg-gradient-to-br from-purple-500/20 to-purple-900/40' : 'bg-gradient-to-br from-white/5 to-transparent'}`} />
+                                            <div className="relative z-10">
+                                                <h4 className="text-3xl font-syncopate font-bold text-white">لياقة</h4>
+                                                <p className="text-white/50 font-outfit font-medium">جلسة تدريب قوة</p>
+                                            </div>
+                                        </motion.button>
+
+                                        <motion.button
+                                            whileTap={{ scale: 0.97 }}
                                             onClick={() => setType('game')}
                                             className={`relative w-full h-32 rounded-[2rem] overflow-hidden p-5 flex flex-col justify-end transition-all ${
                                                 type === 'game'
@@ -544,7 +564,7 @@ export function InteractiveEventModal({ isOpen, onClose, onSave, onDelete, initi
                                 {/* DETAILS */}
                                 {step === 'details' && (
                                     <motion.div key="details" variants={slideVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 pb-10">
-                                        {type === 'training' ? (
+                                        {(type === 'training' || type === 'gym') ? (
                                             <>
                                                 <div>
                                                     <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">

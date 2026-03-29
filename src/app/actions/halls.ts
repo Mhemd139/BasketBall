@@ -36,7 +36,7 @@ export async function fetchHallSchedules(hallId: string) {
 
     const { data: schedules, error } = await (supabase as any)
         .from('class_schedules')
-        .select('id, day_of_week, start_time, end_time, hall_id, class_id, classes(id, name_he, name_ar, name_en, trainer_id, trainers(name_he, name_ar, name_en), categories(name_he, name_ar, name_en))')
+        .select('id, day_of_week, start_time, end_time, hall_id, class_id, session_type, classes(id, name_he, name_ar, name_en, trainer_id, gym_trainer_id, trainers:trainers!classes_trainer_id_fkey(name_he, name_ar, name_en), gym_trainer:trainers!classes_gym_trainer_id_fkey(name_he, name_ar, name_en), categories(name_he, name_ar, name_en))')
         .eq('hall_id', hallId)
         .order('day_of_week', { ascending: true })
         .order('start_time', { ascending: true })
@@ -74,7 +74,7 @@ export async function updateHall(id: string, name_en: string, name_ar: string, n
     return { success: true, hall: data }
 }
 
-export async function addClassSchedule(classId: string, dayOfWeek: number, hallId: string, startTime: string, endTime: string) {
+export async function addClassSchedule(classId: string, dayOfWeek: number, hallId: string, startTime: string, endTime: string, sessionType: string = 'basketball') {
     const session = await getSession()
     if (!session) return { success: false, error: 'Unauthorized' }
 
@@ -87,6 +87,7 @@ export async function addClassSchedule(classId: string, dayOfWeek: number, hallI
                 hall_id: hallId,
                 start_time: startTime,
                 end_time: endTime,
+                session_type: sessionType,
             }
         })
 

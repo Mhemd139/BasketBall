@@ -172,11 +172,11 @@ export default async function HomePage({
                             <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(event.start_time)}</div>
                             <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(event.end_time)}</div>
                           </div>
-                          <div className={`w-1 h-12 rounded-full shrink-0 ${event.type === 'game' ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.4)]' : 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]'}`} />
+                          <div className={`w-1 h-12 rounded-full shrink-0 ${event.type === 'game' ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.4)]' : event.type === 'gym' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]'}`} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-md border border-orange-500/20' : 'text-green-300 bg-green-500/15 px-2 py-0.5 rounded-md border border-green-500/20'}`}>
-                                {event.type === 'game' ? 'مباراة' : 'تدريب'}
+                              <span className={`text-[10px] uppercase tracking-wider font-bold ${event.type === 'game' ? 'text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-md border border-orange-500/20' : event.type === 'gym' ? 'text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded-md border border-purple-500/20' : 'text-green-300 bg-green-500/15 px-2 py-0.5 rounded-md border border-green-500/20'}`}>
+                                {event.type === 'game' ? 'مباراة' : event.type === 'gym' ? 'لياقة' : 'تدريب'}
                               </span>
                             </div>
                             <h3 className="font-bold text-white text-sm truncate leading-tight mb-1 drop-shadow-md">{getLocalizedField(event, 'title', locale)}</h3>
@@ -202,11 +202,11 @@ export default async function HomePage({
                             <div className="text-sm font-black text-white drop-shadow-md leading-none" dir="ltr">{formatTime(s.start_time)}</div>
                             <div className="text-[10px] text-indigo-200/40 font-bold mt-1" dir="ltr">{formatTime(s.end_time)}</div>
                           </div>
-                          <div className="w-1 h-12 rounded-full shrink-0 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]" />
+                          <div className={`w-1 h-12 rounded-full shrink-0 ${s.type === 'gym' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.4)]'}`} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] uppercase tracking-wider font-bold text-green-300 bg-green-500/15 px-2 py-0.5 rounded-md border border-green-500/20">
-                                {'تدريب'}
+                              <span className={`text-[10px] uppercase tracking-wider font-bold ${s.type === 'gym' ? 'text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded-md border border-purple-500/20' : 'text-green-300 bg-green-500/15 px-2 py-0.5 rounded-md border border-green-500/20'}`}>
+                                {s.type === 'gym' ? 'لياقة' : 'تدريب'}
                               </span>
                               {s[`category_name_${locale}`] && (
                                 <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/20 truncate">

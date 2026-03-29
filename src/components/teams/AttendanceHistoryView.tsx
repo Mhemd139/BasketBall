@@ -16,6 +16,9 @@ interface AttendanceHistoryViewProps {
         reasonMap?: Record<string, string>
     }
     locale: string
+    classId?: string
+    hasGymTrainer?: boolean
+    onTabChange?: (tab: 'basketball' | 'gym') => void
 }
 
 function fmtDate(dateString: string, formatStr: string, locale: string) {
@@ -26,10 +29,11 @@ function fmtDate(dateString: string, formatStr: string, locale: string) {
     }
 }
 
-export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewProps) {
+export function AttendanceHistoryView({ data, locale, hasGymTrainer, onTabChange }: AttendanceHistoryViewProps) {
     const router = useRouter()
     const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
     const [navigating, setNavigating] = useState(false)
+    const [activeTab, setActiveTab] = useState<'basketball' | 'gym'>('basketball')
     const { trainees, events, attendanceMap, reasonMap = {} } = data
 
     const totalSlots = trainees.length * events.length
@@ -53,8 +57,39 @@ export function AttendanceHistoryView({ data, locale }: AttendanceHistoryViewPro
         )
     }
 
+    const handleTabSwitch = (tab: 'basketball' | 'gym') => {
+        setActiveTab(tab)
+        onTabChange?.(tab)
+    }
+
     return (
         <div className="space-y-4" dir="rtl">
+            {/* Basketball/Gym filter tabs */}
+            {hasGymTrainer && (
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => handleTabSwitch('basketball')}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            activeTab === 'basketball'
+                                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                        }`}
+                    >
+                        كرة سلة
+                    </button>
+                    <button
+                        onClick={() => handleTabSwitch('gym')}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            activeTab === 'gym'
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                : 'bg-white/5 text-white/40 border border-white/10'
+                        }`}
+                    >
+                        لياقة بدنية
+                    </button>
+                </div>
+            )}
+
             {/* Navigation overlay — app-wide basketball loader */}
             {navigating && typeof window !== 'undefined' && createPortal(
                 <div className="fixed inset-0 bg-[#0B132B]/90 backdrop-blur-3xl flex flex-col items-center justify-center z-[200]">

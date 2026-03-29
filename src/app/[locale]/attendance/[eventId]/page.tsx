@@ -2,25 +2,16 @@ import type { Locale } from '@/lib/i18n/config'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { Badge } from '@/components/ui/Badge'
 import { AttendanceSheet } from '@/components/attendance/AttendanceSheet'
-import { EventManagementActions } from '@/components/events/EventManagementActions'
+import { EventInfoCards } from '@/components/events/EventInfoCards'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getLocalizedField, formatDate } from '@/lib/utils'
+import { getLocalizedField } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/types'
 import { notFound } from 'next/navigation'
-import { MapPin } from 'lucide-react'
 import { getSession } from '@/app/actions'
 import { AnimatedMeshBackground } from '@/components/ui/AnimatedMeshBackground'
-import { EventTimeEditor } from '@/components/events/EventTimeEditor'
 
-type Event = Database['public']['Tables']['events']['Row']
-type Hall = Database['public']['Tables']['halls']['Row']
 type Trainee = Database['public']['Tables']['trainees']['Row']
-
-interface EventWithHall extends Event {
-  halls: Hall | null
-}
 
 export default async function AttendancePage({
   params,
@@ -37,7 +28,7 @@ export default async function AttendancePage({
     { data: attendanceRecords }
   ] = await Promise.all([
     getSession(),
-    (supabase as any).from('events').select('id, type, event_date, class_id, trainer_id, hall_id, title_ar, title_he, title_en, start_time, end_time, notes_en, halls(id, name_ar, name_he, name_en)').eq('id', eventId).single(),
+    (supabase as any).from('events').select('id, type, event_date, class_id, trainer_id, hall_id, title_ar, title_he, title_en, start_time, end_time, notes_en, halls(id, name_ar, name_he, name_en), trainers(name_ar, name_he, name_en), classes(name_ar, name_he, name_en)').eq('id', eventId).single(),
     (supabase as any).from('attendance').select('trainee_id, status, absence_reason').eq('event_id', eventId),
   ])
 
@@ -45,7 +36,9 @@ export default async function AttendancePage({
     notFound()
   }
 
-  const eventWithHall = event as unknown as EventWithHall
+  const trainerName = event.trainers ? getLocalizedField(event.trainers, 'name', locale) : null
+  const className = event.classes ? getLocalizedField(event.classes, 'name', locale) : null
+  const hallName = event.halls ? getLocalizedField(event.halls, 'name', locale) : null
 
   // Get class_id directly from event column, fallback to trainer's class
   let targetClassId: string | null = event.class_id || null
@@ -73,48 +66,35 @@ export default async function AttendancePage({
         <div className="bg-[#0B132B]/60 backdrop-blur-3xl border-b border-white/10 sticky top-0 z-40">
           <Header
             locale={locale}
-            title={getLocalizedField(eventWithHall, 'title', locale)}
+            title={getLocalizedField(event, 'title', locale)}
             showBack
           />
         </div>
 
         <main className="flex-1 pt-20 pb-nav md:pb-8 px-5">
           <div className="max-w-2xl mx-auto">
-            {/* Event Info */}
-            <section className="py-4">
-              <div className="flex items-center gap-3 flex-wrap mb-3">
-                <Badge className={event.type === 'game' ? 'badge-error' : 'badge-success'}>
-                    {event.type === 'game'
-                      ? 'مباراة'
-                      : 'تدريب'
-                    }
-                </Badge>
-                <span className="text-sm text-white/50">
-                  {formatDate(event.event_date, locale)}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <h1 className="text-xl font-semibold text-white">
-                  {getLocalizedField(eventWithHall, 'title', locale)}
-                </h1>
-                <EventManagementActions event={event} locale={locale} hallId={event.hall_id} />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
-                {eventWithHall.halls && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4" />
-                    {getLocalizedField(eventWithHall.halls, 'name', locale)}
-                  </span>
-                )}
-                <EventTimeEditor
-                  eventId={eventId}
-                  startTime={event.start_time}
-                  endTime={event.end_time}
-                />
-              </div>
-            </section>
+            {/* Event Info Cards */}
+            <EventInfoCards
+              event={{
+                id: event.id,
+                type: event.type,
+                event_date: event.event_date,
+                class_id: event.class_id,
+                trainer_id: event.trainer_id,
+                hall_id: event.hall_id,
+                title_ar: event.title_ar,
+                title_he: event.title_he,
+                title_en: event.title_en,
+                start_time: event.start_time,
+                end_time: event.end_time,
+                notes_en: event.notes_en,
+              }}
+              trainerName={trainerName}
+              className={className}
+              hallName={hallName}
+              locale={locale}
+              date={event.event_date}
+            />
 
             {/* Attendance Sheet */}
             <section>

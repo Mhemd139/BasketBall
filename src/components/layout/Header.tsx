@@ -168,7 +168,7 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
               )}
 
               <Link href={`/${locale}`} className="flex items-center gap-2.5 group">
-                <div className="relative w-14 h-14 md:w-16 md:h-16 overflow-hidden rounded-xl ring-2 ring-yellow-600/40 shadow-[0_0_16px_rgba(202,138,4,0.3)] transition-transform duration-200 group-hover:scale-105 shrink-0">
+                <div className="relative w-14 h-14 md:w-16 md:h-16 overflow-hidden rounded drop-shadow-[0_0_16px_rgba(249,249,249,0.34)] transition-transform duration-200 group-hover:scale-105 shrink-0">
                     <Image
                         src="/images/logo.jpg"
                         alt="Logo"
@@ -177,8 +177,8 @@ export function Header({ locale, title, showBack, backHref, onBack }: HeaderProp
                         priority
                     />
                 </div>
-                <h1 className="font-black text-base md:text-lg leading-tight text-yellow-600 tracking-tight truncate">
-                    {title || <>باقة الغربية <span className="text-yellow-600/50 text-sm">·</span> النادي الرياضي</>}
+                <h1 className="font-black text-base md:text-lg leading-tight text-[#D08700] tracking-tight whitespace-nowrap">
+                    {title || 'النادي الرياضي باقة الغربية'}
                 </h1>
               </Link>
             </div>
