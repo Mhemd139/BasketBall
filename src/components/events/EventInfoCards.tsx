@@ -50,7 +50,12 @@ export function EventInfoCards({ event, trainerName, className, hallName, locale
     }
 
     const handleSave = async (eventData: Parameters<typeof upsertEvent>[0]) => {
-        const res = await upsertEvent({ ...eventData, id: event.id })
+        const hallId = eventData.hall_id ?? event.hall_id
+        if (!hallId) {
+            toast('لا يمكن حفظ الحدث بدون قاعة', 'error')
+            return
+        }
+        const res = await upsertEvent({ ...eventData, id: event.id, hall_id: hallId })
         if (res.success) {
             setIsOpen(false)
             toast('تم تحديث الحدث بنجاح', 'success')

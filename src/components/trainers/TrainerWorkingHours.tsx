@@ -196,7 +196,7 @@ export function TrainerWorkingHours({ trainerId, locale = 'ar' }: { trainerId: s
                                     )}
                                 </div>
                                 <p className="text-sm text-white/50 mt-1 font-bold">
-                                    {result.totalEvents} تدريبات
+                                    {result.totalEvents} جلسات
                                 </p>
                             </div>
 
