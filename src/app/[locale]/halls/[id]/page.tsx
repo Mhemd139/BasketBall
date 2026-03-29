@@ -34,7 +34,7 @@ export default async function HallDetailPage({
   const [{ data: hall, error: hallError }, { data: events }, schedulesRes] = await Promise.all([
     supabase.from('halls').select('*').eq('id', id).single(),
     (supabase as any).from('events')
-      .select('id, title_he, title_ar, title_en, start_time, end_time, event_date, type, schedule_id, class_id, trainer_id, hall_id, notes_en, trainers(name_he, name_ar, name_en)')
+      .select('id, title_he, title_ar, title_en, start_time, end_time, event_date, type, schedule_id, class_id, trainer_id, hall_id, notes_en, trainers:trainers!events_trainer_id_fkey(name_he, name_ar, name_en)')
       .eq('hall_id', id)
       .gte('event_date', startOfMonth)
       .lte('event_date', endOfMonth)
