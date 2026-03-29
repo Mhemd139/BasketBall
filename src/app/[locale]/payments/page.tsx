@@ -24,7 +24,7 @@ export default async function PaymentsPage({
     getSession(),
     (supabase as any)
       .from('classes')
-      .select('id, name_en, name_ar, name_he, trainer_id, trainees(count), trainers(name_en, name_ar, name_he)')
+      .select('id, name_en, name_ar, name_he, trainer_id, trainees(count), trainers:trainers!classes_trainer_id_fkey(name_en, name_ar, name_he)')
       .order('name_ar')
       .limit(50),
   ])
